@@ -1,0 +1,26 @@
+{
+    "name": "@pilota/driver-nhost",
+    "version": "0.0.1",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "unbuild",
+        "test": "vitest run",
+        "dev": "unbuild --stub"
+    },
+    "dependencies": {
+        "@pilota/core": "workspace:*"
+    },
+    "devDependencies": {
+        "unbuild": "^2.0.0",
+        "vitest": "^2.0.0",
+        "typescript": "^5.5.0"
+    }
+}
