@@ -6,4 +6,5 @@ export default defineBuildConfig({
     rollup: {
         emitCJS: false,
     },
+    externals: ['zod', 'vue', '@pilota/core', 'hookable', 'miragejs'],
 })

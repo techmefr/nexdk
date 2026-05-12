@@ -1,3 +1,4 @@
+import type { ComputedRef, Ref } from 'vue'
 import type { ZodObject, ZodRawShape, z } from 'zod'
 import { computed, ref } from 'vue'
 import type { AnyResource } from '@pilota/core'
@@ -10,21 +11,34 @@ type FormErrors<TResource extends FormResource> = Partial<
     Record<keyof z.infer<TResource['schema']>, string[]>
 >
 
+export interface ResourceFormReturn<TResource extends FormResource> {
+    values: Ref<FormValues<TResource>>
+    errors: Ref<FormErrors<TResource>>
+    isDirty: ComputedRef<boolean>
+    handleSubmit: (
+        onValid: (data: z.infer<TResource['schema']>) => Promise<void> | void,
+    ) => () => Promise<void>
+    setServerErrors: (serverErrors: Record<string, string[]>) => void
+    reset: () => void
+}
+
 function buildInitialValues<TResource extends FormResource>(resource: TResource): FormValues<TResource> {
     return Object.fromEntries(
         Object.keys(resource.schema.shape).map(key => [key, null]),
     ) as FormValues<TResource>
 }
 
-export function useResourceForm<TResource extends FormResource>(resource: TResource) {
+export function useResourceForm<TResource extends FormResource>(
+    resource: TResource,
+): ResourceFormReturn<TResource> {
     type TValues = FormValues<TResource>
     type TErrors = FormErrors<TResource>
 
     const initial = buildInitialValues(resource)
-    const values = ref<TValues>({ ...initial })
-    const errors = ref<TErrors>({} as TErrors)
+    const values: Ref<TValues> = ref<TValues>({ ...initial })
+    const errors: Ref<TErrors> = ref<TErrors>({} as TErrors)
 
-    const isDirty = computed(() => {
+    const isDirty: ComputedRef<boolean> = computed(() => {
         for (const key of Object.keys(initial) as Array<keyof TValues>) {
             if (values.value[key] !== initial[key]) return true
         }
@@ -33,7 +47,7 @@ export function useResourceForm<TResource extends FormResource>(resource: TResou
 
     function handleSubmit(
         onValid: (data: z.infer<TResource['schema']>) => Promise<void> | void,
-    ) {
+    ): () => Promise<void> {
         return async (): Promise<void> => {
             errors.value = {} as TErrors
 
