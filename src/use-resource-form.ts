@@ -1,11 +1,12 @@
 import type { ComputedRef, Ref } from 'vue'
-import type { ZodObject, ZodRawShape, z } from 'zod'
+import type { ZodObject, z } from 'zod'
 import { computed, ref } from 'vue'
 import type { AnyResource } from '@pilota/core'
 
 type Nullable<T> = { [K in keyof T]: T[K] | null }
 
-type FormResource = AnyResource & { schema: ZodObject<ZodRawShape> }
+// ZodObject is invariant in its shape param — `any` is required here to accept any specific ZodObject subtype
+type FormResource = AnyResource & { schema: ZodObject<any> }
 type FormValues<TResource extends FormResource> = Nullable<z.infer<TResource['schema']>>
 type FormErrors<TResource extends FormResource> = Partial<
     Record<keyof z.infer<TResource['schema']>, string[]>
@@ -36,7 +37,7 @@ export function useResourceForm<TResource extends FormResource>(
 
     const initial = buildInitialValues(resource)
     const values: Ref<TValues> = ref<TValues>({ ...initial })
-    const errors: Ref<TErrors> = ref<TErrors>({} as TErrors)
+    const errors = ref({} as TErrors)
 
     const isDirty: ComputedRef<boolean> = computed(() => {
         for (const key of Object.keys(initial) as Array<keyof TValues>) {
@@ -77,5 +78,5 @@ export function useResourceForm<TResource extends FormResource>(
         errors.value = {} as TErrors
     }
 
-    return { values, errors, isDirty, handleSubmit, setServerErrors, reset }
+    return { values, errors: errors as Ref<TErrors>, isDirty, handleSubmit, setServerErrors, reset }
 }

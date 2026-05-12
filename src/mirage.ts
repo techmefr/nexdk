@@ -30,7 +30,7 @@ export async function setupMirageMock(config: MiragePilotaConfig): Promise<unkno
 
             for (const resourceName of Object.keys(config.seed)) {
                 this.post(`/${resourceName}/search`, schema => ({
-                    data: (schema.db as Record<string, { all: () => unknown[] }>)[resourceName].all(),
+                    data: (schema.db as unknown as Record<string, { all: () => unknown[] }>)[resourceName].all(),
                     meta: null,
                 }))
 
@@ -39,7 +39,7 @@ export async function setupMirageMock(config: MiragePilotaConfig): Promise<unkno
                         mutate: Record<string, unknown>[]
                     }
                     const results = (body.mutate ?? []).map(op => {
-                        const db = (schema.db as Record<string, {
+                        const db = (schema.db as unknown as Record<string, {
                             insert: (o: unknown) => unknown
                             update: (id: unknown, o: unknown) => unknown
                             find: (id: unknown) => unknown
@@ -55,7 +55,7 @@ export async function setupMirageMock(config: MiragePilotaConfig): Promise<unkno
 
                 this.delete(`/${resourceName}`, (schema, request) => {
                     const body = JSON.parse(request.requestBody as string) as { id: unknown }
-                    ;(schema.db as Record<string, { remove: (id: unknown) => void }>)[resourceName].remove(body.id)
+                    ;(schema.db as unknown as Record<string, { remove: (id: unknown) => void }>)[resourceName].remove(body.id)
                     return { success: true }
                 })
             }
