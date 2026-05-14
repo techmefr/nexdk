@@ -1,12 +1,11 @@
 import type { ComputedRef, Ref } from 'vue'
-import type { ZodObject, z } from 'zod'
+import type { ZodObject, ZodRawShape, z } from 'zod'
 import { computed, ref } from 'vue'
 import type { AnyResource } from '@pilota/core'
 
 type Nullable<T> = { [K in keyof T]: T[K] | null }
 
-// ZodObject is invariant in its shape param — `any` is required here to accept any specific ZodObject subtype
-type FormResource = AnyResource & { schema: ZodObject<any> }
+type FormResource = AnyResource & { schema: ZodObject<ZodRawShape> }
 type FormValues<TResource extends FormResource> = Nullable<z.infer<TResource['schema']>>
 type FormErrors<TResource extends FormResource> = Partial<
     Record<keyof z.infer<TResource['schema']>, string[]>
