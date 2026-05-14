@@ -126,6 +126,10 @@ export class NhostDriver implements PilotaDriver {
             body: JSON.stringify({ query: document, variables }),
         })
 
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`)
+        }
+
         return (await response.json()) as NhostQueryResult<T>
     }
 
