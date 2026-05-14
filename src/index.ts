@@ -1,3 +1,5 @@
+export { createNotify } from './notify.ts'
+export type { PilotaNotifyAdapter } from './notify.ts'
 export { createPilotaHooks } from './hooks.ts'
 export type { PilotaEvent, PilotaHookMap, PilotaHooksInstance } from './hooks.ts'
 export { resolveEventHandler } from './event-handler.ts'
