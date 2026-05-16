@@ -35,15 +35,16 @@ export class LomkitDriver implements PilotaDriver {
         mock?: unknown,
     ): Promise<LomkitGetResult<T>> {
         const resource = this.resources.get(resourceName)
+        const urlName = resource?.name ?? resourceName
 
         if (mock !== undefined && resource !== undefined) {
             return { data: [resource.schema.parse(mock) as T] }
         }
 
-        onEvent?.('request', { resource: resourceName, payload })
+        onEvent?.('request', { resource: urlName, payload })
 
         try {
-            const response = await fetch(`${this.baseUrl}/${resourceName}/search`, {
+            const response = await fetch(`${this.baseUrl}/${urlName}/search`, {
                 method: 'POST',
                 headers: this.headers,
                 body: JSON.stringify(payload ?? {}),
@@ -70,15 +71,16 @@ export class LomkitDriver implements PilotaDriver {
         mock?: unknown,
     ): Promise<LomkitMutateResult<T>> {
         const resource = this.resources.get(resourceName)
+        const urlName = resource?.name ?? resourceName
 
         if (mock !== undefined && resource !== undefined) {
             return { data: [parseMock(resource, mock) as T] }
         }
 
-        onEvent?.('request', { resource: resourceName, payload })
+        onEvent?.('request', { resource: urlName, payload })
 
         try {
-            const response = await fetch(`${this.baseUrl}/${resourceName}/mutate`, {
+            const response = await fetch(`${this.baseUrl}/${urlName}/mutate`, {
                 method: 'POST',
                 headers: this.headers,
                 body: JSON.stringify({ mutate: [payload] }),
@@ -103,10 +105,13 @@ export class LomkitDriver implements PilotaDriver {
         payload?: unknown,
         onEvent?: PilotaEventHandler,
     ): Promise<LomkitDeleteResult> {
-        onEvent?.('request', { resource: resourceName, payload })
+        const resource = this.resources.get(resourceName)
+        const urlName = resource?.name ?? resourceName
+
+        onEvent?.('request', { resource: urlName, payload })
 
         try {
-            const response = await fetch(`${this.baseUrl}/${resourceName}`, {
+            const response = await fetch(`${this.baseUrl}/${urlName}`, {
                 method: 'DELETE',
                 headers: this.headers,
                 body: JSON.stringify(payload),
