@@ -164,6 +164,23 @@ export class NhostDriver implements PilotaDriver {
         if (!payload || typeof payload !== 'object' || Object.keys(payload as object).length === 0) {
             return ''
         }
-        return ''
+        const args = Object.entries(payload as Record<string, unknown>)
+            .map(([key, value]) => `${key}: ${this.serializeValue(value)}`)
+            .join(', ')
+        return args ? `(${args})` : ''
+    }
+
+    private serializeValue(value: unknown): string {
+        if (value === null) return 'null'
+        if (typeof value === 'string') return `"${value}"`
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+        if (Array.isArray(value)) return `[${value.map(v => this.serializeValue(v)).join(', ')}]`
+        if (typeof value === 'object') {
+            const entries = Object.entries(value as Record<string, unknown>)
+                .map(([k, v]) => `${k}: ${this.serializeValue(v)}`)
+                .join(', ')
+            return `{${entries}}`
+        }
+        return String(value)
     }
 }
