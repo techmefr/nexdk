@@ -38,6 +38,7 @@ function makeDriver() {
 describe('NhostDriver.query', () => {
     it('sends a GraphQL query with fields from default fragment', async () => {
         mockFetch.mockResolvedValueOnce({
+            ok: true,
             json: async () => ({ data: { users: [] } }),
         })
 
@@ -53,6 +54,7 @@ describe('NhostDriver.query', () => {
 
     it('uses withPosts fragment when specified', async () => {
         mockFetch.mockResolvedValueOnce({
+            ok: true,
             json: async () => ({ data: { users: [] } }),
         })
 
@@ -67,32 +69,32 @@ describe('NhostDriver.query', () => {
 })
 
 describe('NhostDriver.mutation', () => {
-    it('generates a Create operation when id is absent', async () => {
+    it('generates an insert_one mutation', async () => {
         mockFetch.mockResolvedValueOnce({
-            json: async () => ({ data: {} }),
+            ok: true,
+            json: async () => ({ data: { insert_users_one: { id: '1', name: 'Alice', email: 'alice@test.com' } } }),
         })
 
         const driver = makeDriver()
         await driver.mutation('users', { name: 'Alice', email: 'alice@test.com' })
 
-        const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as {
-            query: string
-        }
-        expect(body.query).toContain('mutation CreateUser')
+        const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as { query: string }
+        expect(body.query).toContain('insert_users_one')
+        expect(body.query).toContain('Alice')
     })
 
-    it('generates an Update operation when id is present', async () => {
+    it('generates an update_by_pk mutation via updateById', async () => {
         mockFetch.mockResolvedValueOnce({
-            json: async () => ({ data: {} }),
+            ok: true,
+            json: async () => ({ data: { update_users_by_pk: { id: '1', name: 'Alice', email: 'alice@test.com' } } }),
         })
 
         const driver = makeDriver()
-        await driver.mutation('users', { id: '1', name: 'Alice' })
+        await driver.updateById('users', { id: '1', data: { name: 'Alice' } })
 
-        const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as {
-            query: string
-        }
-        expect(body.query).toContain('mutation UpdateUser')
+        const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as { query: string }
+        expect(body.query).toContain('update_users_by_pk')
+        expect(body.query).toContain('"1"')
     })
 })
 
