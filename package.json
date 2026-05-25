@@ -17,7 +17,8 @@
     },
     "dependencies": {
         "@pilota/core": "workspace:*",
-        "hookable": "^5.5.3"
+        "hookable": "^5.5.3",
+        "zod": "^3.23.8"
     },
     "peerDependencies": {
         "miragejs": "^0.1.47",
