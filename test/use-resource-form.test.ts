@@ -10,6 +10,14 @@ const UserSchema = z.object({
 
 const userResource = defineResource({ name: 'users', schema: UserSchema })
 
+const ProductSchema = z.object({
+    name: z.string().default(''),
+    price: z.number().default(0),
+    published: z.boolean().default(false),
+})
+
+const productResource = defineResource({ name: 'products', schema: ProductSchema })
+
 describe('useResourceForm', () => {
     it('initializes all fields to null', () => {
         const { values } = useResourceForm(userResource)
@@ -86,5 +94,51 @@ describe('useResourceForm', () => {
         const { errors, setServerErrors } = useResourceForm(userResource)
         setServerErrors({ email: ['This email is already taken.'] })
         expect(errors.value).toEqual({ email: ['This email is already taken.'] })
+    })
+
+    it('fill hydrates values', () => {
+        const { values, fill } = useResourceForm(userResource)
+        fill({ name: 'Alice', email: 'alice@test.com' })
+        expect(values.value.name).toBe('Alice')
+        expect(values.value.email).toBe('alice@test.com')
+    })
+
+    it('isDirty is false immediately after fill', () => {
+        const { isDirty, fill } = useResourceForm(userResource)
+        fill({ name: 'Alice', email: 'alice@test.com' })
+        expect(isDirty.value).toBe(false)
+    })
+
+    it('isDirty is true after modifying a field post-fill', () => {
+        const { values, isDirty, fill } = useResourceForm(userResource)
+        fill({ name: 'Alice', email: 'alice@test.com' })
+        values.value.name = 'Bob'
+        expect(isDirty.value).toBe(true)
+    })
+
+    it('reset after fill returns to null (initial), not fill values', () => {
+        const { values, fill, reset } = useResourceForm(userResource)
+        fill({ name: 'Alice', email: 'alice@test.com' })
+        reset()
+        expect(values.value).toEqual({ name: null, email: null })
+    })
+
+    it('isDirty is false after reset following a fill', () => {
+        const { values, isDirty, fill, reset } = useResourceForm(userResource)
+        fill({ name: 'Alice', email: 'alice@test.com' })
+        values.value.name = 'Bob'
+        reset()
+        expect(isDirty.value).toBe(false)
+    })
+
+    it('reads Zod defaults as initial values', () => {
+        const { values } = useResourceForm(productResource)
+        expect(values.value).toEqual({ name: '', price: 0, published: false })
+    })
+
+    it('isDirty is false when value equals Zod default', () => {
+        const { values, isDirty } = useResourceForm(productResource)
+        values.value.name = ''
+        expect(isDirty.value).toBe(false)
     })
 })
