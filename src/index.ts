@@ -4,5 +4,6 @@ export type {
     LomkitDeleteResult,
     LomkitGetResult,
     LomkitMutateResult,
+    LomkitResourceApi,
     LomkitValidationError,
 } from './types.ts'

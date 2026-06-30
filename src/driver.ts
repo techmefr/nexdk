@@ -1,15 +1,32 @@
 import type { AnyResource, PilotaDriver, PilotaEventHandler } from '@pilota/core'
-import { parseMock } from '@pilota/core'
+import { parseMockList } from '@pilota/core'
 import type {
     LomkitConfig,
     LomkitDeleteResult,
     LomkitGetResult,
     LomkitMutateResult,
+    LomkitResourceApi,
     LomkitValidationError,
 } from './types.ts'
 
+// Register the lomkit per-resource API in core's registry so the typed SDK can
+// resolve `sdk.lomkit.<resource>` to LomkitResourceApi<T>.
+declare module '@pilota/core' {
+    interface ResourceApiKinds<T> {
+        lomkit: LomkitResourceApi<T>
+    }
+}
+
+// Error thrown after handleError has already emitted the typed 'error' event,
+// so the method's catch block does not emit a second, duplicate event.
+class LomkitHttpError extends Error {}
+
 export class LomkitDriver implements PilotaDriver {
     readonly name = 'lomkit'
+
+    // Phantom marker: the SDK reads this uri to look up LomkitResourceApi<T> in
+    // the augmented ResourceApiKinds registry. Never used at runtime.
+    declare readonly __apiUri: 'lomkit'
 
     private readonly baseUrl: string
     private readonly headers: Record<string, string>
@@ -38,7 +55,7 @@ export class LomkitDriver implements PilotaDriver {
         const urlName = resource?.name ?? resourceName
 
         if (mock !== undefined && resource !== undefined) {
-            return { data: [resource.schema.parse(mock) as T] }
+            return { data: parseMockList(resource, mock) as T[] }
         }
 
         onEvent?.('request', { resource: urlName, payload })
@@ -51,15 +68,16 @@ export class LomkitDriver implements PilotaDriver {
             })
 
             if (!response.ok) {
-                await this.handleError(response, onEvent)
-                return { data: [] }
+                throw await this.handleError(response, onEvent)
             }
 
             const result = (await response.json()) as LomkitGetResult<T>
             onEvent?.('success', result)
             return result
         } catch (error) {
-            onEvent?.('error', { message: (error as Error).message })
+            if (!(error instanceof LomkitHttpError)) {
+                onEvent?.('error', { message: (error as Error).message })
+            }
             throw error
         }
     }
@@ -74,7 +92,7 @@ export class LomkitDriver implements PilotaDriver {
         const urlName = resource?.name ?? resourceName
 
         if (mock !== undefined && resource !== undefined) {
-            return { data: [parseMock(resource, mock) as T] }
+            return { data: parseMockList(resource, mock) as T[] }
         }
 
         onEvent?.('request', { resource: urlName, payload })
@@ -87,15 +105,16 @@ export class LomkitDriver implements PilotaDriver {
             })
 
             if (!response.ok) {
-                await this.handleError(response, onEvent)
-                return { data: [] }
+                throw await this.handleError(response, onEvent)
             }
 
             const result = (await response.json()) as LomkitMutateResult<T>
             onEvent?.('success', result)
             return result
         } catch (error) {
-            onEvent?.('error', { message: (error as Error).message })
+            if (!(error instanceof LomkitHttpError)) {
+                onEvent?.('error', { message: (error as Error).message })
+            }
             throw error
         }
     }
@@ -118,24 +137,29 @@ export class LomkitDriver implements PilotaDriver {
             })
 
             if (!response.ok) {
-                await this.handleError(response, onEvent)
-                return { success: false }
+                throw await this.handleError(response, onEvent)
             }
 
             onEvent?.('success', { deleted: true })
             return { success: true }
         } catch (error) {
-            onEvent?.('error', { message: (error as Error).message })
+            if (!(error instanceof LomkitHttpError)) {
+                onEvent?.('error', { message: (error as Error).message })
+            }
             throw error
         }
     }
 
-    private async handleError(response: Response, onEvent?: PilotaEventHandler): Promise<void> {
+    // Emit the typed 'error' event with the full HTTP / validation detail and
+    // return the matching error for the caller to throw.
+    private async handleError(response: Response, onEvent?: PilotaEventHandler): Promise<LomkitHttpError> {
         if (response.status === 422) {
             const body = (await response.json()) as LomkitValidationError
             onEvent?.('error', { message: body.message, errors: body.errors })
-            return
+            return new LomkitHttpError(body.message)
         }
-        onEvent?.('error', { message: `HTTP ${response.status}` })
+        const message = `HTTP ${response.status}`
+        onEvent?.('error', { message })
+        return new LomkitHttpError(message)
     }
 }

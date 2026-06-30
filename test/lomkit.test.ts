@@ -51,6 +51,21 @@ describe('LomkitDriver.get', () => {
         expect(result.data[0]).toEqual(mock)
     })
 
+    it('returns all elements when mock is an array', async () => {
+        const driver = makeDriver()
+        const mock = [
+            { id: 1, name: 'Alice', email: 'alice@test.com' },
+            { id: 2, name: 'Bob', email: 'bob@test.com' },
+            { id: 3, name: 'Carol', email: 'carol@test.com' },
+        ]
+
+        const result = await driver.get('users', {}, undefined, mock)
+
+        expect(mockFetch).not.toHaveBeenCalled()
+        expect(result.data).toEqual(mock)
+        expect(result.data).toHaveLength(3)
+    })
+
     it('emits request and success events', async () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
@@ -82,7 +97,7 @@ describe('LomkitDriver.mutate', () => {
         )
     })
 
-    it('exposes 422 validation errors via event handler', async () => {
+    it('emits 422 validation errors via the event handler and then throws', async () => {
         mockFetch.mockResolvedValueOnce({
             ok: false,
             status: 422,
@@ -93,14 +108,53 @@ describe('LomkitDriver.mutate', () => {
         })
 
         const driver = makeDriver()
-        let errorPayload: unknown = null
-        await driver.mutate('users', {}, (event, data) => {
-            if (event === 'error') errorPayload = data
-        })
+        const errorPayloads: unknown[] = []
+        await expect(
+            driver.mutate('users', {}, (event, data) => {
+                if (event === 'error') errorPayloads.push(data)
+            }),
+        ).rejects.toThrow('Validation failed')
 
-        expect(errorPayload).toEqual({
-            message: 'Validation failed',
-            errors: { email: ['The email field is required.'] },
-        })
+        // The typed 'error' event carries the full validation detail, emitted once.
+        expect(errorPayloads).toEqual([
+            {
+                message: 'Validation failed',
+                errors: { email: ['The email field is required.'] },
+            },
+        ])
+    })
+})
+
+describe('LomkitDriver error contract', () => {
+    it('get throws on a non-OK HTTP response instead of returning an empty list', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+
+        const driver = makeDriver()
+        const events: string[] = []
+        await expect(
+            driver.get('users', {}, event => events.push(event)),
+        ).rejects.toThrow('HTTP 500')
+
+        // 'error' is emitted exactly once (not duplicated by the catch block).
+        expect(events.filter(e => e === 'error')).toHaveLength(1)
+    })
+
+    it('delete throws on a non-OK HTTP response instead of returning success:false', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: false, status: 404, json: async () => ({}) })
+
+        const driver = makeDriver()
+        await expect(driver.delete('users', { resources: [1] })).rejects.toThrow('HTTP 404')
+    })
+
+    it('get rethrows a network error and emits a single error event', async () => {
+        mockFetch.mockRejectedValueOnce(new Error('network down'))
+
+        const driver = makeDriver()
+        const events: string[] = []
+        await expect(
+            driver.get('users', {}, event => events.push(event)),
+        ).rejects.toThrow('network down')
+
+        expect(events.filter(e => e === 'error')).toHaveLength(1)
     })
 })
