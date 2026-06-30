@@ -1,5 +1,6 @@
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from '@pilota/core'
-import { parseMockList } from '@pilota/core'
+import type { PilotaEventHandler } from 'beepr'
+import type { AnyResource, PilotaDriver } from 'nexdk'
+import { parseMockList } from 'chaff'
 import type {
     LomkitConfig,
     LomkitDeleteResult,
@@ -11,7 +12,7 @@ import type {
 
 // Register the lomkit per-resource API in core's registry so the typed SDK can
 // resolve `sdk.lomkit.<resource>` to LomkitResourceApi<T>.
-declare module '@pilota/core' {
+declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         lomkit: LomkitResourceApi<T>
     }

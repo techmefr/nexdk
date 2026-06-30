@@ -1,4 +1,4 @@
-import type { PilotaEventHandler } from '@pilota/core'
+import type { PilotaEventHandler } from 'beepr'
 
 export interface LomkitConfig {
     baseUrl: string
