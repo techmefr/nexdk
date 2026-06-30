@@ -16,21 +16,15 @@
         "dev": "unbuild --stub"
     },
     "dependencies": {
-        "@pilota/core": "workspace:*",
-        "hookable": "^5.5.3",
+        "beepr": "workspace:*",
+        "chaff": "workspace:*",
+        "nexdk": "workspace:*",
         "zod": "^3.23.8"
     },
     "peerDependencies": {
-        "miragejs": "^0.1.47",
         "vue": "^3.4.0"
     },
-    "peerDependenciesMeta": {
-        "miragejs": {
-            "optional": true
-        }
-    },
     "devDependencies": {
-        "miragejs": "^0.1.47",
         "unbuild": "^2.0.0",
         "vitest": "^2.0.0",
         "vue": "^3.5.0",

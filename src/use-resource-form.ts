@@ -1,7 +1,7 @@
 import type { ComputedRef, Ref } from 'vue'
 import { ZodDefault, type ZodObject, type ZodRawShape, type z } from 'zod'
 import { computed, ref } from 'vue'
-import type { AnyResource } from '@pilota/core'
+import type { AnyResource } from 'nexdk'
 
 type Nullable<T> = { [K in keyof T]: T[K] | null }
 

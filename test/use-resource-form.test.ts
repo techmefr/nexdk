@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { defineResource } from '@pilota/core'
+import { defineResource } from 'nexdk'
 import { useResourceForm } from '../src/use-resource-form.ts'
 
 const UserSchema = z.object({
