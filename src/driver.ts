@@ -1,5 +1,13 @@
 import type { AnyResource, PilotaDriver, PilotaEventHandler } from '@pilota/core'
-import type { GraphQLOptions, NhostConfig, NhostQueryResult, UpdateByIdPayload, UpsertPayload, UpdateWherePayload, DeleteByIdPayload } from './types.ts'
+import type { GraphQLOptions, NhostConfig, NhostQueryResult, NhostResourceApi, UpdateByIdPayload, UpsertPayload, UpdateWherePayload, DeleteByIdPayload } from './types.ts'
+
+// Register the nhost per-resource API in core's registry so the typed SDK can
+// resolve `sdk.nhost.<resource>` to NhostResourceApi<T>.
+declare module '@pilota/core' {
+    interface ResourceApiKinds<T> {
+        nhost: NhostResourceApi<T>
+    }
+}
 
 type SubHandler = (payload: unknown) => void
 
@@ -7,7 +15,7 @@ interface SharedConnection {
     ws: WebSocket
     acknowledged: boolean
     // pending subscriptions queued before ack
-    pending: Array<{ id: string; query: string }>
+    pending: Array<{ id: string; query: string; variables: Record<string, unknown> }>
     // active subscription handlers keyed by id
     handlers: Map<string, SubHandler>
     refCount: number
@@ -48,8 +56,8 @@ function getSharedConnection(wsUrl: string, adminSecret: string | undefined): Sh
 
         if (msg.type === 'connection_ack' && !conn.acknowledged) {
             conn.acknowledged = true
-            for (const { id, query } of conn.pending) {
-                conn.ws.send(JSON.stringify({ id, type: 'subscribe', payload: { query, variables: {} } }))
+            for (const { id, query, variables } of conn.pending) {
+                conn.ws.send(JSON.stringify({ id, type: 'subscribe', payload: { query, variables } }))
             }
             conn.pending = []
             return
@@ -66,8 +74,26 @@ function getSharedConnection(wsUrl: string, adminSecret: string | undefined): Sh
     return conn
 }
 
+// GraphQL type for a top-level argument of a list query / subscription.
+// We map well-known Hasura argument names to their generated input types so
+// user-supplied values travel as variables instead of being interpolated.
+function argType(resourceName: string, argName: string): string {
+    switch (argName) {
+        case 'where': return `${resourceName}_bool_exp`
+        case 'order_by': return `[${resourceName}_order_by!]`
+        case 'limit':
+        case 'offset': return 'Int'
+        case 'distinct_on': return `[${resourceName}_select_column!]`
+        default: return 'jsonb'
+    }
+}
+
 export class NhostDriver implements PilotaDriver {
     readonly name = 'nhost'
+
+    // Phantom marker: the SDK reads this uri to look up NhostResourceApi<T> in
+    // the augmented ResourceApiKinds registry. Never used at runtime.
+    declare readonly __apiUri: 'nhost'
 
     private readonly endpoint: string
     private readonly headers: Record<string, string>
@@ -97,10 +123,11 @@ export class NhostDriver implements PilotaDriver {
         const resource = this.resources.get(resourceName)
         const fields = this.resolveFields(resource, options?.fragment)
         const operationName = this.buildQueryName(resourceName)
-        const document = `query ${operationName} { ${resourceName}${this.buildArgs(payload)} { ${fields} } }`
+        const { decls, args, variables } = this.buildVarArgs(resourceName, payload)
+        const document = `query ${operationName}${decls} { ${resourceName}${args} { ${fields} } }`
 
         try {
-            const result = await this.execute<T>(document, {})
+            const result = await this.execute<T>(document, variables)
             onEvent?.('success', result)
             return result
         } catch (error) {
@@ -122,10 +149,10 @@ export class NhostDriver implements PilotaDriver {
         const fields = this.resolveFields(resource, options?.fragment)
         const data = (payload ?? {}) as Record<string, unknown>
 
-        const document = `mutation { insert_${resourceName}_one(object: ${this.serializeValue(data)}) { ${fields} } }`
+        const document = `mutation Insert${this.singular(resourceName)}($object: ${resourceName}_insert_input!) { insert_${resourceName}_one(object: $object) { ${fields} } }`
 
         try {
-            const raw = await this.execute<Record<string, T>>(document, {})
+            const raw = await this.execute<Record<string, T>>(document, { object: data })
             onEvent?.('success', raw)
             const result = (raw.data as Record<string, T>)?.[`insert_${resourceName}_one`] ?? null
             return { data: result, errors: raw.errors }
@@ -135,7 +162,12 @@ export class NhostDriver implements PilotaDriver {
         }
     }
 
-    // Upsert — insert with on_conflict (Hasura-specific)
+    // Upsert — insert with on_conflict (Hasura-specific).
+    // `object` carries user data and travels as a variable. `conflictConstraint`
+    // and `updateColumns` are GraphQL enum / enum-array identifiers coming from
+    // developer code (defineResource / call site), never end-user input, so they
+    // are kept inline — Hasura's on_conflict enums cannot be passed as variables
+    // in older versions. They are validated to contain only enum-safe characters.
     async upsert<T>(
         resourceName: string,
         payload: UpsertPayload,
@@ -147,11 +179,12 @@ export class NhostDriver implements PilotaDriver {
         const { data, conflictConstraint, updateColumns } = payload
         const resource = this.resources.get(resourceName)
         const fields = this.resolveFields(resource, options?.fragment)
-        const cols = updateColumns.join(', ')
-        const document = `mutation { insert_${resourceName}_one(object: ${this.serializeValue(data)}, on_conflict: { constraint: ${conflictConstraint}, update_columns: [${cols}] }) { ${fields} } }`
+        const constraint = enumIdentifier(conflictConstraint)
+        const cols = updateColumns.map(enumIdentifier).join(', ')
+        const document = `mutation Upsert${this.singular(resourceName)}($object: ${resourceName}_insert_input!) { insert_${resourceName}_one(object: $object, on_conflict: { constraint: ${constraint}, update_columns: [${cols}] }) { ${fields} } }`
 
         try {
-            const raw = await this.execute<Record<string, T>>(document, {})
+            const raw = await this.execute<Record<string, T>>(document, { object: data })
             onEvent?.('success', raw)
             const result = (raw.data as Record<string, T>)?.[`insert_${resourceName}_one`] ?? null
             return { data: result, errors: raw.errors }
@@ -173,10 +206,10 @@ export class NhostDriver implements PilotaDriver {
         const { id, data } = payload
         const resource = this.resources.get(resourceName)
         const fields = this.resolveFields(resource, options?.fragment)
-        const document = `mutation { update_${resourceName}_by_pk(pk_columns: {id: "${id}"}, _set: ${this.serializeValue(data)}) { ${fields} } }`
+        const document = `mutation Update${this.singular(resourceName)}($pk: ${resourceName}_pk_columns_input!, $set: ${resourceName}_set_input!) { update_${resourceName}_by_pk(pk_columns: $pk, _set: $set) { ${fields} } }`
 
         try {
-            const raw = await this.execute<Record<string, T>>(document, {})
+            const raw = await this.execute<Record<string, T>>(document, { pk: { id }, set: data })
             onEvent?.('success', raw)
             const result = (raw.data as Record<string, T>)?.[`update_${resourceName}_by_pk`] ?? null
             return { data: result, errors: raw.errors }
@@ -195,10 +228,10 @@ export class NhostDriver implements PilotaDriver {
         onEvent?.('request', { resource: resourceName, payload })
 
         const { where, data } = payload
-        const document = `mutation { update_${resourceName}(where: ${this.serializeValue(where)}, _set: ${this.serializeValue(data)}) { affected_rows } }`
+        const document = `mutation UpdateWhere${this.singular(resourceName)}($where: ${resourceName}_bool_exp!, $set: ${resourceName}_set_input!) { update_${resourceName}(where: $where, _set: $set) { affected_rows } }`
 
         try {
-            const raw = await this.execute<Record<string, { affected_rows: number }>>(document, {})
+            const raw = await this.execute<Record<string, { affected_rows: number }>>(document, { where, set: data })
             onEvent?.('success', raw)
             const affected = (raw.data as Record<string, { affected_rows: number }>)?.[`update_${resourceName}`]?.affected_rows ?? 0
             return { affectedRows: affected }
@@ -217,15 +250,15 @@ export class NhostDriver implements PilotaDriver {
         onEvent?.('request', { resource: resourceName, payload })
 
         const { id } = payload
-        const document = `mutation { delete_${resourceName}_by_pk(id: "${id}") { id } }`
+        const document = `mutation Delete${this.singular(resourceName)}($id: uuid!) { delete_${resourceName}_by_pk(id: $id) { id } }`
 
         try {
-            await this.execute(document, {})
+            await this.execute(document, { id })
             onEvent?.('success', { id })
             return { success: true }
         } catch (error) {
             onEvent?.('error', { message: (error as Error).message })
-            return { success: false }
+            throw error
         }
     }
 
@@ -237,7 +270,8 @@ export class NhostDriver implements PilotaDriver {
     ): () => void {
         const resource = this.resources.get(resourceName)
         const fields = this.resolveFields(resource, options?.fragment)
-        const document = `subscription On${this.singular(resourceName)} { ${resourceName}${this.buildArgs(payload)} { ${fields} } }`
+        const { decls, args, variables } = this.buildVarArgs(resourceName, payload)
+        const document = `subscription On${this.singular(resourceName)}${decls} { ${resourceName}${args} { ${fields} } }`
 
         const wsUrl = this.endpoint.replace(/^http/, 'ws')
         const adminSecret = this.headers['x-hasura-admin-secret']
@@ -247,9 +281,9 @@ export class NhostDriver implements PilotaDriver {
         conn.handlers.set(id, payload => onEvent?.('data', payload))
 
         if (conn.acknowledged) {
-            conn.ws.send(JSON.stringify({ id, type: 'subscribe', payload: { query: document, variables: {} } }))
+            conn.ws.send(JSON.stringify({ id, type: 'subscribe', payload: { query: document, variables } }))
         } else {
-            conn.pending.push({ id, query: document })
+            conn.pending.push({ id, query: document, variables })
         }
 
         return () => {
@@ -308,27 +342,31 @@ export class NhostDriver implements PilotaDriver {
         return name.endsWith('s') ? name.slice(0, -1) : name
     }
 
-    private buildArgs(payload: unknown): string {
+    // Build typed variable declarations and the matching argument list for a
+    // list query / subscription. Each top-level argument value becomes a GraphQL
+    // variable so no user-supplied scalar is ever interpolated into the document.
+    private buildVarArgs(resourceName: string, payload: unknown): { decls: string; args: string; variables: Record<string, unknown> } {
         if (!payload || typeof payload !== 'object' || Object.keys(payload as object).length === 0) {
-            return ''
+            return { decls: '', args: '', variables: {} }
         }
-        const args = Object.entries(payload as Record<string, unknown>)
-            .map(([key, value]) => `${key}: ${this.serializeValue(value)}`)
-            .join(', ')
-        return args ? `(${args})` : ''
+        const decls: string[] = []
+        const args: string[] = []
+        const variables: Record<string, unknown> = {}
+        for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
+            decls.push(`$${key}: ${argType(resourceName, key)}`)
+            args.push(`${key}: $${key}`)
+            variables[key] = value
+        }
+        return { decls: `(${decls.join(', ')})`, args: `(${args.join(', ')})`, variables }
     }
+}
 
-    private serializeValue(value: unknown): string {
-        if (value === null) return 'null'
-        if (typeof value === 'string') return `"${value}"`
-        if (typeof value === 'number' || typeof value === 'boolean') return String(value)
-        if (Array.isArray(value)) return `[${value.map(v => this.serializeValue(v)).join(', ')}]`
-        if (typeof value === 'object') {
-            const entries = Object.entries(value as Record<string, unknown>)
-                .map(([k, v]) => `${k}: ${this.serializeValue(v)}`)
-                .join(', ')
-            return `{${entries}}`
-        }
-        return String(value)
+// Validate a developer-controlled GraphQL enum identifier (constraint name,
+// column name). Enums are emitted inline, so reject anything that is not a bare
+// GraphQL name to prevent injection through misconfigured developer code.
+function enumIdentifier(name: string): string {
+    if (!/^[_A-Za-z][_0-9A-Za-z]*$/.test(name)) {
+        throw new Error(`Invalid GraphQL enum identifier: ${name}`)
     }
+    return name
 }

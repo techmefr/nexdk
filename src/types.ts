@@ -1,3 +1,5 @@
+import type { PilotaEventHandler } from '@pilota/core'
+
 export interface NhostConfig {
     endpoint: string
     adminSecret?: string
@@ -38,4 +40,49 @@ export interface UpdateWherePayload {
 
 export interface DeleteByIdPayload {
     id: string
+}
+
+export interface NhostMutationResult<T> {
+    data: T | null
+    errors?: unknown[]
+}
+
+// Per-resource API surface the nhost driver exposes through the SDK.
+// `T` is the resource's inferred record type. GraphQL list operations return a
+// keyed wrapper (e.g. { products: Product[] }) rather than the record itself,
+// so query/subscription accept an explicit `TData` override, defaulting to `T`.
+export interface NhostResourceApi<T> {
+    query<TData = T>(
+        payload?: object,
+        onEvent?: PilotaEventHandler,
+        options?: GraphQLOptions,
+    ): Promise<NhostQueryResult<TData>>
+    mutation<TData = T>(
+        payload?: object,
+        onEvent?: PilotaEventHandler,
+        options?: GraphQLOptions,
+    ): Promise<NhostMutationResult<TData>>
+    upsert<TData = T>(
+        payload: UpsertPayload,
+        onEvent?: PilotaEventHandler,
+        options?: GraphQLOptions,
+    ): Promise<NhostMutationResult<TData>>
+    updateById<TData = T>(
+        payload: UpdateByIdPayload,
+        onEvent?: PilotaEventHandler,
+        options?: GraphQLOptions,
+    ): Promise<NhostMutationResult<TData>>
+    updateWhere(
+        payload: UpdateWherePayload,
+        onEvent?: PilotaEventHandler,
+    ): Promise<{ affectedRows: number }>
+    deleteById(
+        payload: DeleteByIdPayload,
+        onEvent?: PilotaEventHandler,
+    ): Promise<{ success: boolean }>
+    subscription(
+        payload?: object,
+        onEvent?: PilotaEventHandler,
+        options?: GraphQLOptions,
+    ): () => void
 }
