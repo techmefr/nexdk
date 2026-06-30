@@ -1,0 +1,27 @@
+{
+    "name": "nexdk",
+    "version": "0.0.1",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "unbuild",
+        "test": "vitest run",
+        "dev": "unbuild --stub"
+    },
+    "dependencies": {
+        "beepr": "workspace:*",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "unbuild": "^2.0.0",
+        "vitest": "^2.0.0",
+        "typescript": "^5.5.0"
+    }
+}
