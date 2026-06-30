@@ -1,15 +1,41 @@
 {
     "name": "nexdk",
     "version": "0.0.1",
+    "description": "Driver-based SDK — talk to REST, GraphQL and WebSocket backends through one resource grammar.",
     "type": "module",
+    "license": "MIT",
+    "author": "techmefr",
+    "homepage": "https://github.com/techmefr/pilota/tree/main/packages/nexdk#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/techmefr/pilota.git",
+        "directory": "packages/nexdk"
+    },
+    "keywords": [
+        "sdk",
+        "rest",
+        "graphql",
+        "websocket",
+        "zod",
+        "driver",
+        "backend-agnostic"
+    ],
+    "sideEffects": false,
     "exports": {
         ".": {
+            "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs",
-            "types": "./dist/index.d.ts"
+            "default": "./dist/index.mjs"
         }
     },
     "main": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "build": "unbuild",
         "test": "vitest run",
