@@ -7,7 +7,7 @@ export function resolveEventHandler(
 ): PilotaEventHandler {
     if (local !== undefined) return local
 
-    return (event: string, data?: unknown) => {
-        void global.callHook(event as PilotaEvent, data)
+    return (event: PilotaEvent, data?: unknown) => {
+        void global.callHook(event, data)
     }
 }

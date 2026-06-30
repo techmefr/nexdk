@@ -1,12 +1,7 @@
 import { createHooks } from 'hookable'
+import type { PilotaEvent } from '@pilota/core'
 
-export type PilotaEvent =
-    | 'request'
-    | 'success'
-    | 'error'
-    | 'data'
-    | 'connected'
-    | 'disconnected'
+export type { PilotaEvent }
 
 export type PilotaHookMap = {
     [K in PilotaEvent]: (data?: unknown) => void

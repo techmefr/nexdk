@@ -1,14 +1,16 @@
-import type { PilotaEventHandler } from '@pilota/core'
+import type { PilotaEvent, PilotaEventHandler } from '@pilota/core'
 
 export type PilotaNotifyAdapter = {
     onRequest?: (context: { resource?: string; payload?: unknown }) => void
     onSuccess?: (data?: unknown) => void
     onError?: (error: { message: string; errors?: Record<string, string[]> }) => void
     onData?: (data?: unknown) => void
+    onConnected?: (data?: unknown) => void
+    onDisconnected?: (data?: unknown) => void
 }
 
 export function createNotify(adapter: PilotaNotifyAdapter): PilotaEventHandler {
-    return (event: string, data?: unknown) => {
+    return (event: PilotaEvent, data?: unknown) => {
         if (event === 'request') {
             adapter.onRequest?.(data as { resource?: string; payload?: unknown } ?? {})
         }
@@ -21,6 +23,12 @@ export function createNotify(adapter: PilotaNotifyAdapter): PilotaEventHandler {
         }
         if (event === 'data') {
             adapter.onData?.(data)
+        }
+        if (event === 'connected') {
+            adapter.onConnected?.(data)
+        }
+        if (event === 'disconnected') {
+            adapter.onDisconnected?.(data)
         }
     }
 }
