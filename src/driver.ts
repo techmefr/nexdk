@@ -1,10 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
 import type { AnyResource, PilotaDriver, PilotaEventHandler } from '@pilota/core'
-import type { SupabaseConfig, SupabaseResult } from './types.ts'
+import type { SupabaseConfig, SupabaseResourceApi, SupabaseResult } from './types.ts'
+
+// Register the supabase per-resource API in core's registry so the typed SDK
+// can resolve `sdk.supabase.<resource>` to SupabaseResourceApi<T>.
+declare module '@pilota/core' {
+    interface ResourceApiKinds<T> {
+        supabase: SupabaseResourceApi<T>
+    }
+}
 
 export class SupabaseDriver implements PilotaDriver {
     readonly name = 'supabase'
+
+    // Phantom marker: the SDK reads this uri to look up SupabaseResourceApi<T>
+    // in the augmented ResourceApiKinds registry. Never used at runtime.
+    declare readonly __apiUri: 'supabase'
 
     private readonly client: SupabaseClient
     private readonly resources = new Map<string, AnyResource>()
