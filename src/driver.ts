@@ -1,9 +1,10 @@
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from '@pilota/core'
+import type { PilotaEventHandler } from 'beepr'
+import type { AnyResource, PilotaDriver } from 'nexdk'
 import type { GraphQLOptions, NhostConfig, NhostQueryResult, NhostResourceApi, UpdateByIdPayload, UpsertPayload, UpdateWherePayload, DeleteByIdPayload } from './types.ts'
 
 // Register the nhost per-resource API in core's registry so the typed SDK can
 // resolve `sdk.nhost.<resource>` to NhostResourceApi<T>.
-declare module '@pilota/core' {
+declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         nhost: NhostResourceApi<T>
     }
