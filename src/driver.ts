@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from '@pilota/core'
+import type { PilotaEventHandler } from 'beepr'
+import type { AnyResource, PilotaDriver } from 'nexdk'
 import type { SupabaseConfig, SupabaseResourceApi, SupabaseResult } from './types.ts'
 
 // Register the supabase per-resource API in core's registry so the typed SDK
 // can resolve `sdk.supabase.<resource>` to SupabaseResourceApi<T>.
-declare module '@pilota/core' {
+declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         supabase: SupabaseResourceApi<T>
     }

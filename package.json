@@ -16,8 +16,9 @@
         "dev": "unbuild --stub"
     },
     "dependencies": {
-        "@pilota/core": "workspace:*",
-        "@supabase/supabase-js": "^2.43.0"
+        "@supabase/supabase-js": "^2.43.0",
+        "beepr": "workspace:*",
+        "nexdk": "workspace:*"
     },
     "devDependencies": {
         "unbuild": "^2.0.0",
