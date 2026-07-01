@@ -2,6 +2,7 @@ import type { PilotaEventHandler } from 'beepr'
 import type { AnyResource, PilotaDriver } from 'nexdk'
 import { parseMockList } from 'chaff'
 import type {
+    HeadersResolver,
     LomkitConfig,
     LomkitDeleteResult,
     LomkitGetResult,
@@ -9,6 +10,13 @@ import type {
     LomkitResourceApi,
     LomkitValidationError,
 } from './types.ts'
+
+// Resolve a headers config (static object or resolver function) to a plain
+// header record, awaiting the function form so a refreshed token can be used.
+async function resolveHeaders(headers: HeadersResolver | undefined): Promise<Record<string, string>> {
+    if (typeof headers === 'function') return await headers()
+    return headers ?? {}
+}
 
 // Register the lomkit per-resource API in core's registry so the typed SDK can
 // resolve `sdk.lomkit.<resource>` to LomkitResourceApi<T>.
@@ -30,20 +38,26 @@ export class LomkitDriver implements PilotaDriver {
     declare readonly __apiUri: 'lomkit'
 
     private readonly baseUrl: string
-    private readonly headers: Record<string, string>
+    private readonly headersConfig: HeadersResolver | undefined
     private readonly resources = new Map<string, AnyResource>()
 
     constructor(config: LomkitConfig) {
         this.baseUrl = config.baseUrl.replace(/\/$/, '')
-        this.headers = {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            ...config.headers,
-        }
+        this.headersConfig = config.headers
     }
 
     bindResource(resourceName: string, resource: AnyResource): void {
         this.resources.set(resourceName, resource)
+    }
+
+    // Base headers merged with the per-request resolved headers. Resolved on
+    // every request so a function-form config can return a refreshed token.
+    private async buildHeaders(): Promise<Record<string, string>> {
+        return {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            ...(await resolveHeaders(this.headersConfig)),
+        }
     }
 
     async get<T>(
@@ -64,7 +78,7 @@ export class LomkitDriver implements PilotaDriver {
         try {
             const response = await fetch(`${this.baseUrl}/${urlName}/search`, {
                 method: 'POST',
-                headers: this.headers,
+                headers: await this.buildHeaders(),
                 body: JSON.stringify(payload ?? {}),
             })
 
@@ -101,7 +115,7 @@ export class LomkitDriver implements PilotaDriver {
         try {
             const response = await fetch(`${this.baseUrl}/${urlName}/mutate`, {
                 method: 'POST',
-                headers: this.headers,
+                headers: await this.buildHeaders(),
                 body: JSON.stringify({ mutate: [payload] }),
             })
 
@@ -133,7 +147,7 @@ export class LomkitDriver implements PilotaDriver {
         try {
             const response = await fetch(`${this.baseUrl}/${urlName}`, {
                 method: 'DELETE',
-                headers: this.headers,
+                headers: await this.buildHeaders(),
                 body: JSON.stringify(payload),
             })
 

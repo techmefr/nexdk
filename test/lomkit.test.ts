@@ -125,6 +125,60 @@ describe('LomkitDriver.mutate', () => {
     })
 })
 
+describe('LomkitDriver headers', () => {
+    it('applies static object headers to the request', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: [] }) })
+
+        const driver = new LomkitDriver({
+            baseUrl: 'http://localhost:8000/api',
+            headers: { Authorization: 'Bearer static-token' },
+        })
+        driver.bindResource('users', userResource)
+        await driver.get('users', {})
+
+        const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>
+        expect(headers.Authorization).toBe('Bearer static-token')
+        expect(headers['Content-Type']).toBe('application/json')
+    })
+
+    it('resolves a function-form headers config before each request', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) })
+
+        let calls = 0
+        const driver = new LomkitDriver({
+            baseUrl: 'http://localhost:8000/api',
+            headers: () => ({ Authorization: `Bearer token-${++calls}` }),
+        })
+        driver.bindResource('users', userResource)
+
+        await driver.get('users', {})
+        await driver.mutate('users', { name: 'Alice' })
+
+        const first = mockFetch.mock.calls[0][1].headers as Record<string, string>
+        const second = mockFetch.mock.calls[1][1].headers as Record<string, string>
+        // The resolver runs per request, so a refreshed token is picked up.
+        expect(first.Authorization).toBe('Bearer token-1')
+        expect(second.Authorization).toBe('Bearer token-2')
+    })
+
+    it('awaits an async function-form headers config', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: [] }) })
+
+        const driver = new LomkitDriver({
+            baseUrl: 'http://localhost:8000/api',
+            headers: async () => {
+                await Promise.resolve()
+                return { Authorization: 'Bearer refreshed' }
+            },
+        })
+        driver.bindResource('users', userResource)
+        await driver.get('users', {})
+
+        const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>
+        expect(headers.Authorization).toBe('Bearer refreshed')
+    })
+})
+
 describe('LomkitDriver error contract', () => {
     it('get throws on a non-OK HTTP response instead of returning an empty list', async () => {
         mockFetch.mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
