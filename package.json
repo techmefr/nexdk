@@ -33,7 +33,6 @@
         "dev": "unbuild --stub"
     },
     "dependencies": {
-        "beepr": "workspace:*",
         "nexdk": "workspace:*"
     },
     "devDependencies": {

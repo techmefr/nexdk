@@ -1,5 +1,4 @@
-import type { PilotaEventHandler } from 'beepr'
-import type { HeadersResolver } from 'nexdk'
+import type { HeadersResolver, PilotaEventHandler } from 'nexdk'
 
 // Re-exported for convenience so consumers can type their own header resolvers.
 export type { HeadersResolver }
