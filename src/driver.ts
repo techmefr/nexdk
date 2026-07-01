@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
-import type { PilotaEventHandler } from 'beepr'
-import type { AnyResource, PilotaDriver } from 'nexdk'
+import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
 import type { SupabaseConfig, SupabaseResourceApi, SupabaseResult } from './types.ts'
 
 // Register the supabase per-resource API in core's registry so the typed SDK

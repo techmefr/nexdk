@@ -1,4 +1,4 @@
-import type { PilotaEventHandler } from 'beepr'
+import type { PilotaEventHandler } from 'nexdk'
 
 export interface SupabaseConfig {
     url: string
