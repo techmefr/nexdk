@@ -1,7 +1,7 @@
 import { defineResource } from 'nexdk'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { NhostDriver } from '../src/driver.ts'
+import { NhostDriver } from '../src/nhost-driver.ts'
 import { _resetConnectionPool } from '../src/connection-pool.ts'
 
 const UserSchema = z.object({
@@ -270,12 +270,10 @@ describe('NhostDriver headers', () => {
     })
 })
 
-describe('NhostDriver.singular', () => {
-    it('does not mangle words ending in ss/us/is', () => {
-        const driver = makeDriver()
-        // singular() is private; exercise it through the mutation operation name.
-        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: {} }) })
-        const singular = (driver as unknown as { singular(n: string): string }).singular.bind(driver)
+describe('singular', () => {
+    it('does not mangle words ending in ss/us/is', async () => {
+        // singular() now lives in the document module (was a private driver method).
+        const { singular } = await import('../src/document.ts')
         expect(singular('status')).toBe('Status')
         expect(singular('bus')).toBe('Bus')
         expect(singular('axis')).toBe('Axis')
