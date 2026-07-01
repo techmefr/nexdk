@@ -1,5 +1,4 @@
-import type { PilotaEventHandler } from 'beepr'
-import type { AnyResource, PilotaDriver } from './types.ts'
+import type { AnyResource, PilotaDriver, PilotaEventHandler } from './types.ts'
 
 // Request headers may be a static object or a resolver called before every
 // request, so a driver can supply a fresh (e.g. refreshed) bearer token. This

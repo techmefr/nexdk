@@ -1,8 +1,8 @@
-import type { PilotaEventHandler } from 'beepr'
-import { mergeEventHandlers } from 'beepr'
+import { mergeEventHandlers } from './merge.ts'
 import type {
     PilotaConfig,
     PilotaDriver,
+    PilotaEventHandler,
     ResourcesByDriver,
 } from './types.ts'
 import type { TypedPilotaSDK } from './typed-sdk.ts'

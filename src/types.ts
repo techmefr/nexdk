@@ -1,8 +1,18 @@
 import type { ZodTypeAny, z } from 'zod'
-import type { PilotaEvent, PilotaEventHandler } from 'beepr'
 
-// The canonical definitions live in beepr; re-exported here for backward-compat.
-export type { PilotaEvent, PilotaEventHandler }
+// nexdk owns its event contract and depends on nothing. The same tiny union is
+// intentionally duplicated in beepr so both packages stay independent; the two
+// definitions must remain identical (same members) so their handlers stay
+// mutually assignable.
+export type PilotaEvent =
+    | 'request'
+    | 'success'
+    | 'error'
+    | 'data'
+    | 'connected'
+    | 'disconnected'
+
+export type PilotaEventHandler = (event: PilotaEvent, data?: unknown) => void
 
 export type AnyResource = Resource<ZodTypeAny>
 
