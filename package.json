@@ -1,0 +1,44 @@
+{
+    "name": "@pilota/driver-nest",
+    "version": "0.0.1",
+    "description": "Conventional REST CRUD driver for Pilota — targets the common NestJS controller shape (GET/POST/PATCH/DELETE).",
+    "type": "module",
+    "license": "MIT",
+    "author": "techmefr",
+    "homepage": "https://github.com/techmefr/pilota/tree/main/packages/drivers/nest#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/techmefr/pilota.git",
+        "directory": "packages/drivers/nest"
+    },
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "unbuild",
+        "test": "vitest run",
+        "dev": "unbuild --stub"
+    },
+    "dependencies": {
+        "beepr": "workspace:*",
+        "nexdk": "workspace:*"
+    },
+    "devDependencies": {
+        "unbuild": "^2.0.0",
+        "vitest": "^2.0.0",
+        "typescript": "^5.5.0"
+    }
+}
