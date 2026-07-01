@@ -1,5 +1,4 @@
-import type { PilotaEventHandler } from 'beepr'
-import type { AnyResource, PilotaDriver } from 'nexdk'
+import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
 import type { GraphQLOptions, HeadersResolver, NhostConfig, NhostQueryResult, NhostResourceApi, UpdateByIdPayload, UpsertPayload, UpdateWherePayload, DeleteByIdPayload } from './types.ts'
 import { getSharedConnection } from './connection-pool.ts'
 
