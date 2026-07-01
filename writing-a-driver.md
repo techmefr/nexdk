@@ -196,6 +196,28 @@ Mirror the Tier-3 package metadata (description, `license: MIT`,
 `author: techmefr`, `repository` + `directory`, types-first `exports`, `files`,
 `publishConfig`, `sideEffects: false`).
 
+## Dependency rule (independence)
+
+A driver **peer-depends on `nexdk`, never depends on it** — the consumer already
+has the SDK; your driver must not bundle its own copy (the ESLint/Vite plugin
+model). In your `package.json`:
+
+```jsonc
+{
+  "peerDependencies": { "nexdk": "workspace:*" },     // or a version range once published
+  "devDependencies":  { "nexdk": "workspace:*" }       // so the package still builds/tests alone
+}
+```
+
+- Put `nexdk` in `peerDependencies` (+ a `devDependency` so it builds in isolation).
+- Do **not** depend on `beepr` (import the event type from `nexdk`) or on any other
+  driver.
+- A library your driver genuinely needs at runtime goes in `dependencies`
+  (e.g. the supabase driver's `@supabase/supabase-js`, lomkit's `chaff` for the
+  mock path); a library the consumer already has goes in `peerDependencies`.
+
+This is the repo-wide independence rule — see [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ## Follow-up
 
 The existing hand-written drivers (`lomkit`, `nhost`, `supabase`) predate
