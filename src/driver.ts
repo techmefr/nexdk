@@ -1,5 +1,4 @@
-import type { PilotaEventHandler } from 'beepr'
-import type { AnyResource, PilotaDriver } from 'nexdk'
+import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
 import { parseMockList } from 'chaff'
 import type {
     HeadersResolver,

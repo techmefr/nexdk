@@ -16,7 +16,6 @@
         "dev": "unbuild --stub"
     },
     "dependencies": {
-        "beepr": "workspace:*",
         "chaff": "workspace:*",
         "nexdk": "workspace:*"
     },
