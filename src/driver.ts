@@ -1,7 +1,23 @@
 import type { PilotaEventHandler } from 'beepr'
 import type { AnyResource, PilotaDriver } from 'nexdk'
-import type { GraphQLOptions, NhostConfig, NhostQueryResult, NhostResourceApi, UpdateByIdPayload, UpsertPayload, UpdateWherePayload, DeleteByIdPayload } from './types.ts'
+import type { GraphQLOptions, HeadersResolver, NhostConfig, NhostQueryResult, NhostResourceApi, UpdateByIdPayload, UpsertPayload, UpdateWherePayload, DeleteByIdPayload } from './types.ts'
 import { getSharedConnection } from './connection-pool.ts'
+
+// Resolve a headers config (static object or resolver function) to a plain
+// header record, awaiting the function form so a refreshed token can be used.
+async function resolveHeaders(headers: HeadersResolver | undefined): Promise<Record<string, string>> {
+    if (typeof headers === 'function') return await headers()
+    return headers ?? {}
+}
+
+// Generate a subscription id. Prefer the standard crypto UUID, with a tiny
+// fallback for the rare runtime that lacks it.
+function subscriptionId(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID()
+    }
+    return `sub-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
 
 // Register the nhost per-resource API in core's registry so the typed SDK can
 // resolve `sdk.nhost.<resource>` to NhostResourceApi<T>.
@@ -33,15 +49,24 @@ export class NhostDriver implements PilotaDriver {
     declare readonly __apiUri: 'nhost'
 
     private readonly endpoint: string
-    private readonly headers: Record<string, string>
+    private readonly adminSecret: string | undefined
+    private readonly headersConfig: HeadersResolver | undefined
     private readonly resources = new Map<string, AnyResource>()
 
     constructor(config: NhostConfig) {
         this.endpoint = config.endpoint
-        this.headers = {
+        this.adminSecret = config.adminSecret
+        this.headersConfig = config.headers
+    }
+
+    // Base headers merged with the admin secret and the per-request resolved
+    // headers. Resolved on every request so a function-form config can return a
+    // refreshed token.
+    private async buildHeaders(): Promise<Record<string, string>> {
+        return {
             'Content-Type': 'application/json',
-            ...(config.adminSecret ? { 'x-hasura-admin-secret': config.adminSecret } : {}),
-            ...config.headers,
+            ...(this.adminSecret ? { 'x-hasura-admin-secret': this.adminSecret } : {}),
+            ...(await resolveHeaders(this.headersConfig)),
         }
     }
 
@@ -211,11 +236,20 @@ export class NhostDriver implements PilotaDriver {
         const document = `subscription On${this.singular(resourceName)}${decls} { ${resourceName}${args} { ${fields} } }`
 
         const wsUrl = this.endpoint.replace(/^http/, 'ws')
-        const adminSecret = this.headers['x-hasura-admin-secret']
-        const conn = getSharedConnection(wsUrl, adminSecret)
+        // The pool merges the admin secret; the resolver supplies dynamic headers
+        // (e.g. a bearer token) into connection_init on every (re)connect.
+        const conn = getSharedConnection(
+            wsUrl,
+            this.adminSecret,
+            () => resolveHeaders(this.headersConfig),
+        )
 
-        const id = Math.random().toString(36).slice(2)
-        conn.handlers.set(id, payload => onEvent?.('data', payload))
+        const id = subscriptionId()
+        conn.handlers.set(id, {
+            handler: payload => onEvent?.('data', payload),
+            query: document,
+            variables,
+        })
 
         if (conn.acknowledged) {
             conn.ws.send(JSON.stringify({ id, type: 'subscribe', payload: { query: document, variables } }))
@@ -230,6 +264,8 @@ export class NhostDriver implements PilotaDriver {
             }
             conn.refCount--
             if (conn.refCount <= 0) {
+                // Mark the teardown as intentional so onclose does not reconnect.
+                conn.intentionalClose = true
                 conn.ws.close()
             }
         }
@@ -241,7 +277,7 @@ export class NhostDriver implements PilotaDriver {
     ): Promise<NhostQueryResult<T>> {
         const response = await fetch(this.endpoint, {
             method: 'POST',
-            headers: this.headers,
+            headers: await this.buildHeaders(),
             body: JSON.stringify({ query: document, variables }),
         })
 
@@ -274,8 +310,14 @@ export class NhostDriver implements PilotaDriver {
         return `Get${resourceName.charAt(0).toUpperCase()}${resourceName.slice(1)}`
     }
 
+    // Pragmatic singularization used only to build a subscription operation
+    // name. Not a full pluralization library: leaves ss/us/is words alone
+    // (status, bus, axis), maps ies -> y (categories -> category), and otherwise
+    // strips a trailing s.
     private singular(resourceName: string): string {
         const name = resourceName.charAt(0).toUpperCase() + resourceName.slice(1)
+        if (/(ss|us|is)$/.test(name)) return name
+        if (/ies$/.test(name)) return `${name.slice(0, -3)}y`
         return name.endsWith('s') ? name.slice(0, -1) : name
     }
 

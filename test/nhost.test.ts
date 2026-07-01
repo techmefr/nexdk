@@ -2,6 +2,7 @@ import { defineResource } from 'nexdk'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { NhostDriver } from '../src/driver.ts'
+import { _resetConnectionPool } from '../src/connection-pool.ts'
 
 const UserSchema = z.object({
     id: z.string(),
@@ -230,22 +231,182 @@ describe('NhostDriver.upsert / updateWhere / deleteById', () => {
     })
 })
 
+describe('NhostDriver headers', () => {
+    it('applies a static object headers config to the request', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: { users: [] } }) })
+
+        const driver = new NhostDriver({
+            endpoint: 'http://localhost:1337/v1/graphql',
+            headers: { Authorization: 'Bearer static' },
+        })
+        driver.bindResource('users', userResource)
+        await driver.query('users', {})
+
+        const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>
+        expect(headers.Authorization).toBe('Bearer static')
+        expect(headers['Content-Type']).toBe('application/json')
+    })
+
+    it('resolves an async function-form headers config per request', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: { users: [] } }) })
+
+        let calls = 0
+        const driver = new NhostDriver({
+            endpoint: 'http://localhost:1337/v1/graphql',
+            headers: async () => {
+                await Promise.resolve()
+                return { Authorization: `Bearer token-${++calls}` }
+            },
+        })
+        driver.bindResource('users', userResource)
+
+        await driver.query('users', {})
+        await driver.query('users', {})
+
+        const first = mockFetch.mock.calls[0][1].headers as Record<string, string>
+        const second = mockFetch.mock.calls[1][1].headers as Record<string, string>
+        expect(first.Authorization).toBe('Bearer token-1')
+        expect(second.Authorization).toBe('Bearer token-2')
+    })
+})
+
+describe('NhostDriver.singular', () => {
+    it('does not mangle words ending in ss/us/is', () => {
+        const driver = makeDriver()
+        // singular() is private; exercise it through the mutation operation name.
+        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: {} }) })
+        const singular = (driver as unknown as { singular(n: string): string }).singular.bind(driver)
+        expect(singular('status')).toBe('Status')
+        expect(singular('bus')).toBe('Bus')
+        expect(singular('axis')).toBe('Axis')
+        expect(singular('categories')).toBe('Category')
+        expect(singular('users')).toBe('User')
+    })
+})
+
+// A minimal graphql-transport-ws mock that records sent frames and lets tests
+// drive lifecycle callbacks. Exposes the static readyState constants the pool
+// relies on.
+class MockWebSocket {
+    static OPEN = 1
+    static CLOSED = 3
+    static instances: MockWebSocket[] = []
+    readyState = MockWebSocket.OPEN
+    sent: Array<Record<string, unknown>> = []
+    onopen: null | (() => void) = null
+    onmessage: null | ((e: { data: string }) => void) = null
+    onclose: null | (() => void) = null
+    constructor(public url: string, public protocol?: string) {
+        MockWebSocket.instances.push(this)
+    }
+    send(raw: string) { this.sent.push(JSON.parse(raw)) }
+    close() { this.readyState = MockWebSocket.CLOSED; this.onclose?.() }
+    // Test helpers
+    open() { this.onopen?.() }
+    ack() { this.onmessage?.({ data: JSON.stringify({ type: 'connection_ack' }) }) }
+    drop() { this.readyState = MockWebSocket.CLOSED; this.onclose?.() }
+}
+
 describe('NhostDriver.subscription', () => {
+    beforeEach(() => {
+        _resetConnectionPool()
+        MockWebSocket.instances = []
+        vi.stubGlobal('WebSocket', MockWebSocket)
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
     it('returns a cleanup function', () => {
         const driver = makeDriver()
-
-        const MockWebSocket = vi.fn(() => ({
-            send: vi.fn(),
-            close: vi.fn(),
-            onopen: null as null | (() => void),
-            onmessage: null,
-        }))
-        vi.stubGlobal('WebSocket', MockWebSocket)
-
         const unsub = driver.subscription('messages', { room_id: 'room-1' })
         expect(typeof unsub).toBe('function')
         expect(() => unsub()).not.toThrow()
+    })
 
-        vi.unstubAllGlobals()
+    it('uses a uuid-shaped subscription id', () => {
+        const driver = makeDriver()
+        driver.subscription('users', {})
+        const ws = MockWebSocket.instances[0]
+        ws.open()
+        ws.ack()
+
+        const subscribe = ws.sent.find(f => f.type === 'subscribe')
+        expect(subscribe).toBeDefined()
+        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        expect(uuid.test(subscribe!.id as string)).toBe(true)
+    })
+
+    it('resolves function-form headers into the connection_init payload', async () => {
+        const driver = new NhostDriver({
+            endpoint: 'http://localhost:1337/v1/graphql',
+            headers: () => ({ Authorization: 'Bearer ws-token' }),
+        })
+        driver.bindResource('users', userResource)
+        driver.subscription('users', {})
+
+        const ws = MockWebSocket.instances[0]
+        ws.open()
+        // onopen resolves headers asynchronously; flush the microtask queue.
+        for (let i = 0; i < 5; i++) await Promise.resolve()
+
+        const init = ws.sent.find(f => f.type === 'connection_init')
+        expect(init).toBeDefined()
+        expect((init!.payload as { headers: Record<string, string> }).headers.Authorization).toBe('Bearer ws-token')
+    })
+
+    it('reconnects on an unexpected close and replays active subscriptions', () => {
+        vi.useFakeTimers()
+        const driver = makeDriver()
+        driver.subscription('users', { where: { name: { _eq: 'A' } } })
+
+        const first = MockWebSocket.instances[0]
+        first.open()
+        first.ack()
+        const originalSubscribe = first.sent.find(f => f.type === 'subscribe')
+        expect(originalSubscribe).toBeDefined()
+
+        // Unexpected drop (not an intentional teardown).
+        first.drop()
+
+        // A reconnect is scheduled with backoff; advance time to fire it.
+        expect(MockWebSocket.instances).toHaveLength(1)
+        vi.advanceTimersByTime(600)
+        expect(MockWebSocket.instances).toHaveLength(2)
+
+        // New socket connects, acks, and replays the subscription with the same id.
+        const second = MockWebSocket.instances[1]
+        second.open()
+        second.ack()
+        const replayed = second.sent.find(f => f.type === 'subscribe')
+        expect(replayed).toBeDefined()
+        expect(replayed!.id).toBe(originalSubscribe!.id)
+        expect((replayed!.payload as { variables: unknown }).variables).toEqual({ where: { name: { _eq: 'A' } } })
+    })
+
+    it('does not reconnect after an intentional teardown', () => {
+        vi.useFakeTimers()
+        const driver = makeDriver()
+        const unsub = driver.subscription('users', {})
+        const ws = MockWebSocket.instances[0]
+        ws.open()
+        ws.ack()
+
+        // Last unsubscribe -> refCount 0 -> intentional close.
+        unsub()
+
+        vi.advanceTimersByTime(20_000)
+        expect(MockWebSocket.instances).toHaveLength(1)
+    })
+})
+
+describe('backoffDelay', () => {
+    it('grows exponentially and is capped', async () => {
+        const { backoffDelay } = await import('../src/connection-pool.ts')
+        expect(backoffDelay(0)).toBe(500)
+        expect(backoffDelay(1)).toBe(1000)
+        expect(backoffDelay(2)).toBe(2000)
+        // Capped at 15s.
+        expect(backoffDelay(10)).toBe(15_000)
     })
 })

@@ -1,9 +1,14 @@
 import type { PilotaEventHandler } from 'beepr'
 
+// Request headers may be a static object or a resolver function called before
+// every request (and on every WS (re)connect), so callers can supply a fresh
+// (e.g. refreshed) bearer token.
+export type HeadersResolver = Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
+
 export interface NhostConfig {
     endpoint: string
     adminSecret?: string
-    headers?: Record<string, string>
+    headers?: HeadersResolver
 }
 
 export interface GraphQLError {
