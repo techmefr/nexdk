@@ -36,6 +36,6 @@ export const sdk = createSdk({
 
 From here:
 
-- [Anatomy of a call](/nexdk/guides/anatomy-of-a-call/) — what `payload`, `notify` and `mock` do.
+- [Anatomy of a call](/nexdk/guides/anatomy-of-a-call/) — what `payload` and `notify` do.
 - [Packages](/nexdk/guides/packages/) — what each package in the workspace is for.
 - [Writing a driver](/nexdk/guides/writing-a-driver/) — the contract a driver must follow.

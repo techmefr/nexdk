@@ -5,12 +5,12 @@
     "type": "module",
     "license": "MIT",
     "author": "techmefr",
-    "homepage": "https://github.com/techmefr/pilota/tree/main/packages/nexdk#readme",
+    "homepage": "https://github.com/techmefr/nexdk#readme",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/techmefr/pilota.git",
-        "directory": "packages/nexdk"
+        "url": "git+https://github.com/techmefr/nexdk.git"
     },
+    "packageManager": "pnpm@11.9.0",
     "keywords": [
         "sdk",
         "rest",

@@ -4,9 +4,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
     resolve: {
         alias: {
-            nexdk: resolve(__dirname, '../nexdk/src/index.ts'),
-            beepr: resolve(__dirname, '../beepr/src/index.ts'),
-            chaff: resolve(__dirname, '../chaff/src/index.ts'),
+            nexdk: resolve(__dirname, '../../src/index.ts'),
         },
     },
     test: {

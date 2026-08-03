@@ -1,7 +1,24 @@
 {
     "name": "@nexdk/hooks",
     "version": "0.0.1",
+    "description": "Vue composables for nexdk resources — useResourceForm builds form state, dirty-tracking and server-error mapping from a resource's Zod schema.",
     "type": "module",
+    "license": "MIT",
+    "author": "techmefr",
+    "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/hooks#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/techmefr/nexdk.git",
+        "directory": "packages/hooks"
+    },
+    "keywords": [
+        "vue",
+        "forms",
+        "zod",
+        "composable",
+        "nexdk"
+    ],
+    "sideEffects": false,
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
@@ -11,6 +28,12 @@
     },
     "main": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "build": "unbuild",
         "test": "vitest run",

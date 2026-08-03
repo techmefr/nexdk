@@ -27,7 +27,8 @@ declare module 'nexdk' {
     }
 }
 
-// Narrow the third call argument (forwarded in the mock slot) to GraphQL options.
+// The SDK's 4th call-time argument is opaque at the core level; nhost is the
+// one driver that gives it meaning, narrowing it to its own GraphQL options.
 function asOptions(value: unknown): GraphQLOptions | undefined {
     return value as GraphQLOptions | undefined
 }
@@ -66,9 +67,8 @@ interface NhostState {
 // events are supplied by the helper. `subscription` returns a teardown function,
 // so the helper treats it as reactive and returns it untouched.
 // The SDK grammar is `sdk.nhost.<resource>.<method>(payload, onEvent, options)`.
-// createSdk forwards that third call argument in the driver's `mock` slot, so
-// nhost has no mock concept: its third method parameter carries the GraphQL
-// options (fragment selection).
+// nhost is the one driver that uses the SDK's opaque 4th call argument,
+// interpreting it as GraphQL options (fragment selection).
 export const nhostDriver = defineDriver<NhostConfig, NhostState, {
     query: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
     mutation: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>

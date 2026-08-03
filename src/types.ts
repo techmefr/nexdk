@@ -36,7 +36,7 @@ export type InferSchema<TResource extends AnyResource> =
 export type AsyncMethod<TReturn> = (
     payload?: unknown,
     onEvent?: SdkEventHandler,
-    mock?: unknown,
+    extra?: unknown,
 ) => Promise<TReturn>
 
 export type ReactiveMethod = (

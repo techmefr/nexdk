@@ -38,12 +38,10 @@ export interface LomkitResourceApi<T> {
     get(
         payload?: object,
         onEvent?: SdkEventHandler,
-        mock?: T | T[],
     ): Promise<LomkitGetResult<T>>
     mutate(
         payload?: object,
         onEvent?: SdkEventHandler,
-        mock?: T | T[],
     ): Promise<LomkitMutateResult<T>>
     delete(
         payload: { resources: (number | string)[] },

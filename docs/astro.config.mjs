@@ -3,14 +3,11 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import mdx from '@astrojs/mdx';
 
-// Defaults to the future dedicated `nexdk` repo's path. Until that repo split
-// happens, GitHub Pages actually serves this from `pilota` — CI overrides this
-// via DOCS_BASE_PATH so links/assets resolve correctly at the real deploy URL.
-const base = process.env.DOCS_BASE_PATH || '/nexdk';
+const base = '/nexdk';
 
 const SIDEBAR_ICONS = [
-	'compass', 'workflow', 'layout-grid', 'shield-check', 'radio', 'bell',
-	'shuffle', 'globe', 'wrench', 'file-code', 'puzzle', 'database', 'cloud',
+	'compass', 'workflow', 'layout-grid', 'shield-check', 'radio',
+	'globe', 'wrench', 'file-code', 'puzzle', 'database', 'cloud',
 	'zap', 'hexagon', 'server',
 ];
 
@@ -26,7 +23,7 @@ export default defineConfig({
 			title: 'nexdk',
 			description: 'A frontend SDK that talks to any backend — REST, GraphQL or WebSocket — through one grammar.',
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/techmefr/pilota/tree/main/packages/nexdk' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/techmefr/nexdk' },
 			],
 			customCss: ['./src/styles/custom.css'],
 			head: [
@@ -48,15 +45,14 @@ export default defineConfig({
 					items: [
 						{ label: 'Packages overview', slug: 'guides/packages', attrs: { class: 'sidebar-icon icon-layout-grid' } },
 						{ label: 'Standard Schema (validators)', slug: 'guides/standard-schema', attrs: { class: 'sidebar-icon icon-shield-check' } },
-						{ label: 'Events and mocks', slug: 'guides/events-and-mocks', attrs: { class: 'sidebar-icon icon-radio' } },
+						{ label: 'Events', slug: 'guides/events', attrs: { class: 'sidebar-icon icon-radio' } },
 					],
 				},
 				{
 					label: 'Packages',
 					items: [
-						{ label: 'beepr (events)', slug: 'packages/beepr', attrs: { class: 'sidebar-icon icon-bell' } },
-						{ label: 'chaff (mocks)', slug: 'packages/chaff', attrs: { class: 'sidebar-icon icon-shuffle' } },
 						{ label: '@nexdk/http (REST toolkit)', slug: 'packages/http', attrs: { class: 'sidebar-icon icon-globe' } },
+						{ label: '@nexdk/hooks (Vue forms)', slug: 'packages/hooks', attrs: { class: 'sidebar-icon icon-puzzle' } },
 					],
 				},
 				{

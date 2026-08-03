@@ -28,25 +28,21 @@ export interface NestResourceApi<T> {
     get(
         query?: Record<string, unknown>,
         onEvent?: SdkEventHandler,
-        mock?: T | T[],
     ): Promise<T[]>
     // GET /{resource}/{id} → a single record.
     find(
         payload: NestIdPayload,
         onEvent?: SdkEventHandler,
-        mock?: T,
     ): Promise<T>
     // POST /{resource} → the created record.
     create(
         body: Partial<T>,
         onEvent?: SdkEventHandler,
-        mock?: T,
     ): Promise<T>
     // PATCH /{resource}/{id} → the updated record.
     update(
         payload: NestUpdatePayload,
         onEvent?: SdkEventHandler,
-        mock?: T,
     ): Promise<T>
     // DELETE /{resource}/{id}.
     remove(

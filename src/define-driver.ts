@@ -30,12 +30,14 @@ export interface DriverMethodContext {
 }
 
 // A single author-written method: it receives the context, the call payload and
-// the optional mock, and returns either a value/Promise (async method) or an
-// unsubscribe function (reactive method). The wrapper tells the two apart.
+// an opaque 4th value the framework never interprets (most methods ignore it; a
+// driver may give it its own meaning, e.g. nhost's per-call GraphQL fragment
+// selection). Returns either a value/Promise (async method) or an unsubscribe
+// function (reactive method) — the wrapper tells the two apart.
 export type DriverMethod<TState> = (
     ctx: DriverMethodContext & TState,
     payload: unknown,
-    mock: unknown,
+    extra: unknown,
 ) => unknown
 
 export interface DriverDefinition<
@@ -55,7 +57,7 @@ type ProxyMethod = (
     resourceName: string,
     payload?: unknown,
     onEvent?: SdkEventHandler,
-    mock?: unknown,
+    extra?: unknown,
 ) => unknown
 
 // The built driver: a SdkDriver plus one proxy-shaped function per method.
@@ -79,12 +81,12 @@ function runMethod<TState>(
     method: DriverMethod<TState>,
     ctx: DriverMethodContext & TState,
     payload: unknown,
-    mock: unknown,
+    extra: unknown,
 ): unknown {
     ctx.emit?.('request', { resource: ctx.resourceName, payload })
     let result: unknown
     try {
-        result = method(ctx, payload, mock)
+        result = method(ctx, payload, extra)
     } catch (error) {
         ctx.emit?.('error', { message: (error as Error).message })
         throw error
@@ -135,14 +137,14 @@ export function defineDriver<
 
         for (const methodName in definition.methods) {
             const method = definition.methods[methodName]
-            const proxyMethod: ProxyMethod = (resourceName, payload, onEvent, mock) => {
+            const proxyMethod: ProxyMethod = (resourceName, payload, onEvent, extra) => {
                 const ctx = {
                     resourceName,
                     resource: resources.get(resourceName),
                     emit: onEvent,
                     ...state,
                 } as DriverMethodContext & TState
-                return runMethod(method, ctx, payload, mock)
+                return runMethod(method, ctx, payload, extra)
             }
             ;(built as Record<string, unknown>)[methodName] = proxyMethod
         }

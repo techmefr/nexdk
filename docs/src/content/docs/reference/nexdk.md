@@ -17,7 +17,7 @@ Binds `resources` to `drivers` and returns the typed SDK proxy. `config`:
 |-------|------|-------|
 | `drivers` | `Record<string, SdkDriver>` | Any object implementing `{ name, bindResource() }` — by hand or via `defineDriver`. |
 | `resources?` | `Record<driverKey, Record<resourceKey, AnyResource>>` | Bound with `driver.bindResource(resourceName, resource)` before the driver is exposed. |
-| `notify?` | `SdkEventHandler` | Fires on every call, merged with any per-call `onEvent` — see [Events and mocks](/nexdk/guides/events-and-mocks/). |
+| `notify?` | `SdkEventHandler` | Fires on every call, merged with any per-call `onEvent` — see [Events](/nexdk/guides/events/). |
 
 ## `defineResource(config)`
 

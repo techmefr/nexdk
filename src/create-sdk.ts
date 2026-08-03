@@ -61,7 +61,11 @@ function createResourceProxy(
         {},
         {
             get(_target, methodName: string) {
-                return (payload?: unknown, onEvent?: unknown, mock?: unknown) => {
+                // The 4th positional slot is opaque here: most drivers ignore it,
+                // a few (e.g. nhost's per-call GraphQL fragment selection) give it
+                // their own meaning. It is not a shared "mock" concept — mocking
+                // is chaff's job, used standalone alongside the SDK, not through it.
+                return (payload?: unknown, onEvent?: unknown, extra?: unknown) => {
                     const method = (driver as unknown as Record<string, unknown>)[methodName]
 
                     if (typeof method !== 'function') {
@@ -75,7 +79,7 @@ function createResourceProxy(
                         onEvent as SdkEventHandler | undefined,
                     )
 
-                    return (method as (...args: unknown[]) => unknown).call(driver, resourceName, payload, handler, mock)
+                    return (method as (...args: unknown[]) => unknown).call(driver, resourceName, payload, handler, extra)
                 }
             },
         },

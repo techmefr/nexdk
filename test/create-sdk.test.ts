@@ -15,9 +15,9 @@ class MockDriver implements SdkDriver {
         this.boundResources.push(resourceName)
     }
 
-    get(resource: string, payload: unknown, onEvent?: SdkEventHandler, mock?: unknown): Promise<unknown> {
+    get(resource: string, payload: unknown, onEvent?: SdkEventHandler, extra?: unknown): Promise<unknown> {
         this.calls.push({ resource, method: 'get', payload })
-        const result = mock ?? { id: 1, fromDriver: this.name }
+        const result = extra ?? { id: 1, fromDriver: this.name }
         onEvent?.('request', { resource, payload })
         onEvent?.('success', result)
         return Promise.resolve(result)
@@ -55,14 +55,14 @@ describe('createSdk', () => {
         expect(lomkit.calls[0]).toEqual({ resource: 'users', method: 'get', payload: { id: 1 } })
     })
 
-    it('returns mock directly when provided (no real call check)', async () => {
+    it('forwards the 4th call argument to the driver, opaque to the core', async () => {
         const lomkit = new MockDriver('lomkit')
         const sdk = createSdk({ drivers: { lomkit } })
-        const mock = { id: 99, fromDriver: 'mock' }
+        const extra = { id: 99, fromDriver: 'whatever the driver wants' }
 
-        const result = await sdk.lomkit.users.get({ id: 99 }, undefined, mock)
+        const result = await sdk.lomkit.users.get({ id: 99 }, undefined, extra)
 
-        expect(result).toEqual(mock)
+        expect(result).toEqual(extra)
     })
 
     it('returns a cleanup function for reactive methods', () => {

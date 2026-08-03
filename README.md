@@ -5,7 +5,7 @@ resource grammar** — the calling code never knows which protocol is behind a
 resource.
 
 ```
-sdk.[driver].[resource].[method](payload?, onEvent?, mock?)
+sdk.[driver].[resource].[method](payload?, onEvent?, extra?)
 ```
 
 ## Install
@@ -42,8 +42,41 @@ const { data } = await sdk.lomkit.products.get({})
 - **`createSdk({ drivers, resources?, notify? })`** — binds resources to
   drivers and returns a typed SDK. The event handler is structural, so an event
   layer (e.g. [`beepr`](https://www.npmjs.com/package/beepr)) is optional.
-- **`mock`** (3rd method arg) — a `T | T[]` short-circuit, validated against the
-  resource schema. Pairs well with [`chaff`](https://www.npmjs.com/package/chaff).
+- **`extra`** (4th method arg) — opaque at the core level; a driver may give it
+  its own meaning (e.g. `@nexdk/driver-nhost` uses it for GraphQL fragment
+  selection). Mocking is not a core concept — pair with
+  [`chaff`](https://www.npmjs.com/package/chaff) in application code if you
+  want it.
+
+## Drivers
+
+Official drivers (`@nexdk/driver-*`) live in `packages/drivers/`, peer-depend
+on `nexdk` only, and ship independently on npm.
+
+**Available:**
+
+- [`@nexdk/driver-lomkit`](packages/drivers/lomkit) — Laravel + Lomkit REST API
+- [`@nexdk/driver-nhost`](packages/drivers/nhost) — Hasura GraphQL + subscriptions
+- [`@nexdk/driver-supabase`](packages/drivers/supabase) — Supabase realtime
+- [`@nexdk/driver-nest`](packages/drivers/nest) — conventional NestJS REST CRUD
+- [`@nexdk/driver-symfony`](packages/drivers/symfony) — Symfony / API Platform (Hydra)
+
+**Roadmap**, in priority order:
+
+1. Firebase
+2. Appwrite
+3. PocketBase
+4. Convex
+5. Hasura (standalone, no nhost auth wrapper)
+6. Directus
+7. Strapi
+8. AdonisJS
+9. WordPress REST API
+10. Django REST Framework
+11. Rails (JSON:API)
+
+Community drivers use the `nexdk-driver-*` naming convention and live in their
+own repo — see [Writing a driver](https://techmefr.github.io/nexdk/guides/writing-a-driver/).
 
 ## License
 

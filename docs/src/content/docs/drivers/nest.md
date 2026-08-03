@@ -26,10 +26,10 @@ const nest = createNestDriver({
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
-| `get(query?, onEvent?, mock?)` | `GET /{resource}` | Query params from `query`. Returns `T[]`. |
-| `find({ id }, onEvent?, mock?)` | `GET /{resource}/{id}` | Returns `T`. |
-| `create(body, onEvent?, mock?)` | `POST /{resource}` | Returns the created `T`. |
-| `update({ id, ...fields }, onEvent?, mock?)` | `PATCH /{resource}/{id}` | Returns the updated `T`. |
+| `get(query?, onEvent?)` | `GET /{resource}` | Query params from `query`. Returns `T[]`. |
+| `find({ id }, onEvent?)` | `GET /{resource}/{id}` | Returns `T`. |
+| `create(body, onEvent?)` | `POST /{resource}` | Returns the created `T`. |
+| `update({ id, ...fields }, onEvent?)` | `PATCH /{resource}/{id}` | Returns the updated `T`. |
 | `remove({ id }, onEvent?)` | `DELETE /{resource}/{id}` | Returns `{ success: boolean }`. |
 
 Uses [`@nexdk/http`](/nexdk/packages/http/)'s `request`/`toQuery`/`splitId`/`resolveHeaders` — plain `application/json` bodies throughout.

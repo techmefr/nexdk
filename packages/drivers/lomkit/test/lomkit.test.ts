@@ -45,31 +45,6 @@ describe('LomkitDriver.get', () => {
         expect(result.data).toEqual(payload)
     })
 
-    it('returns mock directly without network call', async () => {
-        const driver = makeDriver()
-        const mock = { id: 99, name: 'Mock', email: 'mock@test.com' }
-
-        const result = await driver.get('users', {}, undefined, mock)
-
-        expect(mockFetch).not.toHaveBeenCalled()
-        expect(result.data[0]).toEqual(mock)
-    })
-
-    it('returns all elements when mock is an array', async () => {
-        const driver = makeDriver()
-        const mock = [
-            { id: 1, name: 'Alice', email: 'alice@test.com' },
-            { id: 2, name: 'Bob', email: 'bob@test.com' },
-            { id: 3, name: 'Carol', email: 'carol@test.com' },
-        ]
-
-        const result = await driver.get('users', {}, undefined, mock)
-
-        expect(mockFetch).not.toHaveBeenCalled()
-        expect(result.data).toEqual(mock)
-        expect(result.data).toHaveLength(3)
-    })
-
     it('emits request and success events', async () => {
         mockFetch.mockResolvedValueOnce(jsonResponse(200, { data: [] }))
 

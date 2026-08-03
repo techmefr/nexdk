@@ -1,0 +1,7 @@
+packages:
+  - 'docs'
+  - 'packages/*'
+  - 'packages/drivers/*'
+
+allowBuilds:
+  esbuild: true

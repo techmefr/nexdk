@@ -28,25 +28,21 @@ export interface SymfonyResourceApi<T> {
     get(
         query?: Record<string, unknown>,
         onEvent?: SdkEventHandler,
-        mock?: T | T[],
     ): Promise<T[]>
     // GET /{resource}/{id} → a single JSON-LD record.
     find(
         payload: SymfonyIdPayload,
         onEvent?: SdkEventHandler,
-        mock?: T,
     ): Promise<T>
     // POST /{resource} (application/ld+json) → the created record.
     create(
         body: Partial<T>,
         onEvent?: SdkEventHandler,
-        mock?: T,
     ): Promise<T>
     // PATCH /{resource}/{id} (application/merge-patch+json) → the updated record.
     update(
         payload: SymfonyUpdatePayload,
         onEvent?: SdkEventHandler,
-        mock?: T,
     ): Promise<T>
     // DELETE /{resource}/{id}.
     remove(

@@ -4,7 +4,7 @@ description: The runtime contract a driver must follow, and how to author one wi
 ---
 
 A driver translates the uniform call grammar
-`sdk.[driver].[resource].[method](payload?, notify?, mock?)` into a concrete
+`sdk.[driver].[resource].[method](payload?, notify?, extra?)` into a concrete
 protocol (REST, GraphQL, WebSocket…). This guide covers the runtime contract,
 how to author a driver with `defineDriver` (recommended) or by hand, and how to
 add end-to-end typing.
@@ -12,18 +12,23 @@ add end-to-end typing.
 ## The runtime contract
 
 `createSdk` builds a proxy per driver. When you call
-`sdk.myDriver.users.get(payload, onEvent, mock)` it invokes, on the driver
+`sdk.myDriver.users.get(payload, onEvent, extra)` it invokes, on the driver
 object:
 
 ```ts
-driver.get('users', payload, mergedHandler, mock)
+driver.get('users', payload, mergedHandler, extra)
 ```
 
 So every method has the same **proxy signature**:
 
 ```ts
-(resourceName: string, payload?: unknown, onEvent?: SdkEventHandler, mock?: unknown) => unknown
+(resourceName: string, payload?: unknown, onEvent?: SdkEventHandler, extra?: unknown) => unknown
 ```
+
+The 4th slot, `extra`, is opaque at the core level — most drivers ignore it
+entirely; a driver may give it its own meaning (`@nexdk/driver-nhost` uses it
+for per-call GraphQL fragment-selection options). It is not a shared concept
+the SDK interprets for you.
 
 `mergedHandler` combines the global `notify` (passed to `createSdk`) with the
 per-call `onEvent`. A driver only implements two required members:
@@ -125,24 +130,6 @@ type HeadersResolver =
 `@nexdk/http`) awaits the function form. Build your headers inside `setup` so
 every method reuses the same resolver.
 
-### Mocks stay author-controlled
-
-The `mock` argument is passed straight to your method as its third parameter.
-`nexdk` does not depend on `chaff`; you decide what to do with a mock. A common
-pattern is to validate it against the bound resource schema and short-circuit
-the network:
-
-```ts
-import { parseMockList } from 'chaff'
-
-get: async (ctx, payload, mock) => {
-    if (mock !== undefined && ctx.resource) {
-        return { data: parseMockList(ctx.resource, mock) }
-    }
-    // …real fetch…
-}
-```
-
 ## Authoring by hand
 
 You can implement `SdkDriver` directly (see `@nexdk/driver-lomkit` or
@@ -161,8 +148,8 @@ inferred record type `T`:
 
 ```ts
 export interface MyResourceApi<T> {
-    get(query?: object, onEvent?: SdkEventHandler, mock?: T | T[]): Promise<T[]>
-    // …one method per driver method, matching the (payload, onEvent, mock) shape…
+    get(query?: object, onEvent?: SdkEventHandler): Promise<T[]>
+    // …one method per driver method, matching the (payload, onEvent) shape…
 }
 ```
 
@@ -216,11 +203,11 @@ model). In your `package.json`:
 ```
 
 - Put `nexdk` in `peerDependencies` (+ a `devDependency` so it builds in isolation).
-- Do **not** depend on `beepr` (import the event type from `nexdk`) or on any other
-  driver.
+- Do **not** depend on `beepr` (import the event types from `nexdk` itself) or
+  on any other driver.
 - A library your driver genuinely needs at runtime goes in `dependencies`
-  (e.g. the supabase driver's `@supabase/supabase-js`, lomkit's `chaff` for the
-  mock path); a library the consumer already has goes in `peerDependencies`.
+  (e.g. the supabase driver's `@supabase/supabase-js`); a library the consumer
+  already has goes in `peerDependencies`.
 
 This is the repo-wide independence rule — see the workspace's `CONTRIBUTING.md`.
 

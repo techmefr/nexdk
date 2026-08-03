@@ -9,7 +9,7 @@ hero:
       link: introduction/
       icon: right-arrow
     - text: View on GitHub
-      link: https://github.com/techmefr/pilota/tree/main/packages/nexdk
+      link: https://github.com/techmefr/nexdk
       icon: external
       variant: minimal
 ---
@@ -79,7 +79,7 @@ const { data } = await sdk.lomkit.products.get({ page: 1 })
 
 <FeatureGrid>
 	<FeatureCard title="One call grammar" icon={rocketIcon}>
-		`sdk.[driver].[resource].[method](payload?, notify?, mock?)` — uniform across every backend. The driver behind it is an interchangeable detail.
+		`sdk.[driver].[resource].[method](payload?, notify?)` — uniform across every backend. The driver behind it is an interchangeable detail.
 	</FeatureCard>
 	<FeatureCard title="Validator-agnostic" icon={shieldCheckIcon}>
 		Resources are validated by any <a href="https://standardschema.dev">Standard Schema</a> validator — Zod, Valibot, ArkType. The core never hardcodes one.

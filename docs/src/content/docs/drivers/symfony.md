@@ -26,10 +26,10 @@ const symfony = createSymfonyDriver({
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
-| `get(query?, onEvent?, mock?)` | `GET /{resource}` | Unwraps `body['hydra:member']`, falling back to `body.member`, then the body itself. |
-| `find({ id }, onEvent?, mock?)` | `GET /{resource}/{id}` | Returns a single JSON-LD record. |
-| `create(body, onEvent?, mock?)` | `POST /{resource}` | Sends `Content-Type: application/ld+json`. |
-| `update({ id, ...fields }, onEvent?, mock?)` | `PATCH /{resource}/{id}` | Sends `Content-Type: application/merge-patch+json` — API Platform requires this. |
+| `get(query?, onEvent?)` | `GET /{resource}` | Unwraps `body['hydra:member']`, falling back to `body.member`, then the body itself. |
+| `find({ id }, onEvent?)` | `GET /{resource}/{id}` | Returns a single JSON-LD record. |
+| `create(body, onEvent?)` | `POST /{resource}` | Sends `Content-Type: application/ld+json`. |
+| `update({ id, ...fields }, onEvent?)` | `PATCH /{resource}/{id}` | Sends `Content-Type: application/merge-patch+json` — API Platform requires this. |
 | `remove({ id }, onEvent?)` | `DELETE /{resource}/{id}` | Returns `{ success: boolean }`. |
 
 This is the meaningful difference from [`@nexdk/driver-nest`](/nexdk/drivers/nest/), which uses plain `application/json`: API Platform's Hydra collection shape and merge-patch requirement are handled for you. Consumers can override any header via the `headers` resolver. Uses [`@nexdk/http`](/nexdk/packages/http/) for the shared REST plumbing; `unwrapCollection` (the Hydra unwrap) stays local since it's symfony-specific.

@@ -1,5 +1,4 @@
 import type { AnyResource, SdkDriver, SdkEventHandler } from 'nexdk'
-import { parseMockList } from 'chaff'
 import { HttpError, request, resolveHeaders } from '@nexdk/http'
 import type { HeadersResolver } from '@nexdk/http'
 import type {
@@ -53,14 +52,9 @@ export class LomkitDriver implements SdkDriver {
         resourceName: string,
         payload?: unknown,
         onEvent?: SdkEventHandler,
-        mock?: unknown,
     ): Promise<LomkitGetResult<T>> {
         const resource = this.resources.get(resourceName)
         const urlName = resource?.name ?? resourceName
-
-        if (mock !== undefined && resource !== undefined) {
-            return { data: (await parseMockList(resource, mock)) as T[] }
-        }
 
         onEvent?.('request', { resource: urlName, payload })
 
@@ -81,14 +75,9 @@ export class LomkitDriver implements SdkDriver {
         resourceName: string,
         payload?: unknown,
         onEvent?: SdkEventHandler,
-        mock?: unknown,
     ): Promise<LomkitMutateResult<T>> {
         const resource = this.resources.get(resourceName)
         const urlName = resource?.name ?? resourceName
-
-        if (mock !== undefined && resource !== undefined) {
-            return { data: (await parseMockList(resource, mock)) as T[] }
-        }
 
         onEvent?.('request', { resource: urlName, payload })
 

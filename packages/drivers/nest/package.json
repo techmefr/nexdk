@@ -1,14 +1,14 @@
 {
     "name": "@nexdk/driver-nest",
     "version": "0.0.1",
-    "description": "Conventional REST CRUD driver for Pilota — targets the common NestJS controller shape (GET/POST/PATCH/DELETE).",
+    "description": "Conventional REST CRUD driver for nexdk — targets the common NestJS controller shape (GET/POST/PATCH/DELETE).",
     "type": "module",
     "license": "MIT",
     "author": "techmefr",
-    "homepage": "https://github.com/techmefr/pilota/tree/main/packages/drivers/nest#readme",
+    "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/drivers/nest#readme",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/techmefr/pilota.git",
+        "url": "git+https://github.com/techmefr/nexdk.git",
         "directory": "packages/drivers/nest"
     },
     "sideEffects": false,

@@ -26,8 +26,8 @@ const lomkit = new LomkitDriver({
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
-| `get(payload?, onEvent?, mock?)` | `POST /{resource}/search` | Returns `{ data: T[], meta? }` (pagination). |
-| `mutate(payload?, onEvent?, mock?)` | `POST /{resource}/mutate` | Returns `{ data: T[] }`. |
+| `get(payload?, onEvent?)` | `POST /{resource}/search` | Returns `{ data: T[], meta? }` (pagination). |
+| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Returns `{ data: T[] }`. |
 | `delete({ resources }, onEvent?)` | `DELETE /{resource}` with `{ resources: [...] }` | Returns `{ success: boolean }`. |
 
 ## Errors
