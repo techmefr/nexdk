@@ -1,4 +1,4 @@
-# AGENT.md — @pilota/driver-symfony
+# AGENT.md — @nexdk/driver-symfony
 
 ## Role
 API Platform (Symfony) REST driver over the Hydra / JSON-LD conventions:
@@ -24,11 +24,11 @@ the helper (emit-then-throw on a non-OK HTTP status).
 ## Dependency rule
 - `nexdk` is a **peerDependency** (+ devDependency `workspace:*`), never a
   `dependency`. It uses `defineDriver` (runtime) and types.
-- `@pilota/http` is a real **dependency** — `request`/`toQuery`/`splitId` and
+- `@nexdk/http` is a real **dependency** — `request`/`toQuery`/`splitId` and
   `resolveHeaders` (re-exported from nexdk). `unwrapCollection` (Hydra) stays
   local — it's symfony-specific, not shared REST mechanics.
 - No `beepr` dependency — the event handler type comes from `nexdk`.
 - Declares its typing via `declare module 'nexdk'` + `__apiUri: 'symfony'`.
 
 ## Build/test
-`pnpm --filter @pilota/driver-symfony build` · `... test`. Tests mock `fetch`.
+`pnpm --filter @nexdk/driver-symfony build` · `... test`. Tests mock `fetch`.

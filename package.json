@@ -1,5 +1,5 @@
 {
-    "name": "@pilota/driver-symfony",
+    "name": "@nexdk/driver-symfony",
     "version": "0.0.1",
     "description": "API Platform REST driver for Pilota — targets the Symfony API Platform Hydra conventions (GET/POST/PATCH/DELETE with JSON-LD and merge-patch).",
     "type": "module",
@@ -33,7 +33,7 @@
         "dev": "unbuild --stub"
     },
     "dependencies": {
-        "@pilota/http": "workspace:*"
+        "@nexdk/http": "workspace:*"
     },
     "peerDependencies": {
         "nexdk": "workspace:*"

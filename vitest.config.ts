@@ -6,7 +6,7 @@ export default defineConfig({
         alias: {
             nexdk: resolve(__dirname, '../../nexdk/src/index.ts'),
             beepr: resolve(__dirname, '../../beepr/src/index.ts'),
-            '@pilota/http': resolve(__dirname, '../../http/src/index.ts'),
+            '@nexdk/http': resolve(__dirname, '../../http/src/index.ts'),
         },
     },
     test: {
