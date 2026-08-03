@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
+import type { AnyResource, SdkDriver, SdkEventHandler } from 'nexdk'
 import type { SupabaseConfig, SupabaseError, SupabaseResourceApi, SupabaseResult } from './types.ts'
 
 // Register the supabase per-resource API in core's registry so the typed SDK
@@ -26,7 +26,7 @@ export class SupabaseQueryError extends Error {
     }
 }
 
-export class SupabaseDriver implements PilotaDriver {
+export class SupabaseDriver implements SdkDriver {
     readonly name = 'supabase'
 
     // Phantom marker: the SDK reads this uri to look up SupabaseResourceApi<T>
@@ -46,7 +46,7 @@ export class SupabaseDriver implements PilotaDriver {
 
     // Emit the typed 'error' event with the full Postgrest detail and throw,
     // matching the unified driver contract (emit 'error' then throw).
-    private fail(error: SupabaseError, onEvent?: PilotaEventHandler): never {
+    private fail(error: SupabaseError, onEvent?: SdkEventHandler): never {
         onEvent?.('error', error)
         throw new SupabaseQueryError(error)
     }
@@ -54,7 +54,7 @@ export class SupabaseDriver implements PilotaDriver {
     async get<T>(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<SupabaseResult<T>> {
         onEvent?.('request', { resource: resourceName, payload })
 
@@ -77,7 +77,7 @@ export class SupabaseDriver implements PilotaDriver {
     async insert<T>(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<SupabaseResult<T>> {
         onEvent?.('request', { resource: resourceName, payload })
 
@@ -95,7 +95,7 @@ export class SupabaseDriver implements PilotaDriver {
     async update<T>(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<SupabaseResult<T>> {
         onEvent?.('request', { resource: resourceName, payload })
 
@@ -116,7 +116,7 @@ export class SupabaseDriver implements PilotaDriver {
     async remove(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<{ success: boolean }> {
         onEvent?.('request', { resource: resourceName, payload })
 
@@ -133,7 +133,7 @@ export class SupabaseDriver implements PilotaDriver {
     subscribe(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): () => void {
         const filter =
             payload && typeof payload === 'object' && 'room_id' in (payload as object)

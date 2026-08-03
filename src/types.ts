@@ -1,4 +1,4 @@
-import type { PilotaEventHandler } from 'nexdk'
+import type { SdkEventHandler } from 'nexdk'
 
 export interface SupabaseConfig {
     url: string
@@ -20,9 +20,9 @@ export interface SupabaseError {
 // parameterized by the resource's inferred record type `T`. Core reads this via
 // the driver's phantom `__resourceApi` marker.
 export interface SupabaseResourceApi<T> {
-    get(payload?: object, onEvent?: PilotaEventHandler): Promise<SupabaseResult<T>>
-    insert(payload?: object, onEvent?: PilotaEventHandler): Promise<SupabaseResult<T>>
-    update(payload?: object, onEvent?: PilotaEventHandler): Promise<SupabaseResult<T>>
-    remove(payload?: object, onEvent?: PilotaEventHandler): Promise<{ success: boolean }>
-    subscribe(payload?: object, onEvent?: PilotaEventHandler): () => void
+    get(payload?: object, onEvent?: SdkEventHandler): Promise<SupabaseResult<T>>
+    insert(payload?: object, onEvent?: SdkEventHandler): Promise<SupabaseResult<T>>
+    update(payload?: object, onEvent?: SdkEventHandler): Promise<SupabaseResult<T>>
+    remove(payload?: object, onEvent?: SdkEventHandler): Promise<{ success: boolean }>
+    subscribe(payload?: object, onEvent?: SdkEventHandler): () => void
 }
