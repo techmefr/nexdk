@@ -1,4 +1,4 @@
-# AGENT.md — @pilota/hooks (Vue)
+# AGENT.md — @nexdk/hooks (Vue)
 
 ## Role
 Vue form helper: `useResourceForm(resource)` — form state, `isDirty`, `fill`,
@@ -16,4 +16,4 @@ Framework-specific by design. A React/Svelte/Angular equivalent, if ever added,
 belongs in its own package — do not widen this one.
 
 ## Build/test
-`pnpm --filter @pilota/hooks build` · `... test`.
+`pnpm --filter @nexdk/hooks build` · `... test`.
