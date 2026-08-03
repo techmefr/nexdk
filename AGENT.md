@@ -7,7 +7,7 @@ Conventional REST CRUD driver (common NestJS controller shape):
 `NestResourceApi<T>`, `NestConfig`.
 
 **This is the reference driver** — it's the worked example for
-[docs/writing-a-driver.md](../../../docs/writing-a-driver.md). Built WITH
+[docs/src/content/docs/guides/writing-a-driver.md](../../../docs/src/content/docs/guides/writing-a-driver.md). Built WITH
 `defineDriver` from `nexdk`, so it demonstrates the recommended authoring path
 and the unified event contract. Keep it exemplary.
 
