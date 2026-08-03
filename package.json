@@ -1,5 +1,5 @@
 {
-    "name": "@pilota/driver-nest",
+    "name": "@nexdk/driver-nest",
     "version": "0.0.1",
     "description": "Conventional REST CRUD driver for Pilota — targets the common NestJS controller shape (GET/POST/PATCH/DELETE).",
     "type": "module",
@@ -33,7 +33,7 @@
         "dev": "unbuild --stub"
     },
     "dependencies": {
-        "@pilota/http": "workspace:*"
+        "@nexdk/http": "workspace:*"
     },
     "peerDependencies": {
         "nexdk": "workspace:*"

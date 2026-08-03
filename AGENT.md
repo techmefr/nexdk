@@ -1,4 +1,4 @@
-# AGENT.md — @pilota/driver-nest (reference driver)
+# AGENT.md — @nexdk/driver-nest (reference driver)
 
 ## Role
 Conventional REST CRUD driver (common NestJS controller shape):
@@ -14,10 +14,10 @@ and the unified event contract. Keep it exemplary.
 ## Dependency rule
 - `nexdk` is a **peerDependency** (+ devDependency `workspace:*`), never a
   `dependency`. It uses `defineDriver` (runtime) and types.
-- `@pilota/http` is a real **dependency** — `request`/`toQuery`/`splitId` and
+- `@nexdk/http` is a real **dependency** — `request`/`toQuery`/`splitId` and
   `resolveHeaders` (re-exported from nexdk). This is where the shared REST
   mechanics live; don't hand-roll `fetch` here again.
 - Declares its typing via `declare module 'nexdk'` + `__apiUri: 'nest'`.
 
 ## Build/test
-`pnpm --filter @pilota/driver-nest build` · `... test`. Tests mock `fetch`.
+`pnpm --filter @nexdk/driver-nest build` · `... test`. Tests mock `fetch`.

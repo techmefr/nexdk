@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { request, resolveHeaders, splitId, toQuery } from '@pilota/http'
+import { request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { NestConfig, NestIdPayload, NestResourceApi } from './types.ts'
 
 // Register the nest per-resource API in core's registry so the typed SDK can
