@@ -1,5 +1,6 @@
 {
   "name": "docs",
+  "description": "Documentation site for nexdk — guides, package/driver reference, and API docs.",
   "type": "module",
   "version": "0.0.1",
   "private": true,

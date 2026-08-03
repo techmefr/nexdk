@@ -1,0 +1,22 @@
+---
+interface Props {
+	title: string
+	pkg: string
+	link: string
+	icon: string // raw SVG markup, e.g. from `lucide-static/icons/*.svg?raw`
+	tags: string[]
+}
+const { title, pkg, link, icon, tags } = Astro.props as Props
+---
+
+<a class="module-card not-content" href={link}>
+	<div class="module-card-header">
+		<span class="module-card-icon" set:html={icon} />
+		<span class="module-card-title">{title}</span>
+	</div>
+	<span class="module-card-package">{pkg}</span>
+	<p class="module-card-desc"><slot /></p>
+	<div class="module-card-tags">
+		{tags.map((tag) => <span class="module-card-tag">{tag}</span>)}
+	</div>
+</a>
