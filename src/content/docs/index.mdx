@@ -1,0 +1,42 @@
+---
+title: nexdk
+description: A frontend SDK that talks to any backend — REST, GraphQL or WebSocket — through one grammar.
+template: splash
+hero:
+  tagline: One grammar. Any backend. Any validator.
+  actions:
+    - text: Read the introduction
+      link: introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/techmefr/pilota/tree/main/packages/nexdk
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What nexdk is
+
+Business code declares resources; the protocol behind them (Laravel/Lomkit, Hasura, Supabase Realtime…) becomes an interchangeable detail. Swapping the backend never touches the business layer.
+
+```ts
+sdk.nhost.products.query({})              // GraphQL   → catalogue
+sdk.lomkit.cartItems.get({})              // REST      → cart
+sdk.supabase.messages.subscribe(handler)  // WebSocket → realtime chat
+```
+
+<CardGrid stagger>
+	<Card title="One call grammar" icon="rocket">
+		`sdk.[driver].[resource].[method](payload?, notify?, mock?)` — uniform across every backend. The driver behind it is an interchangeable detail.
+	</Card>
+	<Card title="Validator-agnostic" icon="approve-check">
+		Resources are validated by any <a href="https://standardschema.dev">Standard Schema</a> validator — Zod, Valibot, ArkType. The core never hardcodes one.
+	</Card>
+	<Card title="One driver contract" icon="setting">
+		`defineDriver` supplies the unified event contract (`request`/`success`/`error`) — authors write only the protocol translation.
+	</Card>
+	<Card title="Zero-dependency core" icon="pencil">
+		`nexdk` depends on nothing. Extensions (drivers, hooks) peer-depend on it — you bring the SDK, they don't bundle it.
+	</Card>
+</CardGrid>

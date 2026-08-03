@@ -1,4 +1,7 @@
-# Writing a driver
+---
+title: Writing a driver
+description: The runtime contract a driver must follow, and how to author one with defineDriver.
+---
 
 A driver translates the uniform call grammar
 `sdk.[driver].[resource].[method](payload?, notify?, mock?)` into a concrete
@@ -118,8 +121,9 @@ type HeadersResolver =
     | (() => Record<string, string> | Promise<Record<string, string>>)
 ```
 
-`resolveHeaders(headers)` (exported from `nexdk`) awaits the function form. Build
-your headers inside `setup` so every method reuses the same resolver.
+`resolveHeaders(headers)` (exported from `nexdk`, also re-exported from
+`@nexdk/http`) awaits the function form. Build your headers inside `setup` so
+every method reuses the same resolver.
 
 ### Mocks stay author-controlled
 
@@ -141,11 +145,12 @@ get: async (ctx, payload, mock) => {
 
 ## Authoring by hand
 
-You can implement `SdkDriver` directly (see `@nexdk/driver-lomkit`). You then
-own the resource `Map`, `bindResource`, and the full
-`request` → try/`success` → catch/`error`+throw boilerplate in every method. Use
-this only when a driver needs a shape `defineDriver` cannot express; otherwise
-prefer `defineDriver`.
+You can implement `SdkDriver` directly (see `@nexdk/driver-lomkit` or
+`@nexdk/driver-supabase`). You then own the resource `Map`, `bindResource`, and
+the full `request` → try/`success` → catch/`error`+throw boilerplate in every
+method. Use this only when a driver needs a shape `defineDriver` cannot
+express; otherwise prefer `defineDriver` — `@nexdk/driver-nest`,
+`@nexdk/driver-symfony` and `@nexdk/driver-nhost` are all built with it.
 
 ## End-to-end typing
 
@@ -217,10 +222,11 @@ model). In your `package.json`:
   (e.g. the supabase driver's `@supabase/supabase-js`, lomkit's `chaff` for the
   mock path); a library the consumer already has goes in `peerDependencies`.
 
-This is the repo-wide independence rule — see [CONTRIBUTING.md](../CONTRIBUTING.md).
+This is the repo-wide independence rule — see the workspace's `CONTRIBUTING.md`.
 
 ## Follow-up
 
-The existing hand-written drivers (`lomkit`, `nhost`, `supabase`) predate
-`defineDriver` and are not yet migrated onto it — a separate, non-breaking task.
-`@nexdk/driver-nest` is the reference for the `defineDriver` authoring flow.
+`@nexdk/driver-lomkit` and `@nexdk/driver-supabase` predate `defineDriver` and
+are hand-written; `@nexdk/driver-nhost`, `@nexdk/driver-nest` and
+`@nexdk/driver-symfony` are built with it. `@nexdk/driver-nest` is the
+reference for the `defineDriver` authoring flow.
