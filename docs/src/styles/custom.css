@@ -1,9 +1,9 @@
 /* Bold, high-contrast theme: near-black/white base with a single electric accent. */
 
 :root {
-	--sl-color-accent-low: #003a1f;
-	--sl-color-accent: #00e05e;
-	--sl-color-accent-high: #b6ffd8;
+	--sl-color-accent-low: #00203a;
+	--sl-color-accent: #2f8fff;
+	--sl-color-accent-high: #b8e4ff;
 	--sl-color-white: #ffffff;
 	--sl-color-gray-1: #eef1ee;
 	--sl-color-gray-2: #c4c9c4;
@@ -17,9 +17,9 @@
 }
 
 :root[data-theme='light'] {
-	--sl-color-accent-low: #d3ffe7;
-	--sl-color-accent: #00913f;
-	--sl-color-accent-high: #005226;
+	--sl-color-accent-low: #d6ecff;
+	--sl-color-accent: #0060c0;
+	--sl-color-accent-high: #003a70;
 	--sl-color-white: #0a0b09;
 	--sl-color-gray-1: #1c1e1a;
 	--sl-color-gray-2: #34372f;
