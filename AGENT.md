@@ -1,4 +1,4 @@
-# AGENT.md — @pilota/driver-supabase
+# AGENT.md — @nexdk/driver-supabase
 
 ## Role
 Realtime driver over Supabase. `get`/`insert`/`update`/`remove` +
@@ -15,4 +15,4 @@ Emit `'error'` then `throw` on failure; reactive `subscribe` returns an
 unsubscribe function and emits `data`/`connected`/`disconnected`.
 
 ## Build/test
-`pnpm --filter @pilota/driver-supabase build` · `... test`.
+`pnpm --filter @nexdk/driver-supabase build` · `... test`.
