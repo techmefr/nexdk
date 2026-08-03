@@ -1,6 +1,6 @@
 # Writing a driver
 
-A Pilota driver translates the uniform call grammar
+A driver translates the uniform call grammar
 `sdk.[driver].[resource].[method](payload?, notify?, mock?)` into a concrete
 protocol (REST, GraphQL, WebSocket…). This guide covers the runtime contract,
 how to author a driver with `defineDriver` (recommended) or by hand, and how to
@@ -8,7 +8,7 @@ add end-to-end typing.
 
 ## The runtime contract
 
-`createPilota` builds a proxy per driver. When you call
+`createSdk` builds a proxy per driver. When you call
 `sdk.myDriver.users.get(payload, onEvent, mock)` it invokes, on the driver
 object:
 
@@ -19,20 +19,20 @@ driver.get('users', payload, mergedHandler, mock)
 So every method has the same **proxy signature**:
 
 ```ts
-(resourceName: string, payload?: unknown, onEvent?: PilotaEventHandler, mock?: unknown) => unknown
+(resourceName: string, payload?: unknown, onEvent?: SdkEventHandler, mock?: unknown) => unknown
 ```
 
-`mergedHandler` combines the global `notify` (passed to `createPilota`) with the
+`mergedHandler` combines the global `notify` (passed to `createSdk`) with the
 per-call `onEvent`. A driver only implements two required members:
 
 ```ts
-interface PilotaDriver {
+interface SdkDriver {
     readonly name: string
     bindResource(resourceName: string, resource: AnyResource): void
 }
 ```
 
-`createPilota` calls `bindResource` for every resource declared under that
+`createSdk` calls `bindResource` for every resource declared under that
 driver's key, so a driver keeps its bound resources in a private `Map`.
 
 ## The event vocabulary
@@ -141,7 +141,7 @@ get: async (ctx, payload, mock) => {
 
 ## Authoring by hand
 
-You can implement `PilotaDriver` directly (see `@nexdk/driver-lomkit`). You then
+You can implement `SdkDriver` directly (see `@nexdk/driver-lomkit`). You then
 own the resource `Map`, `bindResource`, and the full
 `request` → try/`success` → catch/`error`+throw boilerplate in every method. Use
 this only when a driver needs a shape `defineDriver` cannot express; otherwise
@@ -156,7 +156,7 @@ inferred record type `T`:
 
 ```ts
 export interface MyResourceApi<T> {
-    get(query?: object, onEvent?: PilotaEventHandler, mock?: T | T[]): Promise<T[]>
+    get(query?: object, onEvent?: SdkEventHandler, mock?: T | T[]): Promise<T[]>
     // …one method per driver method, matching the (payload, onEvent, mock) shape…
 }
 ```
@@ -172,7 +172,7 @@ declare module 'nexdk' {
 }
 ```
 
-**3. Advertise the uri on the driver** with a phantom `__apiUri`. `createPilota`
+**3. Advertise the uri on the driver** with a phantom `__apiUri`. `createSdk`
 reads it and looks `MyResourceApi<T>` up in the registry, so
 `sdk.my.<resource>.get()` is fully typed from the resource's schema (any Standard
 Schema validator — Zod, Valibot, ArkType…). By hand
@@ -191,7 +191,7 @@ shape (`sdk.driver.anything.method()` still works, just untyped).
 ## Publishing conventions
 
 - Official drivers: `@nexdk/driver-*` (e.g. `@nexdk/driver-nest`).
-- Community drivers: `pilota-driver-*`.
+- Community drivers: `nexdk-driver-*`.
 
 Mirror the Tier-3 package metadata (description, `license: MIT`,
 `author: techmefr`, `repository` + `directory`, types-first `exports`, `files`,
