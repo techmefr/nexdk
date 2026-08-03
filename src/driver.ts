@@ -1,5 +1,5 @@
 import { defineDriver, resolveHeaders } from 'nexdk'
-import type { AnyResource, PilotaEventHandler } from 'nexdk'
+import type { AnyResource, SdkEventHandler } from 'nexdk'
 import type {
     DeleteByIdPayload,
     GraphQLOptions,
@@ -66,7 +66,7 @@ interface NhostState {
 // events are supplied by the helper. `subscription` returns a teardown function,
 // so the helper treats it as reactive and returns it untouched.
 // The SDK grammar is `sdk.nhost.<resource>.<method>(payload, onEvent, options)`.
-// createPilota forwards that third call argument in the driver's `mock` slot, so
+// createSdk forwards that third call argument in the driver's `mock` slot, so
 // nhost has no mock concept: its third method parameter carries the GraphQL
 // options (fragment selection).
 export const nhostDriver = defineDriver<NhostConfig, NhostState, {
@@ -201,4 +201,4 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
 })
 
 // Base ctx fields every method receives from defineDriver.
-type CtxBase = { resourceName: string; resource: AnyResource | undefined; emit: PilotaEventHandler | undefined }
+type CtxBase = { resourceName: string; resource: AnyResource | undefined; emit: SdkEventHandler | undefined }

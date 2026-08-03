@@ -1,4 +1,4 @@
-import type { PilotaEventHandler } from 'nexdk'
+import type { SdkEventHandler } from 'nexdk'
 
 // Request headers may be a static object or a resolver function called before
 // every request (and on every WS (re)connect), so callers can supply a fresh
@@ -58,35 +58,35 @@ export interface NhostMutationResult<T> {
 export interface NhostResourceApi<T> {
     query<TData = T>(
         payload?: object,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
     ): Promise<NhostQueryResult<TData>>
     mutation<TData = T>(
         payload?: object,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
     ): Promise<NhostMutationResult<TData>>
     upsert<TData = T>(
         payload: UpsertPayload,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
     ): Promise<NhostMutationResult<TData>>
     updateById<TData = T>(
         payload: UpdateByIdPayload,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
     ): Promise<NhostMutationResult<TData>>
     updateWhere(
         payload: UpdateWherePayload,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<{ affectedRows: number }>
     deleteById(
         payload: DeleteByIdPayload,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<{ success: boolean }>
     subscription(
         payload?: object,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
     ): () => void
 }
