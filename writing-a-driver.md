@@ -141,7 +141,7 @@ get: async (ctx, payload, mock) => {
 
 ## Authoring by hand
 
-You can implement `PilotaDriver` directly (see `@pilota/driver-lomkit`). You then
+You can implement `PilotaDriver` directly (see `@nexdk/driver-lomkit`). You then
 own the resource `Map`, `bindResource`, and the full
 `request` → try/`success` → catch/`error`+throw boilerplate in every method. Use
 this only when a driver needs a shape `defineDriver` cannot express; otherwise
@@ -190,7 +190,7 @@ shape (`sdk.driver.anything.method()` still works, just untyped).
 
 ## Publishing conventions
 
-- Official drivers: `@pilota/driver-*` (e.g. `@pilota/driver-nest`).
+- Official drivers: `@nexdk/driver-*` (e.g. `@nexdk/driver-nest`).
 - Community drivers: `pilota-driver-*`.
 
 Mirror the Tier-3 package metadata (description, `license: MIT`,
@@ -223,4 +223,4 @@ This is the repo-wide independence rule — see [CONTRIBUTING.md](../CONTRIBUTIN
 
 The existing hand-written drivers (`lomkit`, `nhost`, `supabase`) predate
 `defineDriver` and are not yet migrated onto it — a separate, non-breaking task.
-`@pilota/driver-nest` is the reference for the `defineDriver` authoring flow.
+`@nexdk/driver-nest` is the reference for the `defineDriver` authoring flow.
