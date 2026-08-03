@@ -23,8 +23,15 @@ function makeDriver() {
     return driver as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>
 }
 
+function jsonResponse(status: number, value: unknown) {
+    return new Response(JSON.stringify(value), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    })
+}
+
 function okJson(value: unknown) {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => value })
+    mockFetch.mockResolvedValueOnce(jsonResponse(200, value))
 }
 
 describe('NestDriver verbs', () => {
@@ -80,7 +87,7 @@ describe('NestDriver verbs', () => {
     })
 
     it('remove → DELETE /{resource}/{id}', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, {}))
         const driver = makeDriver()
         const result = await driver.remove('users', { id: 3 })
 
@@ -101,15 +108,15 @@ describe('NestDriver headers', () => {
         }) as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>
         await driver.get('users', {})
 
-        const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>
-        expect(headers.Authorization).toBe('Bearer refreshed')
-        expect(headers['Content-Type']).toBe('application/json')
+        const headers = new Headers(mockFetch.mock.calls[0][1].headers as HeadersInit)
+        expect(headers.get('Authorization')).toBe('Bearer refreshed')
+        expect(headers.get('Content-Type')).toBe('application/json')
     })
 })
 
 describe('NestDriver error contract', () => {
     it('emits error then throws on a non-OK response', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(500, {}))
         const driver = makeDriver()
         const events: string[] = []
 

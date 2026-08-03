@@ -13,7 +13,10 @@ and the unified event contract. Keep it exemplary.
 
 ## Dependency rule
 - `nexdk` is a **peerDependency** (+ devDependency `workspace:*`), never a
-  `dependency`. It uses `defineDriver`/`resolveHeaders` (runtime) and types.
+  `dependency`. It uses `defineDriver` (runtime) and types.
+- `@pilota/http` is a real **dependency** — `request`/`toQuery`/`splitId` and
+  `resolveHeaders` (re-exported from nexdk). This is where the shared REST
+  mechanics live; don't hand-roll `fetch` here again.
 - Declares its typing via `declare module 'nexdk'` + `__apiUri: 'nest'`.
 
 ## Build/test
