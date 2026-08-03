@@ -1,0 +1,202 @@
+/* Bold, high-contrast theme: near-black/white base with a single electric accent. */
+
+:root {
+	--sl-color-accent-low: #003a1f;
+	--sl-color-accent: #00e05e;
+	--sl-color-accent-high: #b6ffd8;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #eef1ee;
+	--sl-color-gray-2: #c4c9c4;
+	--sl-color-gray-3: #8b928b;
+	--sl-color-gray-4: #5a615a;
+	--sl-color-gray-5: #34372f;
+	--sl-color-gray-6: #1c1e1a;
+	--sl-color-black: #0a0b09;
+
+	--sl-font: 'Helvetica Neue', 'Arial', system-ui, sans-serif;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #d3ffe7;
+	--sl-color-accent: #00913f;
+	--sl-color-accent-high: #005226;
+	--sl-color-white: #0a0b09;
+	--sl-color-gray-1: #1c1e1a;
+	--sl-color-gray-2: #34372f;
+	--sl-color-gray-3: #5a615a;
+	--sl-color-gray-4: #8b928b;
+	--sl-color-gray-5: #c4c9c4;
+	--sl-color-gray-6: #eef1ee;
+	--sl-color-gray-7: #f7f9f7;
+	--sl-color-black: #ffffff;
+}
+
+/* Uppercase is kept for the hero only: in body copy it shouts, and it mangles
+   the code identifiers that headings legitimately contain. */
+h1,
+h2,
+h3 {
+	font-weight: 800;
+	letter-spacing: -0.02em;
+}
+
+h1 {
+	font-size: 2.25rem;
+	line-height: 1.1;
+}
+
+h2 {
+	font-size: 1.5rem;
+}
+
+h3 {
+	font-size: 1.175rem;
+}
+
+a {
+	text-underline-offset: 0.2em;
+}
+
+.sl-markdown-content a:not(:where(.not-content *)) {
+	font-weight: 600;
+	text-decoration-thickness: 2px;
+}
+
+.hero h1 {
+	font-size: 3rem;
+	text-transform: uppercase;
+}
+
+.hero .tagline {
+	font-weight: 500;
+	letter-spacing: -0.01em;
+}
+
+.hero .actions a {
+	border-radius: 999px;
+	border-width: 2px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.card {
+	border-width: 2px !important;
+	border-radius: 0.75rem !important;
+}
+
+code {
+	font-weight: 600;
+}
+
+/* Sidebar icons: each nav link gets a lucide glyph via CSS mask so it
+   inherits the current text color (and the accent color on hover/active)
+   instead of shipping a fixed-color <img>. */
+a.sidebar-icon {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+}
+
+a.sidebar-icon::before {
+	content: '';
+	flex-shrink: 0;
+	width: 1rem;
+	height: 1rem;
+	background-color: currentColor;
+	mask-image: var(--icon-src);
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	-webkit-mask-image: var(--icon-src);
+	-webkit-mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+}
+
+/* Per-icon --icon-src rules are generated in astro.config.mjs (see
+   `sidebarIconCss`) since they embed the base path, which depends on
+   DOCS_BASE_PATH and can't be hardcoded in a static stylesheet. */
+
+/* Nuxt-Modules-style driver grid on the drivers overview page. */
+.module-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 1rem;
+	margin: 1.5rem 0;
+}
+
+.module-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	border: 2px solid var(--sl-color-gray-5);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	text-decoration: none !important;
+	color: var(--sl-color-white);
+	transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.module-card:hover {
+	border-color: var(--sl-color-accent);
+	transform: translateY(-2px);
+}
+
+.module-card-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.module-card-icon {
+	display: inline-flex;
+	flex-shrink: 0;
+	width: 2rem;
+	height: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	background: var(--sl-color-accent-low);
+	color: var(--sl-color-accent);
+}
+
+.module-card-icon svg {
+	width: 1.1rem;
+	height: 1.1rem;
+}
+
+.module-card-title {
+	font-weight: 700;
+	font-size: 1rem;
+}
+
+.module-card-package {
+	font-size: 0.75rem;
+	color: var(--sl-color-gray-3);
+	font-family: var(--sl-font-mono, monospace);
+}
+
+.module-card-desc {
+	font-size: 0.875rem;
+	color: var(--sl-color-gray-2);
+	margin: 0;
+	flex-grow: 1;
+}
+
+.module-card-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.module-card-tag {
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	padding: 0.15rem 0.5rem;
+	border-radius: 999px;
+	background: var(--sl-color-gray-6);
+	color: var(--sl-color-gray-2);
+}

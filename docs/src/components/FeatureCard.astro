@@ -1,0 +1,45 @@
+---
+interface Props {
+	title: string
+	icon: string // raw SVG markup, e.g. from `lucide-static/icons/*.svg?raw`
+}
+const { title, icon } = Astro.props as Props
+---
+
+<div class="feature-card not-content">
+	<span class="feature-icon" set:html={icon} />
+	<h3>{title}</h3>
+	<p><slot /></p>
+</div>
+
+<style>
+	.feature-card {
+		border: 2px solid var(--sl-color-gray-5);
+		border-radius: 0.75rem;
+		padding: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.feature-icon {
+		display: inline-flex;
+		color: var(--sl-color-accent);
+	}
+
+	.feature-icon :global(svg) {
+		width: 1.75rem;
+		height: 1.75rem;
+	}
+
+	.feature-card h3 {
+		margin: 0;
+		font-size: 1.05rem;
+	}
+
+	.feature-card p {
+		margin: 0;
+		color: var(--sl-color-gray-2);
+		font-size: 0.9rem;
+	}
+</style>

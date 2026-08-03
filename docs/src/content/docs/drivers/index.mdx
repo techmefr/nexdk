@@ -1,0 +1,32 @@
+---
+title: Drivers
+description: Browse the official nexdk drivers.
+---
+
+import ModuleGrid from '../../../components/ModuleGrid.astro';
+import ModuleCard from '../../../components/ModuleCard.astro';
+import databaseIcon from 'lucide-static/icons/database.svg?raw';
+import cloudIcon from 'lucide-static/icons/cloud.svg?raw';
+import zapIcon from 'lucide-static/icons/zap.svg?raw';
+import hexagonIcon from 'lucide-static/icons/hexagon.svg?raw';
+import serverIcon from 'lucide-static/icons/server.svg?raw';
+
+A driver translates the SDK's uniform call grammar into one backend's actual protocol. Official drivers ship as `@nexdk/driver-*`; anyone can publish their own as `nexdk-driver-*` — see [Writing a driver](/nexdk/guides/writing-a-driver/).
+
+<ModuleGrid>
+	<ModuleCard title="lomkit" pkg="@nexdk/driver-lomkit" link="/nexdk/drivers/lomkit/" icon={databaseIcon} tags={['REST', 'Laravel']}>
+		Laravel backend via Lomkit's search/mutate/delete REST conventions.
+	</ModuleCard>
+	<ModuleCard title="nhost" pkg="@nexdk/driver-nhost" link="/nexdk/drivers/nhost/" icon={cloudIcon} tags={['GraphQL', 'Hasura', 'Realtime']}>
+		Hasura/Nhost GraphQL queries and mutations, plus subscriptions over graphql-transport-ws.
+	</ModuleCard>
+	<ModuleCard title="supabase" pkg="@nexdk/driver-supabase" link="/nexdk/drivers/supabase/" icon={zapIcon} tags={['Realtime', 'Postgres']}>
+		Supabase Postgrest reads/writes plus postgres_changes realtime channels.
+	</ModuleCard>
+	<ModuleCard title="nest" pkg="@nexdk/driver-nest" link="/nexdk/drivers/nest/" icon={hexagonIcon} tags={['REST', 'CRUD', 'Reference']}>
+		Conventional REST CRUD over a common NestJS controller shape — the reference driver.
+	</ModuleCard>
+	<ModuleCard title="symfony" pkg="@nexdk/driver-symfony" link="/nexdk/drivers/symfony/" icon={serverIcon} tags={['REST', 'Hydra', 'API Platform']}>
+		Symfony / API Platform REST driver over Hydra / JSON-LD conventions.
+	</ModuleCard>
+</ModuleGrid>
