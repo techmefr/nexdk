@@ -11,7 +11,7 @@ sdk.[driver].[resource].[method](payload?, onEvent?, mock?)
 ## Install
 
 ```bash
-pnpm add nexdk beepr zod
+pnpm add nexdk zod
 # plus the driver(s) you need, e.g. @nexdk/driver-lomkit
 ```
 
@@ -36,7 +36,9 @@ const { data } = await sdk.lomkit.products.get({})
 ```
 
 - **`defineResource({ name, schema, fragments?, relations? })`** — declare a
-  resource once (Zod schema is the single source of truth).
+  resource once. `schema` is any [Standard Schema](https://standardschema.dev)
+  validator (Zod, Valibot, ArkType…) — the single source of truth for the
+  resource's inferred type.
 - **`createSdk({ drivers, resources?, notify? })`** — binds resources to
   drivers and returns a typed SDK. The event handler is structural, so an event
   layer (e.g. [`beepr`](https://www.npmjs.com/package/beepr)) is optional.
