@@ -23,7 +23,10 @@ the helper (emit-then-throw on a non-OK HTTP status).
 
 ## Dependency rule
 - `nexdk` is a **peerDependency** (+ devDependency `workspace:*`), never a
-  `dependency`. It uses `defineDriver`/`resolveHeaders` (runtime) and types.
+  `dependency`. It uses `defineDriver` (runtime) and types.
+- `@pilota/http` is a real **dependency** — `request`/`toQuery`/`splitId` and
+  `resolveHeaders` (re-exported from nexdk). `unwrapCollection` (Hydra) stays
+  local — it's symfony-specific, not shared REST mechanics.
 - No `beepr` dependency — the event handler type comes from `nexdk`.
 - Declares its typing via `declare module 'nexdk'` + `__apiUri: 'symfony'`.
 

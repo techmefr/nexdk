@@ -32,6 +32,9 @@
         "test": "vitest run",
         "dev": "unbuild --stub"
     },
+    "dependencies": {
+        "@pilota/http": "workspace:*"
+    },
     "peerDependencies": {
         "nexdk": "workspace:*"
     },

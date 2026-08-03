@@ -23,8 +23,15 @@ function makeDriver() {
     return driver as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>
 }
 
+function jsonResponse(status: number, value: unknown) {
+    return new Response(JSON.stringify(value), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    })
+}
+
 function okJson(value: unknown) {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => value })
+    mockFetch.mockResolvedValueOnce(jsonResponse(200, value))
 }
 
 describe('SymfonyDriver verbs', () => {
@@ -80,7 +87,7 @@ describe('SymfonyDriver verbs', () => {
         expect(url).toBe('http://localhost:8000/api/users')
         expect(init.method).toBe('POST')
         expect(init.body).toBe(JSON.stringify({ name: 'Alice', email: 'a@test.com' }))
-        expect((init.headers as Record<string, string>)['Content-Type']).toBe('application/ld+json')
+        expect(new Headers(init.headers as HeadersInit).get('Content-Type')).toBe('application/ld+json')
     })
 
     it('update → PATCH /{resource}/{id} with application/merge-patch+json', async () => {
@@ -92,13 +99,13 @@ describe('SymfonyDriver verbs', () => {
         expect(url).toBe('http://localhost:8000/api/users/1')
         expect(init.method).toBe('PATCH')
         expect(init.body).toBe(JSON.stringify({ name: 'Renamed' }))
-        expect((init.headers as Record<string, string>)['Content-Type']).toBe(
+        expect(new Headers(init.headers as HeadersInit).get('Content-Type')).toBe(
             'application/merge-patch+json',
         )
     })
 
     it('remove → DELETE /{resource}/{id}', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, {}))
         const driver = makeDriver()
         const result = await driver.remove('users', { id: 3 })
 
@@ -119,15 +126,15 @@ describe('SymfonyDriver headers', () => {
         }) as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>
         await driver.get('users', {})
 
-        const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>
-        expect(headers.Authorization).toBe('Bearer refreshed')
-        expect(headers.Accept).toBe('application/ld+json')
+        const headers = new Headers(mockFetch.mock.calls[0][1].headers as HeadersInit)
+        expect(headers.get('Authorization')).toBe('Bearer refreshed')
+        expect(headers.get('Accept')).toBe('application/ld+json')
     })
 })
 
 describe('SymfonyDriver error contract', () => {
     it('emits error then throws on a non-OK response', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(500, {}))
         const driver = makeDriver()
         const events: string[] = []
 
