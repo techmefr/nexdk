@@ -1,13 +1,28 @@
 import { createClient } from '@supabase/supabase-js'
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
 import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
-import type { SupabaseConfig, SupabaseResourceApi, SupabaseResult } from './types.ts'
+import type { SupabaseConfig, SupabaseError, SupabaseResourceApi, SupabaseResult } from './types.ts'
 
 // Register the supabase per-resource API in core's registry so the typed SDK
 // can resolve `sdk.supabase.<resource>` to SupabaseResourceApi<T>.
 declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         supabase: SupabaseResourceApi<T>
+    }
+}
+
+// Thrown after a Postgrest error has been emitted, carrying its code/details/hint.
+export class SupabaseQueryError extends Error {
+    readonly code: string | undefined
+    readonly details: string | undefined
+    readonly hint: string | undefined
+
+    constructor(error: SupabaseError) {
+        super(error.message)
+        this.name = 'SupabaseQueryError'
+        this.code = error.code
+        this.details = error.details
+        this.hint = error.hint
     }
 }
 
@@ -29,6 +44,13 @@ export class SupabaseDriver implements PilotaDriver {
         this.resources.set(resourceName, resource)
     }
 
+    // Emit the typed 'error' event with the full Postgrest detail and throw,
+    // matching the unified driver contract (emit 'error' then throw).
+    private fail(error: SupabaseError, onEvent?: PilotaEventHandler): never {
+        onEvent?.('error', error)
+        throw new SupabaseQueryError(error)
+    }
+
     async get<T>(
         resourceName: string,
         payload?: unknown,
@@ -46,13 +68,10 @@ export class SupabaseDriver implements PilotaDriver {
 
         const { data, error } = await query
 
-        if (error !== null) {
-            onEvent?.('error', error)
-            return { data: null, error }
-        }
+        if (error !== null) this.fail(error, onEvent)
 
         onEvent?.('success', { data })
-        return { data: data as T[], error: null }
+        return { data: data as T[] }
     }
 
     async insert<T>(
@@ -67,13 +86,10 @@ export class SupabaseDriver implements PilotaDriver {
             .insert(payload as Record<string, unknown>)
             .select()
 
-        if (error !== null) {
-            onEvent?.('error', error)
-            return { data: null, error }
-        }
+        if (error !== null) this.fail(error, onEvent)
 
         onEvent?.('success', { data })
-        return { data: data as T[], error: null }
+        return { data: data as T[] }
     }
 
     async update<T>(
@@ -91,33 +107,27 @@ export class SupabaseDriver implements PilotaDriver {
             .eq('id', id)
             .select()
 
-        if (error !== null) {
-            onEvent?.('error', error)
-            return { data: null, error }
-        }
+        if (error !== null) this.fail(error, onEvent)
 
         onEvent?.('success', { data })
-        return { data: data as T[], error: null }
+        return { data: data as T[] }
     }
 
     async remove(
         resourceName: string,
         payload?: unknown,
         onEvent?: PilotaEventHandler,
-    ): Promise<SupabaseResult<never>> {
+    ): Promise<{ success: boolean }> {
         onEvent?.('request', { resource: resourceName, payload })
 
         const { id } = payload as Record<string, unknown>
 
         const { error } = await this.client.from(resourceName).delete().eq('id', id)
 
-        if (error !== null) {
-            onEvent?.('error', error)
-            return { data: null, error }
-        }
+        if (error !== null) this.fail(error, onEvent)
 
         onEvent?.('success', { deleted: true })
-        return { data: null, error: null }
+        return { success: true }
     }
 
     subscribe(

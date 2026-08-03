@@ -6,8 +6,7 @@ export interface SupabaseConfig {
 }
 
 export interface SupabaseResult<T> {
-    data: T[] | null
-    error: SupabaseError | null
+    data: T[]
 }
 
 export interface SupabaseError {
@@ -24,6 +23,6 @@ export interface SupabaseResourceApi<T> {
     get(payload?: object, onEvent?: PilotaEventHandler): Promise<SupabaseResult<T>>
     insert(payload?: object, onEvent?: PilotaEventHandler): Promise<SupabaseResult<T>>
     update(payload?: object, onEvent?: PilotaEventHandler): Promise<SupabaseResult<T>>
-    remove(payload?: object, onEvent?: PilotaEventHandler): Promise<SupabaseResult<never>>
+    remove(payload?: object, onEvent?: PilotaEventHandler): Promise<{ success: boolean }>
     subscribe(payload?: object, onEvent?: PilotaEventHandler): () => void
 }
