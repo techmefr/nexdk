@@ -8,6 +8,7 @@ export type {
     HeadersResolver,
 } from './define-driver.ts'
 export { defineResource } from './define-resource.ts'
+export type { StandardSchemaV1 } from './standard-schema.ts'
 export type {
     AnyResource,
     AsyncMethod,

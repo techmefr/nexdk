@@ -1,4 +1,4 @@
-import type { ZodTypeAny, z } from 'zod'
+import type { StandardSchemaV1 } from './standard-schema.ts'
 
 // nexdk owns its event contract and depends on nothing. The same tiny union is
 // intentionally duplicated in beepr so both packages stay independent; the two
@@ -14,23 +14,24 @@ export type PilotaEvent =
 
 export type PilotaEventHandler = (event: PilotaEvent, data?: unknown) => void
 
-export type AnyResource = Resource<ZodTypeAny>
+export type AnyResource = Resource<StandardSchemaV1>
 
-export interface ResourceConfig<TSchema extends ZodTypeAny> {
+export interface ResourceConfig<TSchema extends StandardSchemaV1> {
     name: string
     schema: TSchema
     fragments?: Record<string, string[]>
     relations?: Record<string, () => AnyResource>
 }
 
-export interface Resource<TSchema extends ZodTypeAny> {
+export interface Resource<TSchema extends StandardSchemaV1> {
     name: string
     schema: TSchema
     fragments: Record<string, string[]>
     relations: Record<string, () => AnyResource>
 }
 
-export type InferSchema<TResource extends AnyResource> = z.infer<TResource['schema']>
+export type InferSchema<TResource extends AnyResource> =
+    StandardSchemaV1.InferOutput<TResource['schema']>
 
 export type AsyncMethod<TReturn> = (
     payload?: unknown,
