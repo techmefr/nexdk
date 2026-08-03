@@ -12,7 +12,7 @@ sdk.[driver].[resource].[method](payload?, onEvent?, mock?)
 
 ```bash
 pnpm add nexdk beepr zod
-# plus the driver(s) you need, e.g. @pilota/driver-lomkit
+# plus the driver(s) you need, e.g. @nexdk/driver-lomkit
 ```
 
 ## Usage
