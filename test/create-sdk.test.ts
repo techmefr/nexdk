@@ -5,12 +5,15 @@ import type { AnyResource, SdkDriver, SdkEventHandler } from '../src/types.ts'
 class MockDriver implements SdkDriver {
     readonly name: string
     readonly calls: Array<{ resource: string; method: string; payload: unknown }> = []
+    readonly boundResources: string[] = []
 
     constructor(name: string) {
         this.name = name
     }
 
-    bindResource(_resourceName: string, _resource: AnyResource): void {}
+    bindResource(resourceName: string, _resource: AnyResource): void {
+        this.boundResources.push(resourceName)
+    }
 
     get(resource: string, payload: unknown, onEvent?: SdkEventHandler, mock?: unknown): Promise<unknown> {
         this.calls.push({ resource, method: 'get', payload })
@@ -91,6 +94,22 @@ describe('createSdk', () => {
         await sdk.lomkit.users.get({ id: 1 })
 
         expect(events.length).toBeGreaterThan(0)
+    })
+
+    it('passes through a plain property that exists on the driver', () => {
+        const lomkit = new MockDriver('lomkit')
+        const sdk = createSdk({ drivers: { lomkit } })
+
+        expect(sdk.lomkit.name).toBe('lomkit')
+    })
+
+    it('passes through and binds a method that exists on the driver', () => {
+        const lomkit = new MockDriver('lomkit')
+        const sdk = createSdk({ drivers: { lomkit } })
+
+        sdk.lomkit.bindResource('users', {} as AnyResource)
+
+        expect(lomkit.boundResources).toEqual(['users'])
     })
 
     it('merges global and per-call handlers, both fire', async () => {

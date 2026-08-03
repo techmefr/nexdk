@@ -19,6 +19,8 @@ function makeTestDriver() {
     return defineDriver<TestConfig, TestState, {
         get: (ctx: TestState & { resourceName: string }, payload: unknown) => Promise<unknown>
         boom: () => Promise<never>
+        boomSync: () => never
+        getSync: (ctx: { resourceName: string }, payload: unknown) => unknown
         watch: (ctx: { emit?: (event: string, data?: unknown) => void }) => () => void
         headersDump: (ctx: TestState) => Promise<Record<string, string>>
     }>({
@@ -31,6 +33,10 @@ function makeTestDriver() {
             boom: async () => {
                 throw new Error('kaboom')
             },
+            boomSync: () => {
+                throw new Error('sync kaboom')
+            },
+            getSync: (ctx, payload) => ({ resource: ctx.resourceName, payload }),
             watch: ctx => {
                 ctx.emit?.('connected')
                 return () => ctx.emit?.('disconnected')
@@ -39,6 +45,23 @@ function makeTestDriver() {
         },
     })
 }
+
+describe('resolveHeaders', () => {
+    it('returns a static object headers config untouched', async () => {
+        const headers = await resolveHeaders({ Authorization: 'Bearer static' })
+        expect(headers).toEqual({ Authorization: 'Bearer static' })
+    })
+
+    it('returns an empty object when headers is undefined', async () => {
+        const headers = await resolveHeaders(undefined)
+        expect(headers).toEqual({})
+    })
+
+    it('awaits a function-form headers config', async () => {
+        const headers = await resolveHeaders(() => ({ Authorization: 'Bearer fn' }))
+        expect(headers).toEqual({ Authorization: 'Bearer fn' })
+    })
+})
 
 describe('defineDriver', () => {
     it('builds a SdkDriver with name, bindResource and one function per method', () => {
@@ -78,6 +101,28 @@ describe('defineDriver', () => {
         ).rejects.toThrow('kaboom')
         expect(events[0][0]).toBe('request')
         expect(events[1]).toEqual(['error', { message: 'kaboom' }])
+    })
+
+    it('turns a synchronous author throw into emit(error) + rethrow', () => {
+        const driver = makeTestDriver()({})
+        const events: Array<[string, unknown]> = []
+        expect(() =>
+            (driver as unknown as {
+                boomSync: (r: string, p: unknown, e: (event: string, data?: unknown) => void) => never
+            }).boomSync('users', undefined, (event, data) => events.push([event, data])),
+        ).toThrow('sync kaboom')
+        expect(events[0][0]).toBe('request')
+        expect(events[1]).toEqual(['error', { message: 'sync kaboom' }])
+    })
+
+    it('emits request then success around a synchronous (non-Promise) method result', () => {
+        const driver = makeTestDriver()({})
+        const events: string[] = []
+        const result = (driver as unknown as {
+            getSync: (r: string, p: unknown, e: (event: string) => void) => { resource: string }
+        }).getSync('users', { id: 1 }, event => events.push(event))
+        expect(result).toEqual({ resource: 'users', payload: { id: 1 } })
+        expect(events).toEqual(['request', 'success'])
     })
 
     it('returns a reactive method unsubscribe untouched (no success envelope)', () => {
