@@ -8,12 +8,15 @@ REST driver for Laravel + Lomkit REST API. `get` → POST `/{resource}/search`,
 ## Dependency rule
 - `nexdk`: **peerDependency** (+ devDependency `workspace:*`) — type-only usage.
 - `chaff`: real `dependency` — used at runtime (`parseMockList`) for the `mock` param.
+- `@pilota/http`: real `dependency` — `request`/`HttpError`/`resolveHeaders`.
+  Not `toQuery`/`splitId` (lomkit's `/search`/`/mutate` endpoints don't have the
+  id-in-URL shape those two assume).
 - Event type imported from `nexdk` (`import type`), never from beepr.
 
 ## Contract
 Emit `'error'` then `throw` on network / non-2xx HTTP / 422. `headers` may be a
 `Record` or a `() => Record | Promise<Record>` resolver (per-request, for token
-refresh).
+refresh). `handleError` reads the 422 body from `HttpError.data`.
 
 ## Build/test
 `pnpm --filter @pilota/driver-lomkit build` · `... test`. Tests mock `fetch`.

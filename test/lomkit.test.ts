@@ -23,13 +23,17 @@ function makeDriver() {
     return driver
 }
 
+function jsonResponse(status: number, value: unknown) {
+    return new Response(JSON.stringify(value), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    })
+}
+
 describe('LomkitDriver.get', () => {
     it('posts to /resource/search and returns typed data', async () => {
         const payload = [{ id: 1, name: 'Alice', email: 'alice@test.com' }]
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({ data: payload }),
-        })
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, { data: payload }))
 
         const driver = makeDriver()
         const result = await driver.get('users', { id: 1 })
@@ -67,10 +71,7 @@ describe('LomkitDriver.get', () => {
     })
 
     it('emits request and success events', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({ data: [] }),
-        })
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, { data: [] }))
 
         const driver = makeDriver()
         const events: string[] = []
@@ -83,10 +84,9 @@ describe('LomkitDriver.get', () => {
 
 describe('LomkitDriver.mutate', () => {
     it('posts to /resource/mutate', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({ data: [{ id: 1, name: 'Alice', email: 'alice@test.com' }] }),
-        })
+        mockFetch.mockResolvedValueOnce(
+            jsonResponse(200, { data: [{ id: 1, name: 'Alice', email: 'alice@test.com' }] }),
+        )
 
         const driver = makeDriver()
         await driver.mutate('users', { name: 'Alice', email: 'alice@test.com' })
@@ -98,14 +98,12 @@ describe('LomkitDriver.mutate', () => {
     })
 
     it('emits 422 validation errors via the event handler and then throws', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: false,
-            status: 422,
-            json: async () => ({
+        mockFetch.mockResolvedValueOnce(
+            jsonResponse(422, {
                 message: 'Validation failed',
                 errors: { email: ['The email field is required.'] },
             }),
-        })
+        )
 
         const driver = makeDriver()
         const errorPayloads: unknown[] = []
@@ -127,7 +125,7 @@ describe('LomkitDriver.mutate', () => {
 
 describe('LomkitDriver headers', () => {
     it('applies static object headers to the request', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: [] }) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, { data: [] }))
 
         const driver = new LomkitDriver({
             baseUrl: 'http://localhost:8000/api',
@@ -136,13 +134,13 @@ describe('LomkitDriver headers', () => {
         driver.bindResource('users', userResource)
         await driver.get('users', {})
 
-        const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>
-        expect(headers.Authorization).toBe('Bearer static-token')
-        expect(headers['Content-Type']).toBe('application/json')
+        const headers = new Headers(mockFetch.mock.calls[0][1].headers as HeadersInit)
+        expect(headers.get('Authorization')).toBe('Bearer static-token')
+        expect(headers.get('Content-Type')).toBe('application/json')
     })
 
     it('resolves a function-form headers config before each request', async () => {
-        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) })
+        mockFetch.mockImplementation(async () => jsonResponse(200, { data: [] }))
 
         let calls = 0
         const driver = new LomkitDriver({
@@ -154,15 +152,15 @@ describe('LomkitDriver headers', () => {
         await driver.get('users', {})
         await driver.mutate('users', { name: 'Alice' })
 
-        const first = mockFetch.mock.calls[0][1].headers as Record<string, string>
-        const second = mockFetch.mock.calls[1][1].headers as Record<string, string>
+        const first = new Headers(mockFetch.mock.calls[0][1].headers as HeadersInit)
+        const second = new Headers(mockFetch.mock.calls[1][1].headers as HeadersInit)
         // The resolver runs per request, so a refreshed token is picked up.
-        expect(first.Authorization).toBe('Bearer token-1')
-        expect(second.Authorization).toBe('Bearer token-2')
+        expect(first.get('Authorization')).toBe('Bearer token-1')
+        expect(second.get('Authorization')).toBe('Bearer token-2')
     })
 
     it('awaits an async function-form headers config', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: [] }) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, { data: [] }))
 
         const driver = new LomkitDriver({
             baseUrl: 'http://localhost:8000/api',
@@ -174,14 +172,14 @@ describe('LomkitDriver headers', () => {
         driver.bindResource('users', userResource)
         await driver.get('users', {})
 
-        const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>
-        expect(headers.Authorization).toBe('Bearer refreshed')
+        const headers = new Headers(mockFetch.mock.calls[0][1].headers as HeadersInit)
+        expect(headers.get('Authorization')).toBe('Bearer refreshed')
     })
 })
 
 describe('LomkitDriver error contract', () => {
     it('get throws on a non-OK HTTP response instead of returning an empty list', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(500, {}))
 
         const driver = makeDriver()
         const events: string[] = []
@@ -194,7 +192,7 @@ describe('LomkitDriver error contract', () => {
     })
 
     it('delete throws on a non-OK HTTP response instead of returning success:false', async () => {
-        mockFetch.mockResolvedValueOnce({ ok: false, status: 404, json: async () => ({}) })
+        mockFetch.mockResolvedValueOnce(jsonResponse(404, {}))
 
         const driver = makeDriver()
         await expect(driver.delete('users', { resources: [1] })).rejects.toThrow('HTTP 404')

@@ -1,8 +1,5 @@
 import type { PilotaEventHandler } from 'nexdk'
-
-// Request headers may be a static object or a resolver function called before
-// every request, so callers can supply a fresh (e.g. refreshed) bearer token.
-export type HeadersResolver = Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
+import type { HeadersResolver } from '@pilota/http'
 
 export interface LomkitConfig {
     baseUrl: string

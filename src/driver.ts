@@ -1,7 +1,8 @@
 import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
 import { parseMockList } from 'chaff'
+import { HttpError, request, resolveHeaders } from '@pilota/http'
+import type { HeadersResolver } from '@pilota/http'
 import type {
-    HeadersResolver,
     LomkitConfig,
     LomkitDeleteResult,
     LomkitGetResult,
@@ -10,13 +11,6 @@ import type {
     LomkitValidationError,
 } from './types.ts'
 
-// Resolve a headers config (static object or resolver function) to a plain
-// header record, awaiting the function form so a refreshed token can be used.
-async function resolveHeaders(headers: HeadersResolver | undefined): Promise<Record<string, string>> {
-    if (typeof headers === 'function') return await headers()
-    return headers ?? {}
-}
-
 // Register the lomkit per-resource API in core's registry so the typed SDK can
 // resolve `sdk.lomkit.<resource>` to LomkitResourceApi<T>.
 declare module 'nexdk' {
@@ -24,10 +18,6 @@ declare module 'nexdk' {
         lomkit: LomkitResourceApi<T>
     }
 }
-
-// Error thrown after handleError has already emitted the typed 'error' event,
-// so the method's catch block does not emit a second, duplicate event.
-class LomkitHttpError extends Error {}
 
 export class LomkitDriver implements PilotaDriver {
     readonly name = 'lomkit'
@@ -69,30 +59,21 @@ export class LomkitDriver implements PilotaDriver {
         const urlName = resource?.name ?? resourceName
 
         if (mock !== undefined && resource !== undefined) {
-            return { data: parseMockList(resource, mock) as T[] }
+            return { data: (await parseMockList(resource, mock)) as T[] }
         }
 
         onEvent?.('request', { resource: urlName, payload })
 
         try {
-            const response = await fetch(`${this.baseUrl}/${urlName}/search`, {
+            const result = await request<LomkitGetResult<T>>(`${this.baseUrl}/${urlName}/search`, {
                 method: 'POST',
                 headers: await this.buildHeaders(),
-                body: JSON.stringify(payload ?? {}),
+                body: payload ?? {},
             })
-
-            if (!response.ok) {
-                throw await this.handleError(response, onEvent)
-            }
-
-            const result = (await response.json()) as LomkitGetResult<T>
             onEvent?.('success', result)
             return result
         } catch (error) {
-            if (!(error instanceof LomkitHttpError)) {
-                onEvent?.('error', { message: (error as Error).message })
-            }
-            throw error
+            throw this.handleError(error, onEvent)
         }
     }
 
@@ -106,30 +87,21 @@ export class LomkitDriver implements PilotaDriver {
         const urlName = resource?.name ?? resourceName
 
         if (mock !== undefined && resource !== undefined) {
-            return { data: parseMockList(resource, mock) as T[] }
+            return { data: (await parseMockList(resource, mock)) as T[] }
         }
 
         onEvent?.('request', { resource: urlName, payload })
 
         try {
-            const response = await fetch(`${this.baseUrl}/${urlName}/mutate`, {
+            const result = await request<LomkitMutateResult<T>>(`${this.baseUrl}/${urlName}/mutate`, {
                 method: 'POST',
                 headers: await this.buildHeaders(),
-                body: JSON.stringify({ mutate: [payload] }),
+                body: { mutate: [payload] },
             })
-
-            if (!response.ok) {
-                throw await this.handleError(response, onEvent)
-            }
-
-            const result = (await response.json()) as LomkitMutateResult<T>
             onEvent?.('success', result)
             return result
         } catch (error) {
-            if (!(error instanceof LomkitHttpError)) {
-                onEvent?.('error', { message: (error as Error).message })
-            }
-            throw error
+            throw this.handleError(error, onEvent)
         }
     }
 
@@ -144,36 +116,30 @@ export class LomkitDriver implements PilotaDriver {
         onEvent?.('request', { resource: urlName, payload })
 
         try {
-            const response = await fetch(`${this.baseUrl}/${urlName}`, {
+            await request(`${this.baseUrl}/${urlName}`, {
                 method: 'DELETE',
                 headers: await this.buildHeaders(),
-                body: JSON.stringify(payload),
+                body: payload,
             })
-
-            if (!response.ok) {
-                throw await this.handleError(response, onEvent)
-            }
-
             onEvent?.('success', { deleted: true })
             return { success: true }
         } catch (error) {
-            if (!(error instanceof LomkitHttpError)) {
-                onEvent?.('error', { message: (error as Error).message })
-            }
-            throw error
+            throw this.handleError(error, onEvent)
         }
     }
 
     // Emit the typed 'error' event with the full HTTP / validation detail and
-    // return the matching error for the caller to throw.
-    private async handleError(response: Response, onEvent?: PilotaEventHandler): Promise<LomkitHttpError> {
-        if (response.status === 422) {
-            const body = (await response.json()) as LomkitValidationError
+    // return the matching error for the caller to throw. A 422 carries a Lomkit
+    // validation payload (parsed by @pilota/http's `request` into `HttpError.data`);
+    // anything else (other HTTP status, network failure) is a plain HTTP error.
+    private handleError(error: unknown, onEvent?: PilotaEventHandler): Error {
+        if (error instanceof HttpError && error.status === 422) {
+            const body = error.data as LomkitValidationError
             onEvent?.('error', { message: body.message, errors: body.errors })
-            return new LomkitHttpError(body.message)
+            return new Error(body.message)
         }
-        const message = `HTTP ${response.status}`
+        const message = error instanceof HttpError ? error.message : (error as Error).message
         onEvent?.('error', { message })
-        return new LomkitHttpError(message)
+        return new Error(message)
     }
 }

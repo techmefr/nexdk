@@ -20,7 +20,8 @@
         "nexdk": "workspace:*"
     },
     "dependencies": {
-        "chaff": "workspace:*"
+        "chaff": "workspace:*",
+        "@pilota/http": "workspace:*"
     },
     "devDependencies": {
         "nexdk": "workspace:*",

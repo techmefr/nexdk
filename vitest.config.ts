@@ -7,6 +7,7 @@ export default defineConfig({
             nexdk: resolve(__dirname, '../../nexdk/src/index.ts'),
             beepr: resolve(__dirname, '../../beepr/src/index.ts'),
             chaff: resolve(__dirname, '../../chaff/src/index.ts'),
+            '@pilota/http': resolve(__dirname, '../../http/src/index.ts'),
         },
     },
     test: {
