@@ -1,7 +1,7 @@
 import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
 import { parseMockList } from 'chaff'
-import { HttpError, request, resolveHeaders } from '@pilota/http'
-import type { HeadersResolver } from '@pilota/http'
+import { HttpError, request, resolveHeaders } from '@nexdk/http'
+import type { HeadersResolver } from '@nexdk/http'
 import type {
     LomkitConfig,
     LomkitDeleteResult,
@@ -130,7 +130,7 @@ export class LomkitDriver implements PilotaDriver {
 
     // Emit the typed 'error' event with the full HTTP / validation detail and
     // return the matching error for the caller to throw. A 422 carries a Lomkit
-    // validation payload (parsed by @pilota/http's `request` into `HttpError.data`);
+    // validation payload (parsed by @nexdk/http's `request` into `HttpError.data`);
     // anything else (other HTTP status, network failure) is a plain HTTP error.
     private handleError(error: unknown, onEvent?: PilotaEventHandler): Error {
         if (error instanceof HttpError && error.status === 422) {

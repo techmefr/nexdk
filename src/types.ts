@@ -1,5 +1,5 @@
 import type { PilotaEventHandler } from 'nexdk'
-import type { HeadersResolver } from '@pilota/http'
+import type { HeadersResolver } from '@nexdk/http'
 
 export interface LomkitConfig {
     baseUrl: string

@@ -1,5 +1,5 @@
 {
-    "name": "@pilota/driver-lomkit",
+    "name": "@nexdk/driver-lomkit",
     "version": "0.0.1",
     "type": "module",
     "exports": {
@@ -21,7 +21,7 @@
     },
     "dependencies": {
         "chaff": "workspace:*",
-        "@pilota/http": "workspace:*"
+        "@nexdk/http": "workspace:*"
     },
     "devDependencies": {
         "nexdk": "workspace:*",
