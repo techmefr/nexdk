@@ -1,0 +1,48 @@
+{
+    "name": "@pilota/http",
+    "version": "0.0.1",
+    "description": "Shared REST toolkit — ofetch-based JSON request, query-string/id helpers, and an emit-then-throw HTTP error contract for defineDriver-based drivers.",
+    "type": "module",
+    "license": "MIT",
+    "author": "techmefr",
+    "keywords": [
+        "http",
+        "fetch",
+        "ofetch",
+        "rest",
+        "driver"
+    ],
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "unbuild",
+        "test": "vitest run",
+        "dev": "unbuild --stub"
+    },
+    "dependencies": {
+        "ofetch": "^1.5.1"
+    },
+    "peerDependencies": {
+        "nexdk": "workspace:*"
+    },
+    "devDependencies": {
+        "nexdk": "workspace:*",
+        "typescript": "^5.8.3",
+        "unbuild": "^2.0.0",
+        "vitest": "^2.1.9"
+    }
+}
