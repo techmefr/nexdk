@@ -1,4 +1,4 @@
-import type { HeadersResolver, PilotaEventHandler } from 'nexdk'
+import type { HeadersResolver, SdkEventHandler } from 'nexdk'
 
 // Re-exported for convenience so consumers can type their own header resolvers.
 export type { HeadersResolver }
@@ -27,30 +27,30 @@ export interface SymfonyResourceApi<T> {
     // GET /{resource} with query params → the Hydra "hydra:member" collection.
     get(
         query?: Record<string, unknown>,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: T | T[],
     ): Promise<T[]>
     // GET /{resource}/{id} → a single JSON-LD record.
     find(
         payload: SymfonyIdPayload,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: T,
     ): Promise<T>
     // POST /{resource} (application/ld+json) → the created record.
     create(
         body: Partial<T>,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: T,
     ): Promise<T>
     // PATCH /{resource}/{id} (application/merge-patch+json) → the updated record.
     update(
         payload: SymfonyUpdatePayload,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: T,
     ): Promise<T>
     // DELETE /{resource}/{id}.
     remove(
         payload: SymfonyIdPayload,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<SymfonyRemoveResult>
 }
