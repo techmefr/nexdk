@@ -1,4 +1,4 @@
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from 'nexdk'
+import type { AnyResource, SdkDriver, SdkEventHandler } from 'nexdk'
 import { parseMockList } from 'chaff'
 import { HttpError, request, resolveHeaders } from '@nexdk/http'
 import type { HeadersResolver } from '@nexdk/http'
@@ -19,7 +19,7 @@ declare module 'nexdk' {
     }
 }
 
-export class LomkitDriver implements PilotaDriver {
+export class LomkitDriver implements SdkDriver {
     readonly name = 'lomkit'
 
     // Phantom marker: the SDK reads this uri to look up LomkitResourceApi<T> in
@@ -52,7 +52,7 @@ export class LomkitDriver implements PilotaDriver {
     async get<T>(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: unknown,
     ): Promise<LomkitGetResult<T>> {
         const resource = this.resources.get(resourceName)
@@ -80,7 +80,7 @@ export class LomkitDriver implements PilotaDriver {
     async mutate<T>(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: unknown,
     ): Promise<LomkitMutateResult<T>> {
         const resource = this.resources.get(resourceName)
@@ -108,7 +108,7 @@ export class LomkitDriver implements PilotaDriver {
     async delete(
         resourceName: string,
         payload?: unknown,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<LomkitDeleteResult> {
         const resource = this.resources.get(resourceName)
         const urlName = resource?.name ?? resourceName
@@ -132,7 +132,7 @@ export class LomkitDriver implements PilotaDriver {
     // return the matching error for the caller to throw. A 422 carries a Lomkit
     // validation payload (parsed by @nexdk/http's `request` into `HttpError.data`);
     // anything else (other HTTP status, network failure) is a plain HTTP error.
-    private handleError(error: unknown, onEvent?: PilotaEventHandler): Error {
+    private handleError(error: unknown, onEvent?: SdkEventHandler): Error {
         if (error instanceof HttpError && error.status === 422) {
             const body = error.data as LomkitValidationError
             onEvent?.('error', { message: body.message, errors: body.errors })

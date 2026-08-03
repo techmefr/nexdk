@@ -1,4 +1,4 @@
-import type { PilotaEventHandler } from 'nexdk'
+import type { SdkEventHandler } from 'nexdk'
 import type { HeadersResolver } from '@nexdk/http'
 
 export interface LomkitConfig {
@@ -37,16 +37,16 @@ export interface LomkitValidationError {
 export interface LomkitResourceApi<T> {
     get(
         payload?: object,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: T | T[],
     ): Promise<LomkitGetResult<T>>
     mutate(
         payload?: object,
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
         mock?: T | T[],
     ): Promise<LomkitMutateResult<T>>
     delete(
         payload: { resources: (number | string)[] },
-        onEvent?: PilotaEventHandler,
+        onEvent?: SdkEventHandler,
     ): Promise<LomkitDeleteResult>
 }
