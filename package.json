@@ -1,5 +1,5 @@
 {
-    "name": "@pilota/http",
+    "name": "@nexdk/http",
     "version": "0.0.1",
     "description": "Shared REST toolkit — ofetch-based JSON request, query-string/id helpers, and an emit-then-throw HTTP error contract for defineDriver-based drivers.",
     "type": "module",

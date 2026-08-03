@@ -1,4 +1,4 @@
-# AGENT.md — @pilota/http
+# AGENT.md — @nexdk/http
 
 ## Role
 Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)`
@@ -28,4 +28,4 @@ hand-rolled.
   don't force a driver onto a helper it doesn't need.
 
 ## Build/test
-`pnpm --filter @pilota/http build` · `... test`. Tests mock `fetch`.
+`pnpm --filter @nexdk/http build` · `... test`. Tests mock `fetch`.
