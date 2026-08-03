@@ -3,7 +3,7 @@ title: nexdk
 description: A frontend SDK that talks to any backend — REST, GraphQL or WebSocket — through one grammar.
 template: splash
 hero:
-  tagline: One grammar. Any backend. Any validator.
+  tagline: Stop writing a new data layer every time the backend changes.
   actions:
     - text: Read the introduction
       link: introduction/
@@ -14,29 +14,88 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import FeatureCard from '../../components/FeatureCard.astro';
+import FeatureGrid from '../../components/FeatureGrid.astro';
+import rocketIcon from 'lucide-static/icons/rocket.svg?raw';
+import shieldCheckIcon from 'lucide-static/icons/shield-check.svg?raw';
+import routeIcon from 'lucide-static/icons/route.svg?raw';
+import packageIcon from 'lucide-static/icons/package.svg?raw';
 
-## What nexdk is
+## The problem
 
-Business code declares resources; the protocol behind them (Laravel/Lomkit, Hasura, Supabase Realtime…) becomes an interchangeable detail. Swapping the backend never touches the business layer.
+A typical app ends up with three different data layers — a REST client here, a GraphQL client there, raw WebSocket handling for realtime — each with its own error handling, its own mocking story, its own shape. Swap one backend and the business code that calls it has to change too.
 
+<Tabs>
+<TabItem label="Without nexdk">
 ```ts
-sdk.nhost.products.query({})              // GraphQL   → catalogue
-sdk.lomkit.cartItems.get({})              // REST      → cart
-sdk.supabase.messages.subscribe(handler)  // WebSocket → realtime chat
+// Three unrelated shapes, three unrelated error stories.
+const res = await fetch(`/api/products?${qs}`)
+if (!res.ok) throw new Error(`HTTP ${res.status}`)
+const products = await res.json()
+
+const { data, errors } = await graphqlClient.query({ query: PRODUCTS_QUERY })
+if (errors) console.error(errors) // easy to silently swallow
+
+const channel = supabase.channel('messages').on('postgres_changes', {}, handler).subscribe()
+```
+</TabItem>
+<TabItem label="With nexdk">
+```ts
+// Same shape, same error contract, whatever the driver is.
+await sdk.lomkit.products.get({ page: 1 })
+await sdk.nhost.products.query({})
+sdk.supabase.messages.subscribe({}, handler)
+```
+</TabItem>
+</Tabs>
+
+Business code declares **resources**; the protocol behind them (Laravel/Lomkit, Hasura, Supabase Realtime…) becomes an interchangeable detail. Swapping the backend never touches the business layer.
+
+## Quickstart
+
+```bash
+npm install nexdk
+# plus the driver(s) you need, e.g. @nexdk/driver-lomkit
 ```
 
-<CardGrid stagger>
-	<Card title="One call grammar" icon="rocket">
+```ts
+import { createSdk, defineResource } from 'nexdk'
+import { z } from 'zod'
+
+const product = defineResource({
+  name: 'products',
+  schema: z.object({ id: z.number(), name: z.string(), price: z.number() }),
+})
+
+export const sdk = createSdk({
+  drivers: { lomkit },
+  resources: { lomkit: { products: product } },
+})
+
+const { data } = await sdk.lomkit.products.get({ page: 1 })
+// data is typed as { id: number, name: string, price: number }[]
+```
+
+<FeatureGrid>
+	<FeatureCard title="One call grammar" icon={rocketIcon}>
 		`sdk.[driver].[resource].[method](payload?, notify?, mock?)` — uniform across every backend. The driver behind it is an interchangeable detail.
-	</Card>
-	<Card title="Validator-agnostic" icon="approve-check">
+	</FeatureCard>
+	<FeatureCard title="Validator-agnostic" icon={shieldCheckIcon}>
 		Resources are validated by any <a href="https://standardschema.dev">Standard Schema</a> validator — Zod, Valibot, ArkType. The core never hardcodes one.
-	</Card>
-	<Card title="One driver contract" icon="setting">
+	</FeatureCard>
+	<FeatureCard title="One driver contract" icon={routeIcon}>
 		`defineDriver` supplies the unified event contract (`request`/`success`/`error`) — authors write only the protocol translation.
-	</Card>
-	<Card title="Zero-dependency core" icon="pencil">
+	</FeatureCard>
+	<FeatureCard title="Zero-dependency core" icon={packageIcon}>
 		`nexdk` depends on nothing. Extensions (drivers, hooks) peer-depend on it — you bring the SDK, they don't bundle it.
-	</Card>
-</CardGrid>
+	</FeatureCard>
+</FeatureGrid>
+
+## What it doesn't do (on purpose)
+
+`nexdk` is a **call grammar and driver contract**, not a cache. It doesn't dedupe in-flight requests, revalidate on focus, or keep a query cache — that's what [TanStack Query](https://tanstack.com/query) or [SWR](https://swr.vercel.app) are for, and they compose fine on top of a driver call. If your app needs that, pair the two; `nexdk` isn't trying to replace them.
+
+## Try it
+
+Five playground apps (Nuxt, Next.js, SvelteKit, Astro, Angular) run the same SDK against Laravel/Lomkit, Hasura and Supabase side by side — the [packages guide](/nexdk/guides/packages/) lists what each one proves.
