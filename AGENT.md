@@ -1,4 +1,4 @@
-# AGENT.md — @pilota/driver-nhost
+# AGENT.md — @nexdk/driver-nhost
 
 ## Role
 GraphQL + subscriptions driver for Hasura/Nhost. `query`/`mutation`/`upsert`/
@@ -22,5 +22,5 @@ request and on every WS reconnect via `connection_init`). Subscription ids use
 `crypto.randomUUID()`.
 
 ## Build/test
-`pnpm --filter @pilota/driver-nhost build` · `... test`. Tests mock `fetch` and
+`pnpm --filter @nexdk/driver-nhost build` · `... test`. Tests mock `fetch` and
 `WebSocket` (incl. reconnect/replay with fake timers).
