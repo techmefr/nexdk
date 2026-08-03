@@ -1,15 +1,15 @@
 # AGENT.md — nexdk (the SDK)
 
 ## Role
-The core SDK. Exposes `createPilota`, `defineResource`, `defineDriver`,
-`resolveHeaders`, and all the SDK types (`PilotaEvent`, `PilotaEventHandler`,
-`PilotaDriver`, `Resource`/`AnyResource`, `TypedPilotaSDK`, the `ResourceApiKinds`
+The core SDK. Exposes `createSdk`, `defineResource`, `defineDriver`,
+`resolveHeaders`, and all the SDK types (`SdkEvent`, `SdkEventHandler`,
+`SdkDriver`, `Resource`/`AnyResource`, `TypedSdk`, the `ResourceApiKinds`
 registry, `HeadersResolver`…). Runtime proxy: `sdk.[driver].[resource].[method]`.
 
 ## Hard rule — nexdk depends on NOTHING
 - **No runtime or peer `dependencies` at all.** Never import `beepr`, `chaff`,
   any driver, or `zod`.
-- The event contract (`PilotaEvent`, `PilotaEventHandler`) and `mergeEventHandlers`
+- The event contract (`SdkEvent`, `SdkEventHandler`) and `mergeEventHandlers`
   are **native here** (`src/types.ts`, `src/merge.ts`) — do not re-add a beepr import.
 - `Resource`/`defineResource` are typed against `StandardSchemaV1`
   (`src/standard-schema.ts`), a tiny interface copied locally per the spec's own
@@ -20,7 +20,7 @@ registry, `HeadersResolver`…). Runtime proxy: `sdk.[driver].[resource].[method
   no `notify` and no `mock` — bringing `beepr`/`chaff` must stay optional.
 
 ## Layout
-`create-pilota.ts` (proxy + resource binding) · `define-resource.ts` ·
+`create-sdk.ts` (proxy + resource binding) · `define-resource.ts` ·
 `define-driver.ts` (the driver-authoring helper) · `typed-sdk.ts` (HKT registry
 for end-to-end types) · `types.ts` · `merge.ts` · `standard-schema.ts` (local
 Standard Schema contract — keep it byte-identical to chaff's copy).

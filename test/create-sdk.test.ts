@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createPilota } from '../src/create-pilota.ts'
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from '../src/types.ts'
+import { createSdk } from '../src/create-sdk.ts'
+import type { AnyResource, SdkDriver, SdkEventHandler } from '../src/types.ts'
 
-class MockDriver implements PilotaDriver {
+class MockDriver implements SdkDriver {
     readonly name: string
     readonly calls: Array<{ resource: string; method: string; payload: unknown }> = []
 
@@ -12,7 +12,7 @@ class MockDriver implements PilotaDriver {
 
     bindResource(_resourceName: string, _resource: AnyResource): void {}
 
-    get(resource: string, payload: unknown, onEvent?: PilotaEventHandler, mock?: unknown): Promise<unknown> {
+    get(resource: string, payload: unknown, onEvent?: SdkEventHandler, mock?: unknown): Promise<unknown> {
         this.calls.push({ resource, method: 'get', payload })
         const result = mock ?? { id: 1, fromDriver: this.name }
         onEvent?.('request', { resource, payload })
@@ -20,31 +20,31 @@ class MockDriver implements PilotaDriver {
         return Promise.resolve(result)
     }
 
-    subscribe(resource: string, payload: unknown, onEvent?: PilotaEventHandler): () => void {
+    subscribe(resource: string, payload: unknown, onEvent?: SdkEventHandler): () => void {
         this.calls.push({ resource, method: 'subscribe', payload })
         onEvent?.('connected', { resource })
         return () => {}
     }
 }
 
-describe('createPilota', () => {
+describe('createSdk', () => {
     it('exposes each driver by key', () => {
         const lomkit = new MockDriver('lomkit')
-        const sdk = createPilota({ drivers: { lomkit } })
+        const sdk = createSdk({ drivers: { lomkit } })
         expect(sdk.lomkit).toBeDefined()
     })
 
     it('two drivers coexist without collision', () => {
         const lomkit = new MockDriver('lomkit')
         const nhost = new MockDriver('nhost')
-        const sdk = createPilota({ drivers: { lomkit, nhost } })
+        const sdk = createSdk({ drivers: { lomkit, nhost } })
         expect(sdk.lomkit).toBeDefined()
         expect(sdk.nhost).toBeDefined()
     })
 
     it('routes sdk.driver.resource.method to driver.method(resource, payload)', async () => {
         const lomkit = new MockDriver('lomkit')
-        const sdk = createPilota({ drivers: { lomkit } })
+        const sdk = createSdk({ drivers: { lomkit } })
 
         await sdk.lomkit.users.get({ id: 1 })
 
@@ -54,7 +54,7 @@ describe('createPilota', () => {
 
     it('returns mock directly when provided (no real call check)', async () => {
         const lomkit = new MockDriver('lomkit')
-        const sdk = createPilota({ drivers: { lomkit } })
+        const sdk = createSdk({ drivers: { lomkit } })
         const mock = { id: 99, fromDriver: 'mock' }
 
         const result = await sdk.lomkit.users.get({ id: 99 }, undefined, mock)
@@ -64,7 +64,7 @@ describe('createPilota', () => {
 
     it('returns a cleanup function for reactive methods', () => {
         const lomkit = new MockDriver('lomkit')
-        const sdk = createPilota({ drivers: { lomkit } })
+        const sdk = createSdk({ drivers: { lomkit } })
 
         const unsub = sdk.lomkit.messages.subscribe({ roomId: 1 })
 
@@ -73,7 +73,7 @@ describe('createPilota', () => {
 
     it('throws when driver does not have the requested method', () => {
         const lomkit = new MockDriver('lomkit')
-        const sdk = createPilota({ drivers: { lomkit } })
+        const sdk = createSdk({ drivers: { lomkit } })
 
         expect(() => sdk.lomkit.users.nonExistentMethod()).toThrow(
             'Driver "lomkit" has no method "nonExistentMethod"',
@@ -83,7 +83,7 @@ describe('createPilota', () => {
     it('fires global notify on every call', async () => {
         const lomkit = new MockDriver('lomkit')
         const events: string[] = []
-        const sdk = createPilota({
+        const sdk = createSdk({
             drivers: { lomkit },
             notify: event => events.push(event),
         })
@@ -97,7 +97,7 @@ describe('createPilota', () => {
         const lomkit = new MockDriver('lomkit')
         const globalEvents: string[] = []
         const localEvents: string[] = []
-        const sdk = createPilota({
+        const sdk = createSdk({
             drivers: { lomkit },
             notify: event => globalEvents.push(event),
         })

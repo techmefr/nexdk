@@ -1,7 +1,7 @@
 import type {
     AnyResource,
     InferSchema,
-    PilotaDriver,
+    SdkDriver,
     ResourceProxy,
     ResourcesByDriver,
 } from './types.ts'
@@ -22,10 +22,10 @@ import type {
 // hand-writing an interface.
 export interface ResourceApiKinds<T> {
     // intentionally empty — augmented per driver package
-    readonly __pilota?: T
+    readonly __sdk?: T
 }
 
-export type ResourceApiUri = Exclude<keyof ResourceApiKinds<unknown>, '__pilota'>
+export type ResourceApiUri = Exclude<keyof ResourceApiKinds<unknown>, '__sdk'>
 
 // Recover a driver's per-resource API for a given resource type `T` by reading
 // its declared `__apiUri` and looking it up in the registry.
@@ -42,7 +42,7 @@ export type ResourceApiFor<TDriver, T> = TDriver extends {
 //
 // When a driver declares no resources, fall back to the permissive proxy shape
 // so legacy no-resource construction (sdk.driver.anything.method()) still works.
-type TypedDriverSlice<TDriver extends PilotaDriver, TResources> = [
+type TypedDriverSlice<TDriver extends SdkDriver, TResources> = [
     keyof TResources,
 ] extends [never]
     ? TDriver & Record<string, ResourceProxy>
@@ -54,8 +54,8 @@ type TypedDriverSlice<TDriver extends PilotaDriver, TResources> = [
 
 // The fully typed SDK: every driver slice carries exactly its declared
 // resources, each typed with that driver's method surface.
-export type TypedPilotaSDK<
-    TDrivers extends Record<string, PilotaDriver>,
+export type TypedSdk<
+    TDrivers extends Record<string, SdkDriver>,
     TResources extends ResourcesByDriver<TDrivers>,
 > = {
     [K in keyof TDrivers]: TypedDriverSlice<

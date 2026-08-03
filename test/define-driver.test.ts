@@ -41,7 +41,7 @@ function makeTestDriver() {
 }
 
 describe('defineDriver', () => {
-    it('builds a PilotaDriver with name, bindResource and one function per method', () => {
+    it('builds a SdkDriver with name, bindResource and one function per method', () => {
         const driver = makeTestDriver()({})
         expect(driver.name).toBe('test')
         expect(typeof driver.bindResource).toBe('function')

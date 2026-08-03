@@ -1,16 +1,16 @@
 import { mergeEventHandlers } from './merge.ts'
 import type {
-    PilotaConfig,
-    PilotaDriver,
-    PilotaEventHandler,
+    SdkConfig,
+    SdkDriver,
+    SdkEventHandler,
     ResourcesByDriver,
 } from './types.ts'
-import type { TypedPilotaSDK } from './typed-sdk.ts'
+import type { TypedSdk } from './typed-sdk.ts'
 
-export function createPilota<
-    TDrivers extends Record<string, PilotaDriver>,
+export function createSdk<
+    TDrivers extends Record<string, SdkDriver>,
     TResources extends ResourcesByDriver<TDrivers> = Record<never, never>,
->(config: PilotaConfig<TDrivers, TResources>): TypedPilotaSDK<TDrivers, TResources> {
+>(config: SdkConfig<TDrivers, TResources>): TypedSdk<TDrivers, TResources> {
     const sdk = {} as Record<string, unknown>
     const globalHandler = config.notify
 
@@ -20,12 +20,12 @@ export function createPilota<
         sdk[key] = createDriverProxy(driver, globalHandler)
     }
 
-    return sdk as TypedPilotaSDK<TDrivers, TResources>
+    return sdk as TypedSdk<TDrivers, TResources>
 }
 
 function bindDriverResources(
-    driver: PilotaDriver,
-    resources: ResourcesByDriver<Record<string, PilotaDriver>>[string] | undefined,
+    driver: SdkDriver,
+    resources: ResourcesByDriver<Record<string, SdkDriver>>[string] | undefined,
 ): void {
     if (resources === undefined) return
     for (const resourceName in resources) {
@@ -36,9 +36,9 @@ function bindDriverResources(
     }
 }
 
-function createDriverProxy<TDriver extends PilotaDriver>(
+function createDriverProxy<TDriver extends SdkDriver>(
     driver: TDriver,
-    globalHandler?: PilotaEventHandler,
+    globalHandler?: SdkEventHandler,
 ): TDriver {
     return new Proxy(driver, {
         get(target, prop: string) {
@@ -53,9 +53,9 @@ function createDriverProxy<TDriver extends PilotaDriver>(
 }
 
 function createResourceProxy(
-    driver: PilotaDriver,
+    driver: SdkDriver,
     resourceName: string,
-    globalHandler?: PilotaEventHandler,
+    globalHandler?: SdkEventHandler,
 ): unknown {
     return new Proxy(
         {},
@@ -72,7 +72,7 @@ function createResourceProxy(
 
                     const handler = mergeEventHandlers(
                         globalHandler,
-                        onEvent as PilotaEventHandler | undefined,
+                        onEvent as SdkEventHandler | undefined,
                     )
 
                     return (method as (...args: unknown[]) => unknown).call(driver, resourceName, payload, handler, mock)

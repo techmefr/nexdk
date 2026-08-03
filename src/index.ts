@@ -1,4 +1,4 @@
-export { createPilota } from './create-pilota.ts'
+export { createSdk } from './create-sdk.ts'
 export { defineDriver, resolveHeaders } from './define-driver.ts'
 export type {
     DefinedDriver,
@@ -13,11 +13,11 @@ export type {
     AnyResource,
     AsyncMethod,
     InferSchema,
-    PilotaConfig,
-    PilotaDriver,
-    PilotaEvent,
-    PilotaEventHandler,
-    PilotaSDK,
+    SdkConfig,
+    SdkDriver,
+    SdkEvent,
+    SdkEventHandler,
+    Sdk,
     ReactiveMethod,
     Resource,
     ResourceConfig,
@@ -28,5 +28,5 @@ export type {
     ResourceApiFor,
     ResourceApiKinds,
     ResourceApiUri,
-    TypedPilotaSDK,
+    TypedSdk,
 } from './typed-sdk.ts'

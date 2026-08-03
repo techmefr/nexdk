@@ -1,4 +1,4 @@
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from './types.ts'
+import type { AnyResource, SdkDriver, SdkEventHandler } from './types.ts'
 
 // Request headers may be a static object or a resolver called before every
 // request, so a driver can supply a fresh (e.g. refreshed) bearer token. This
@@ -26,7 +26,7 @@ export interface DriverMethodContext {
     // The (already merged global + local) event handler. Reactive methods use
     // it to emit 'data' / 'connected' / 'disconnected'. Request/success/error
     // around a normal method are emitted by the wrapper — authors need not.
-    emit: PilotaEventHandler | undefined
+    emit: SdkEventHandler | undefined
 }
 
 // A single author-written method: it receives the context, the call payload and
@@ -50,16 +50,16 @@ export interface DriverDefinition<
     methods: TMethods
 }
 
-// The proxy-invoked signature createPilota calls for every method.
+// The proxy-invoked signature createSdk calls for every method.
 type ProxyMethod = (
     resourceName: string,
     payload?: unknown,
-    onEvent?: PilotaEventHandler,
+    onEvent?: SdkEventHandler,
     mock?: unknown,
 ) => unknown
 
-// The built driver: a PilotaDriver plus one proxy-shaped function per method.
-export type DefinedDriver<TMethods> = PilotaDriver & {
+// The built driver: a SdkDriver plus one proxy-shaped function per method.
+export type DefinedDriver<TMethods> = SdkDriver & {
     [K in keyof TMethods]: ProxyMethod
 }
 
@@ -110,7 +110,7 @@ function runMethod<TState>(
 }
 
 // Declare a driver by writing only the protocol translation. The helper returns
-// an object implementing PilotaDriver (name + bindResource with a private
+// an object implementing SdkDriver (name + bindResource with a private
 // resource Map) plus one proxy-shaped function per declared method, each wrapped
 // with the unified event contract.
 export function defineDriver<
@@ -124,7 +124,7 @@ export function defineDriver<
         const state = definition.setup(config)
         const resources = new Map<string, AnyResource>()
 
-        const driver: PilotaDriver = {
+        const driver: SdkDriver = {
             name: definition.name,
             bindResource(resourceName, resource) {
                 resources.set(resourceName, resource)

@@ -4,7 +4,7 @@ import type { StandardSchemaV1 } from './standard-schema.ts'
 // intentionally duplicated in beepr so both packages stay independent; the two
 // definitions must remain identical (same members) so their handlers stay
 // mutually assignable.
-export type PilotaEvent =
+export type SdkEvent =
     | 'request'
     | 'success'
     | 'error'
@@ -12,7 +12,7 @@ export type PilotaEvent =
     | 'connected'
     | 'disconnected'
 
-export type PilotaEventHandler = (event: PilotaEvent, data?: unknown) => void
+export type SdkEventHandler = (event: SdkEvent, data?: unknown) => void
 
 export type AnyResource = Resource<StandardSchemaV1>
 
@@ -35,45 +35,45 @@ export type InferSchema<TResource extends AnyResource> =
 
 export type AsyncMethod<TReturn> = (
     payload?: unknown,
-    onEvent?: PilotaEventHandler,
+    onEvent?: SdkEventHandler,
     mock?: unknown,
 ) => Promise<TReturn>
 
 export type ReactiveMethod = (
     payload?: unknown,
-    onEvent?: PilotaEventHandler,
+    onEvent?: SdkEventHandler,
 ) => () => void
 
-export interface PilotaDriver {
+export interface SdkDriver {
     readonly name: string
     bindResource(resourceName: string, resource: AnyResource): void
 }
 
-export type DriverResourceProxy<TDriver extends PilotaDriver> =
+export type DriverResourceProxy<TDriver extends SdkDriver> =
     TDriver & Record<string, unknown>
 
 // Map of declared resources keyed by the name used in the SDK (cartItems, …).
 export type ResourceMap = Record<string, AnyResource>
 
-// The resources passed to createPilota: one record of resources per driver key.
-export type ResourcesByDriver<TDrivers extends Record<string, PilotaDriver>> = {
+// The resources passed to createSdk: one record of resources per driver key.
+export type ResourcesByDriver<TDrivers extends Record<string, SdkDriver>> = {
     [K in keyof TDrivers]?: ResourceMap
 }
 
-export type PilotaConfig<
-    TDrivers extends Record<string, PilotaDriver>,
+export type SdkConfig<
+    TDrivers extends Record<string, SdkDriver>,
     TResources extends ResourcesByDriver<TDrivers> = ResourcesByDriver<TDrivers>,
 > = {
     drivers: TDrivers
     // Resources keyed by driver name, each a record of resourceName -> Resource.
-    // createPilota binds them on the matching driver, so apps never call
+    // createSdk binds them on the matching driver, so apps never call
     // bindResource manually and declared resources become typed end-to-end.
     resources?: TResources
-    notify?: PilotaEventHandler
+    notify?: SdkEventHandler
 }
 
 export type ResourceProxy = Record<string, (...args: unknown[]) => unknown>
 
-export type PilotaSDK<TDrivers extends Record<string, PilotaDriver>> = {
+export type Sdk<TDrivers extends Record<string, SdkDriver>> = {
     [K in keyof TDrivers]: TDrivers[K] & Record<string, ResourceProxy>
 }

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { createPilota } from '../src/create-pilota.ts'
+import { createSdk } from '../src/create-sdk.ts'
 import { defineResource } from '../src/define-resource.ts'
-import type { AnyResource, PilotaDriver, PilotaEventHandler } from '../src/types.ts'
+import type { AnyResource, SdkDriver, SdkEventHandler } from '../src/types.ts'
 
 // A driver exposing a typed, generic per-resource API, exactly like the real
 // driver packages do. `get` returns the resource type wrapped in { data }.
 interface MockResourceApi<T> {
-    get(payload?: object, onEvent?: PilotaEventHandler): Promise<{ data: T }>
+    get(payload?: object, onEvent?: SdkEventHandler): Promise<{ data: T }>
 }
 
 // Register the mock API in core's registry (same mechanism the real drivers use).
@@ -17,7 +17,7 @@ declare module '../src/typed-sdk.ts' {
     }
 }
 
-class TypedMockDriver implements PilotaDriver {
+class TypedMockDriver implements SdkDriver {
     readonly name = 'mock'
     declare readonly __apiUri: 'mock'
 
@@ -37,15 +37,15 @@ const userResource = defineResource({
 })
 
 describe('typed SDK', () => {
-    it('binds declared resources through createPilota', () => {
+    it('binds declared resources through createSdk', () => {
         const mock = new TypedMockDriver()
-        createPilota({ drivers: { mock }, resources: { mock: { users: userResource } } })
+        createSdk({ drivers: { mock }, resources: { mock: { users: userResource } } })
         expect(mock.bound).toEqual(['users'])
     })
 
     it('exposes declared resources with the driver method surface', async () => {
         const mock = new TypedMockDriver()
-        const sdk = createPilota({
+        const sdk = createSdk({
             drivers: { mock },
             resources: { mock: { users: userResource } },
         })
@@ -58,7 +58,7 @@ describe('typed SDK', () => {
 
     it('type-checks: undeclared resource and bad usage are type errors', async () => {
         const mock = new TypedMockDriver()
-        const sdk = createPilota({
+        const sdk = createSdk({
             drivers: { mock },
             resources: { mock: { users: userResource } },
         })

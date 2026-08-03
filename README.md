@@ -18,7 +18,7 @@ pnpm add nexdk beepr zod
 ## Usage
 
 ```ts
-import { createPilota, defineResource } from 'nexdk'
+import { createSdk, defineResource } from 'nexdk'
 import { z } from 'zod'
 
 const product = defineResource({
@@ -26,8 +26,8 @@ const product = defineResource({
   schema: z.object({ id: z.number(), name: z.string(), price: z.number() }),
 })
 
-const sdk = createPilota({
-  drivers: { lomkit },                 // any object implementing PilotaDriver
+const sdk = createSdk({
+  drivers: { lomkit },                 // any object implementing SdkDriver
   resources: { lomkit: { products: product } },
 })
 
@@ -37,7 +37,7 @@ const { data } = await sdk.lomkit.products.get({})
 
 - **`defineResource({ name, schema, fragments?, relations? })`** — declare a
   resource once (Zod schema is the single source of truth).
-- **`createPilota({ drivers, resources?, notify? })`** — binds resources to
+- **`createSdk({ drivers, resources?, notify? })`** — binds resources to
   drivers and returns a typed SDK. The event handler is structural, so an event
   layer (e.g. [`beepr`](https://www.npmjs.com/package/beepr)) is optional.
 - **`mock`** (3rd method arg) — a `T | T[]` short-circuit, validated against the
