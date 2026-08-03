@@ -174,7 +174,8 @@ declare module 'nexdk' {
 
 **3. Advertise the uri on the driver** with a phantom `__apiUri`. `createPilota`
 reads it and looks `MyResourceApi<T>` up in the registry, so
-`sdk.my.<resource>.get()` is fully typed from the resource's Zod schema. By hand
+`sdk.my.<resource>.get()` is fully typed from the resource's schema (any Standard
+Schema validator — Zod, Valibot, ArkType…). By hand
 this is a `declare readonly __apiUri: 'my'` field; with `defineDriver` expose a
 factory whose return type intersects `{ __apiUri: 'my' }`:
 
