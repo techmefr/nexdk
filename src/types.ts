@@ -49,7 +49,6 @@ export interface DeleteByIdPayload {
 
 export interface NhostMutationResult<T> {
     data: T | null
-    errors?: unknown[]
 }
 
 // Per-resource API surface the nhost driver exposes through the SDK.

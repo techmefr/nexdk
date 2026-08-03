@@ -149,6 +149,25 @@ describe('NhostDriver.mutation', () => {
         // Document still contains exactly one operation
         expect(body.query.match(/mutation/g)?.length).toBe(1)
     })
+
+    it('throws and emits error on an application-level GraphQL error, even with an HTTP 200', async () => {
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                data: null,
+                errors: [{ message: 'email must be unique' }],
+            }),
+        })
+
+        const driver = makeDriver()
+        const events: string[] = []
+        await expect(
+            driver.mutation('users', { name: 'Alice', email: 'dup@test.com' }, event => events.push(event)),
+        ).rejects.toThrow('email must be unique')
+
+        expect(events).toContain('error')
+        expect(events).not.toContain('success')
+    })
 })
 
 describe('NhostDriver.upsert / updateWhere / deleteById', () => {

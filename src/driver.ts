@@ -32,6 +32,16 @@ function asOptions(value: unknown): GraphQLOptions | undefined {
     return value as GraphQLOptions | undefined
 }
 
+// Hasura returns HTTP 200 with an `errors` array for application-level GraphQL
+// failures (e.g. constraint violation) — only a transport failure throws in
+// `execute`. Surface these the same way, so runMethod's emit('error')+throw
+// contract holds regardless of which layer rejected the request.
+function assertNoGraphQLErrors(raw: NhostQueryResult<unknown>): void {
+    if (raw.errors && raw.errors.length > 0) {
+        throw new Error(raw.errors.map(error => error.message).join('; '))
+    }
+}
+
 // Generate a subscription id. Prefer the standard crypto UUID, with a tiny
 // fallback for the rare runtime that lacks it.
 function subscriptionId(): string {
@@ -104,8 +114,9 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const data = (payload ?? {}) as Record<string, unknown>
             const document = `mutation Insert${singular(ctx.resourceName)}($object: ${ctx.resourceName}_insert_input!) { insert_${ctx.resourceName}_one(object: $object) { ${fields} } }`
             const raw = await ctx.execute<Record<string, unknown>>(document, { object: data })
+            assertNoGraphQLErrors(raw)
             const result = (raw.data as Record<string, unknown>)?.[`insert_${ctx.resourceName}_one`] ?? null
-            return { data: result, errors: raw.errors }
+            return { data: result }
         },
         // Upsert — insert with on_conflict (Hasura-specific). `object` carries user
         // data and travels as a variable. `conflictConstraint` and `updateColumns`
@@ -119,8 +130,9 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const cols = updateColumns.map(enumIdentifier).join(', ')
             const document = `mutation Upsert${singular(ctx.resourceName)}($object: ${ctx.resourceName}_insert_input!) { insert_${ctx.resourceName}_one(object: $object, on_conflict: { constraint: ${constraint}, update_columns: [${cols}] }) { ${fields} } }`
             const raw = await ctx.execute<Record<string, unknown>>(document, { object: data })
+            assertNoGraphQLErrors(raw)
             const result = (raw.data as Record<string, unknown>)?.[`insert_${ctx.resourceName}_one`] ?? null
-            return { data: result, errors: raw.errors }
+            return { data: result }
         },
         // Update by PK.
         updateById: async (ctx, payload, options) => {
@@ -128,14 +140,16 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
             const document = `mutation Update${singular(ctx.resourceName)}($pk: ${ctx.resourceName}_pk_columns_input!, $set: ${ctx.resourceName}_set_input!) { update_${ctx.resourceName}_by_pk(pk_columns: $pk, _set: $set) { ${fields} } }`
             const raw = await ctx.execute<Record<string, unknown>>(document, { pk: { id }, set: data })
+            assertNoGraphQLErrors(raw)
             const result = (raw.data as Record<string, unknown>)?.[`update_${ctx.resourceName}_by_pk`] ?? null
-            return { data: result, errors: raw.errors }
+            return { data: result }
         },
         // Update many rows matching a where clause.
         updateWhere: async (ctx, payload) => {
             const { where, data } = payload as UpdateWherePayload
             const document = `mutation UpdateWhere${singular(ctx.resourceName)}($where: ${ctx.resourceName}_bool_exp!, $set: ${ctx.resourceName}_set_input!) { update_${ctx.resourceName}(where: $where, _set: $set) { affected_rows } }`
             const raw = await ctx.execute<Record<string, { affected_rows: number }>>(document, { where, set: data })
+            assertNoGraphQLErrors(raw)
             const affected = (raw.data as Record<string, { affected_rows: number }>)?.[`update_${ctx.resourceName}`]?.affected_rows ?? 0
             return { affectedRows: affected }
         },
@@ -143,7 +157,8 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
         deleteById: async (ctx, payload) => {
             const { id } = payload as DeleteByIdPayload
             const document = `mutation Delete${singular(ctx.resourceName)}($id: uuid!) { delete_${ctx.resourceName}_by_pk(id: $id) { id } }`
-            await ctx.execute(document, { id })
+            const raw = await ctx.execute(document, { id })
+            assertNoGraphQLErrors(raw)
             return { success: true }
         },
         subscription: (ctx, payload, options) => {
