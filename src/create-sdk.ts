@@ -64,7 +64,7 @@ function createResourceProxy(
                 // The 4th positional slot is opaque here: most drivers ignore it,
                 // a few (e.g. nhost's per-call GraphQL fragment selection) give it
                 // their own meaning. It is not a shared "mock" concept — mocking
-                // is chaff's job, used standalone alongside the SDK, not through it.
+                // is shamock's job, used standalone alongside the SDK, not through it.
                 return (payload?: unknown, onEvent?: unknown, extra?: unknown) => {
                     const method = (driver as unknown as Record<string, unknown>)[methodName]
 

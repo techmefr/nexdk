@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="docs/public/banner.svg" alt="nexdk — one resource grammar, any backend" width="100%">
+  <a href="https://techmefr.github.io/nexdk/"><img src="docs/public/logo.png" alt="neXdk" width="640"></a>
+</p>
+
+<p align="center">
+  <img src="docs/public/banner.svg" alt="nexdk — One SDK, any backend" width="100%">
 </p>
 
 <p align="center">
@@ -16,7 +20,7 @@
   <a href="#drivers">Drivers</a>
 </p>
 
-# nexdk
+# neXdk
 
 Driver-based SDK. Talk to REST, GraphQL and WebSocket backends through **one
 resource grammar** — the calling code never knows which protocol is behind a
@@ -77,7 +81,7 @@ const { data } = await sdk.lomkit.products.get({})
 - **`extra`** (4th method arg) — opaque at the core level; a driver may give it
   its own meaning (e.g. `@nexdk/driver-nhost` uses it for GraphQL fragment
   selection). Mocking is not a core concept — pair with
-  [`chaff`](https://www.npmjs.com/package/chaff) in application code if you
+  [`shamock`](https://github.com/techmefr/shamock) in application code if you
   want it.
 
 ## Drivers
@@ -110,6 +114,16 @@ on `nexdk` only, and ship independently on npm.
 
 Community drivers use the `nexdk-driver-*` naming convention and live in their
 own repo — see [Writing a driver](https://techmefr.github.io/nexdk/guides/writing-a-driver/).
+
+## Ecosystem
+
+| Project | Role | Documentation |
+|---|---|---|
+| [neXdk](https://github.com/techmefr/nexdk) | One resource grammar for REST, GraphQL and WebSocket backends. | [Docs](https://techmefr.github.io/nexdk/) |
+| [beepr](https://github.com/techmefr/beepr) | Typed events and notification adapters. | [Docs](https://techmefr.github.io/beepr/) |
+| [shamock](https://github.com/techmefr/shamock) | Schema-validated mock data, fixtures and offline fallback. | [Docs](https://techmefr.github.io/shamock/) |
+
+Use each library on its own, or compose them in application code. neXdk does not depend on beepr or shamock.
 
 ## License
 

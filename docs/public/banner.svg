@@ -16,7 +16,7 @@
     <path d="M0 105H1200M0 210H1200M0 315H1200M300 0V420M600 0V420M900 0V420"/>
   </g>
   <text x="70" y="170" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="96" font-weight="800" fill="url(#ac)">nexdk</text>
-  <text x="74" y="222" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" fill="#cbd5e1">One resource grammar. Any backend.</text>
+  <text x="74" y="222" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" fill="#cbd5e1">One SDK, any backend</text>
   <text x="74" y="290" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="26" fill="#e2e8f0">sdk.<tspan fill="#38bdf8">[driver]</tspan>.<tspan fill="#a5b4fc">[resource]</tspan>.<tspan fill="#86efac">[method]</tspan>()</text>
   <g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="18" text-anchor="middle">
     <circle cx="760" cy="210" r="46" fill="url(#ac)"/>

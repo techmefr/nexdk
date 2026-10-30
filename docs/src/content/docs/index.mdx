@@ -3,7 +3,7 @@ title: nexdk
 description: A frontend SDK that talks to any backend — REST, GraphQL or WebSocket — through one grammar.
 template: splash
 hero:
-  tagline: Stop writing a new data layer every time the backend changes.
+  tagline: One SDK, any backend
   actions:
     - text: Read the introduction
       link: introduction/
@@ -99,3 +99,13 @@ const { data } = await sdk.lomkit.products.get({ page: 1 })
 ## Try it
 
 Five playground apps (Nuxt, Next.js, SvelteKit, Astro, Angular) run the same SDK against Laravel/Lomkit, Hasura and Supabase side by side — the [packages guide](/nexdk/guides/packages/) lists what each one proves.
+
+## Ecosystem
+
+| Project | Role | Documentation |
+|---|---|---|
+| [neXdk](https://github.com/techmefr/nexdk) | One resource grammar for REST, GraphQL and WebSocket backends. | [Docs](https://techmefr.github.io/nexdk/) |
+| [beepr](https://github.com/techmefr/beepr) | Typed events and notification adapters. | [Docs](https://techmefr.github.io/beepr/) |
+| [shamock](https://github.com/techmefr/shamock) | Schema-validated mock data, fixtures and offline fallback. | [Docs](https://techmefr.github.io/shamock/) |
+
+Use each library on its own, or compose them in application code. neXdk does not depend on beepr or shamock.

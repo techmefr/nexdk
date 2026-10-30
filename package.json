@@ -18,7 +18,13 @@
         "websocket",
         "standard-schema",
         "driver",
-        "backend-agnostic"
+        "backend-agnostic",
+        "typescript",
+        "type-safe",
+        "realtime",
+        "zod",
+        "valibot",
+        "arktype"
     ],
     "sideEffects": false,
     "exports": {

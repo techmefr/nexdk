@@ -22,9 +22,9 @@ This workspace is split into composable, UnJS-style building blocks — each usa
 
 Extensions (drivers, hooks) **peer-depend on `nexdk` only** — you bring the SDK, they don't bundle it, like an ESLint/Vite plugin. Each package builds, tests and ships on its own.
 
-## Pairing with beepr and chaff
+## Pairing with beepr and shamock
 
-[`beepr`](https://www.npmjs.com/package/beepr) (a typed notify engine) and [`chaff`](https://www.npmjs.com/package/chaff) (schema-driven mock validation) are standalone packages, each in its own repo with its own docs — they're not part of this workspace. `nexdk` doesn't depend on either: its own event types cover the `notify` contract (see [Events](/nexdk/guides/events/)), and mocking is left entirely to application code that wants it. Pair them with `nexdk` if useful, or use `nexdk` on its own.
+[`beepr`](https://www.npmjs.com/package/beepr) (a typed notify engine) and [`shamock`](https://www.npmjs.com/package/shamock) (schema-driven mock validation) are standalone packages, each in its own repo with its own docs — they're not part of this workspace. `nexdk` doesn't depend on either: its own event types cover the `notify` contract (see [Events](/nexdk/guides/events/)), and mocking is left entirely to application code that wants it. Pair them with `nexdk` if useful, or use `nexdk` on its own.
 
 ## Naming
 

@@ -11,7 +11,7 @@ export interface StandardSchemaV1<Input = unknown, Output = Input> {
 }
 ```
 
-`defineResource({ name, schema })` accepts any object implementing this interface — so a resource declared with Zod, Valibot or ArkType works identically through `createSdk` and `defineDriver`. [`chaff`](https://www.npmjs.com/package/chaff), a separate standalone package, follows the same interface for schema-driven mock validation, if you want mocking alongside the SDK.
+`defineResource({ name, schema })` accepts any object implementing this interface — so a resource declared with Zod, Valibot or ArkType works identically through `createSdk` and `defineDriver`. [`shamock`](https://www.npmjs.com/package/shamock), a separate standalone package, follows the same interface for schema-driven mock validation, if you want mocking alongside the SDK.
 
 ## The one exception
 

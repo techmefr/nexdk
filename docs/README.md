@@ -2,7 +2,7 @@
 
 Documentation site for [`nexdk`](..) — built with [Astro](https://astro.build) + [Starlight](https://starlight.astro.build).
 
-Covers the core concepts (call grammar, driver contract, Standard Schema), one page per in-repo package (`@nexdk/http`, `@nexdk/hooks`), one page per official driver (`lomkit`, `nhost`, `supabase`, `nest`, `symfony`), a guide to writing your own driver, and the `nexdk` API reference. `beepr` and `chaff` are separate repos with their own docs — see [Packages overview](src/content/docs/guides/packages.md).
+Covers the core concepts (call grammar, driver contract, Standard Schema), one page per in-repo package (`@nexdk/http`, `@nexdk/hooks`), one page per official driver (`lomkit`, `nhost`, `supabase`, `nest`, `symfony`), a guide to writing your own driver, and the `nexdk` API reference. `beepr` and `shamock` are separate repos with their own docs — see [Packages overview](src/content/docs/guides/packages.md).
 
 ## Develop
 

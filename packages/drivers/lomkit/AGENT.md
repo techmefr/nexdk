@@ -7,7 +7,7 @@ REST driver for Laravel + Lomkit REST API. `get` → POST `/{resource}/search`,
 
 ## Dependency rule
 - `nexdk`: **peerDependency** (+ devDependency `workspace:*`) — type-only usage.
-- `chaff`: real `dependency` — used at runtime (`parseMockList`) for the `mock` param.
+- No dependency on `shamock`: fixture validation is an application-level choice.
 - `@nexdk/http`: real `dependency` — `request`/`HttpError`/`resolveHeaders`.
   Not `toQuery`/`splitId` (lomkit's `/search`/`/mutate` endpoints don't have the
   id-in-URL shape those two assume).

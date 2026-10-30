@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#0a0b09"/>
-  <path d="M9 23V9h3.2l7.6 9.6V9H23v14h-3.2L12.2 13.4V23H9z" fill="#00e05e"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 224"><title>neXdk</title><rect width="240" height="224" rx="30" fill="#fff"/><g fill="none" stroke="#1754ff" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"><path d="M43 40L104 112L43 184"/><path d="M197 40L136 112L197 184"/></g></svg>
