@@ -20,6 +20,7 @@ export default defineConfig({
 	base,
 	integrations: [
 		starlight({
+            components: { Hero: './src/components/BackendHero.astro' },
 			title: 'neXdk',
 			logo: { light: './src/assets/logo.svg', dark: './src/assets/logo-dark.svg', alt: '' },
 			description: 'A frontend SDK that talks to any backend — REST, GraphQL or WebSocket — through one grammar.',

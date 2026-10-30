@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://techmefr.github.io/nexdk/"><img src="docs/public/logo.png" alt="neXdk" width="640"></a>
+  <a href="https://techmefr.github.io/nexdk/"><img src="docs/public/logo-lockup.svg" alt="neXdk" width="640"></a>
 </p>
 
 <p align="center">

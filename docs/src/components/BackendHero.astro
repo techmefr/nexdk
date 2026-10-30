@@ -1,0 +1,94 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const backends = [
+  { name: 'Laravel / Lomkit', detail: 'REST', slug: 'lomkit', color: '#f56565', x: 50, y: 8.93 },
+  { name: 'Nhost / Hasura', detail: 'GraphQL + subscriptions', slug: 'nhost', color: '#9b8bff', x: 81, y: 17.86 },
+  { name: 'Supabase', detail: 'Realtime', slug: 'supabase', color: '#34d399', x: 88, y: 50 },
+  { name: 'NestJS', detail: 'REST', slug: 'nest', color: '#f472b6', x: 81, y: 82.14 },
+  { name: 'Symfony', detail: 'REST / API Platform', slug: 'symfony', color: '#94a3b8', x: 50, y: 91.07 },
+  { name: 'PocketBase', detail: 'Records API', slug: 'pocketbase', color: '#67cce8', x: 19, y: 82.14 },
+  { name: 'Strapi', detail: 'REST v5', slug: 'strapi', color: '#a78bfa', x: 12, y: 50 },
+  { name: 'Firebase', detail: 'Firestore REST', slug: 'firebase', color: '#fbbf24', x: 19, y: 17.86 },
+];
+const links = [
+  'M500 196V84', 'M620 220Q680 100 730 100', 'M660 280H794',
+  'M620 340Q680 460 730 460', 'M500 364V476',
+  'M380 340Q320 460 270 460', 'M340 280H206', 'M380 220Q320 100 270 100',
+];
+---
+<section class="nx-hero" aria-label="neXdk and supported backends">
+  <div class="nx-network" role="group" aria-label="Eight backends connected to one SDK">
+    <svg class="nx-lines" viewBox="0 0 1000 560" fill="none" aria-hidden="true">
+      <ellipse cx="500" cy="280" rx="376" ry="222" stroke="currentColor" stroke-dasharray="3 10" opacity=".15" />
+      {links.map((d) => <path d={d} stroke="currentColor" stroke-width="2" />)}
+      <circle cx="500" cy="188" r="4" fill="currentColor" />
+      <circle cx="500" cy="372" r="4" fill="currentColor" />
+      <circle cx="332" cy="280" r="4" fill="currentColor" />
+      <circle cx="668" cy="280" r="4" fill="currentColor" />
+    </svg>
+    <div class="nx-core">
+      <h1 id="_top" data-page-title>
+        <img src={base + '/logo.png'} alt="neXdk — One SDK, any backend" width="640" height="259" fetchpriority="high" />
+      </h1>
+    </div>
+    {backends.map((b) => (
+      <a class="nx-node" href={base + '/drivers/' + b.slug + '/'}
+         style={'--x:' + b.x + '%;--y:' + b.y + '%;--node-accent:' + b.color}
+         aria-label={b.name + ': ' + b.detail + '. Read the driver guide.'}>
+        <span class="nx-dot" aria-hidden="true"></span>
+        <span class="nx-node-copy"><strong>{b.name}</strong><small>{b.detail}</small></span>
+        <span class="nx-node-arrow" aria-hidden="true">↗</span>
+      </a>
+    ))}
+  </div>
+  <p class="nx-summary">REST, GraphQL and realtime through interchangeable drivers.</p>
+  <div class="nx-actions">
+    <a class="nx-primary" href={base + '/introduction/'}>Get started <span aria-hidden="true">→</span></a>
+    <a class="nx-secondary" href="https://github.com/techmefr/nexdk">View on GitHub <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+<style>
+.nx-hero { padding: 1.25rem 0 3.5rem; }
+.nx-network { position: relative; width: 100%; aspect-ratio: 1000 / 560; max-width: 72rem; margin: auto; }
+.nx-lines { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--sl-color-accent); opacity: .6; }
+.nx-core { position: absolute; z-index: 1; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 32%; min-height: 10rem; display: grid; align-items: center; padding: 1.5rem 1rem; background: #fff; border: 1px solid #dbe5ff; border-radius: 1.5rem; box-shadow: 0 0 0 .65rem color-mix(in srgb, var(--sl-color-accent) 7%, transparent), 0 1rem 4rem #1754ff12; }
+.nx-core h1 { margin: 0; line-height: 1; }
+.nx-core img { display: block; width: 100%; height: auto; }
+.nx-node { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); display: flex; align-items: center; gap: .65rem; width: 11.25rem; min-height: 4.5rem; padding: .9rem .85rem; border: 1px solid var(--sl-color-gray-5); border-radius: 1rem; background: var(--sl-color-bg); color: var(--sl-color-white); text-decoration: none; box-shadow: 0 .3rem 1.2rem #00000008; transition: border-color .15s ease, box-shadow .15s ease; }
+.nx-node:hover { border-color: var(--node-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--node-accent) 16%, transparent); }
+.nx-node:focus-visible, .nx-actions a:focus-visible { outline: 3px solid var(--sl-color-accent); outline-offset: 5px; }
+.nx-dot { width: .55rem; height: .55rem; flex: none; border-radius: 50%; background: var(--node-accent); box-shadow: 0 0 0 .25rem color-mix(in srgb, var(--node-accent) 14%, transparent); }
+.nx-node-copy { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.nx-node strong { font-size: .85rem; line-height: 1.2; letter-spacing: -.02em; }
+.nx-node small { color: var(--sl-color-gray-2); font-size: .66rem; white-space: nowrap; }
+.nx-node-arrow { margin-left: auto; color: var(--sl-color-gray-3); font-size: .85rem; }
+.nx-summary { margin: 1.25rem auto 1.5rem; text-align: center; color: var(--sl-color-gray-2); font-size: 1.1rem; }
+.nx-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; }
+.nx-actions a { display: inline-flex; align-items: center; gap: 1.5rem; padding: .85rem 1.4rem; border-radius: 999px; font-size: .9rem; font-weight: 700; text-decoration: none; }
+.nx-primary { color: #fff; background: #1754ff; border: 1px solid #1754ff; }
+.nx-secondary { color: var(--sl-color-white); border: 1px solid var(--sl-color-gray-5); }
+@media (max-width: 65rem) and (min-width: 43rem) {
+  .nx-node { width: 9.2rem; padding: .7rem .6rem; gap: .5rem; }
+  .nx-node strong { font-size: .72rem; }
+  .nx-node small { font-size: .57rem; }
+  .nx-node-arrow { display: none; }
+  .nx-core { min-height: 8rem; padding: 1.1rem .7rem; }
+}
+@media (max-width: 43rem) {
+  .nx-hero { padding-top: 1rem; }
+  .nx-network { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.5rem; aspect-ratio: auto; }
+  .nx-network::before { content: ''; position: absolute; left: 50%; width: 1px; top: 8rem; bottom: 2.25rem; background: var(--sl-color-accent); opacity: .4; }
+  .nx-lines { display: none; }
+  .nx-core { position: relative; top: auto; left: auto; transform: none; grid-column: 1 / -1; width: min(100%, 20rem); min-height: 8rem; margin: 0 auto 1rem; padding: 1.1rem; }
+  .nx-node { position: relative; left: auto; top: auto; transform: none; width: auto; min-height: 4.5rem; padding: .7rem .6rem; gap: .5rem; }
+  .nx-node::after { content: ''; position: absolute; top: 50%; width: .75rem; height: 1px; background: var(--sl-color-accent); opacity: .4; }
+  .nx-node:nth-of-type(odd)::after { right: -.75rem; }
+  .nx-node:nth-of-type(even)::after { left: -.75rem; }
+  .nx-node strong { font-size: .75rem; }
+  .nx-node small { font-size: .6rem; }
+  .nx-node-arrow { display: none; }
+  .nx-summary { font-size: .95rem; }
+}
+@media (prefers-reduced-motion: reduce) { .nx-node { transition: none; } }
+</style>
+
