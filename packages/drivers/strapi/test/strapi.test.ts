@@ -99,3 +99,51 @@ describe('StrapiDriver', () => {
         expect(result).toEqual({ success: true })
     })
 })
+
+describe('StrapiDriver pagination', () => {
+    it('follows every page when the caller sets none', async () => {
+        okJson({ data: [{ id: 1 }, { id: 2 }], meta: { pagination: { page: 1, pageSize: 2, pageCount: 2, total: 3 } } })
+        okJson({ data: [{ id: 3 }], meta: { pagination: { page: 2, pageSize: 2, pageCount: 2, total: 3 } } })
+
+        const result = await makeDriver().get('articles', { sort: ['title:asc'] })
+
+        expect(result).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }])
+        expect(mockFetch).toHaveBeenCalledTimes(2)
+        expect(decodeURIComponent(mockFetch.mock.calls[1][0] as string)).toContain('pagination[page]=2')
+    })
+
+    it('respects an explicit page', async () => {
+        okJson({ data: [{ id: 3 }], meta: { pagination: { page: 2, pageSize: 2, pageCount: 5, total: 9 } } })
+        const result = await makeDriver().get('articles', { pagination: { page: 2, pageSize: 2 } })
+        expect(result).toEqual([{ id: 3 }])
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+
+    it('respects an explicit pageSize', async () => {
+        okJson({ data: [{ id: 1 }], meta: { pagination: { page: 1, pageSize: 1, pageCount: 4, total: 4 } } })
+        const result = await makeDriver().get('articles', { pagination: { pageSize: 1 } })
+        expect(result).toEqual([{ id: 1 }])
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+})
+
+describe('toStrapiQuery safety', () => {
+    it('throws on a circular payload', () => {
+        const filters: Record<string, unknown> = {}
+        filters.self = filters
+        expect(() => toStrapiQuery({ filters })).toThrow('circular')
+    })
+
+    it('throws beyond the maximum depth', () => {
+        let nested: Record<string, unknown> = { leaf: 1 }
+        for (let i = 0; i < 40; i++) nested = { next: nested }
+        expect(() => toStrapiQuery({ filters: nested })).toThrow('maximum depth')
+    })
+
+    it('accepts a shared non-circular reference', () => {
+        const shared = { $eq: 'a' }
+        expect(decodeURIComponent(toStrapiQuery({ filters: { a: shared, b: shared } }))).toBe(
+            '?filters[a][$eq]=a&filters[b][$eq]=a',
+        )
+    })
+})

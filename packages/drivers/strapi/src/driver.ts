@@ -16,6 +16,15 @@ interface StrapiState {
 
 interface StrapiEnvelope {
     data: unknown
+    meta?: { pagination?: { pageCount?: number } }
+}
+
+const EXPLICIT_PAGINATION_KEYS = ['page', 'pageSize', 'start', 'limit']
+
+function hasExplicitPagination(query: Record<string, unknown>): boolean {
+    const pagination = query.pagination
+    if (pagination === null || typeof pagination !== 'object') return false
+    return EXPLICIT_PAGINATION_KEYS.some(key => (pagination as Record<string, unknown>)[key] !== undefined)
 }
 
 type Ctx = StrapiState & { resourceName: string }
@@ -40,11 +49,28 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
     }),
     methods: {
         get: async (ctx, payload) => {
-            const envelope = await request<StrapiEnvelope>(`${collectionUrl(ctx)}${toStrapiQuery(payload)}`, {
-                method: 'GET',
-                headers: await ctx.buildHeaders(),
-            })
-            return envelope.data
+            const query = (payload ?? {}) as Record<string, unknown>
+            const headers = await ctx.buildHeaders()
+            const fetchPage = (page: number | undefined): Promise<StrapiEnvelope> => {
+                const pagination = (query.pagination ?? {}) as Record<string, unknown>
+                const pageQuery = page === undefined ? query : { ...query, pagination: { ...pagination, page } }
+                return request<StrapiEnvelope>(`${collectionUrl(ctx)}${toStrapiQuery(pageQuery)}`, {
+                    method: 'GET',
+                    headers,
+                })
+            }
+
+            if (hasExplicitPagination(query)) return (await fetchPage(undefined)).data
+
+            const first = await fetchPage(undefined)
+            if (!Array.isArray(first.data)) return first.data
+            const items: unknown[] = [...first.data]
+            const pageCount = first.meta?.pagination?.pageCount ?? 1
+            for (let page = 2; page <= pageCount; page++) {
+                const next = await fetchPage(page)
+                if (Array.isArray(next.data)) items.push(...next.data)
+            }
+            return items
         },
         find: async (ctx, payload) => {
             const { id } = payload as StrapiIdPayload
