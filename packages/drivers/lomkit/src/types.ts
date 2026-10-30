@@ -31,9 +31,6 @@ export interface LomkitValidationError {
     errors: Record<string, string[]>
 }
 
-// Per-resource API surface the lomkit driver exposes through the SDK,
-// parameterized by the resource's inferred record type `T`. Core reads this via
-// the driver's phantom `__resourceApi` marker to type each resource end-to-end.
 export interface LomkitResourceApi<T> {
     get(
         payload?: object,

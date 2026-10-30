@@ -10,8 +10,6 @@ import type {
     LomkitValidationError,
 } from './types.ts'
 
-// Register the lomkit per-resource API in core's registry so the typed SDK can
-// resolve `sdk.lomkit.<resource>` to LomkitResourceApi<T>.
 declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         lomkit: LomkitResourceApi<T>
@@ -21,8 +19,6 @@ declare module 'nexdk' {
 export class LomkitDriver implements SdkDriver {
     readonly name = 'lomkit'
 
-    // Phantom marker: the SDK reads this uri to look up LomkitResourceApi<T> in
-    // the augmented ResourceApiKinds registry. Never used at runtime.
     declare readonly __apiUri: 'lomkit'
 
     private readonly baseUrl: string
@@ -38,8 +34,6 @@ export class LomkitDriver implements SdkDriver {
         this.resources.set(resourceName, resource)
     }
 
-    // Base headers merged with the per-request resolved headers. Resolved on
-    // every request so a function-form config can return a refreshed token.
     private async buildHeaders(): Promise<Record<string, string>> {
         return {
             'Content-Type': 'application/json',
@@ -54,21 +48,23 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
     ): Promise<LomkitGetResult<T>> {
         const resource = this.resources.get(resourceName)
-        const urlName = resource?.name ?? resourceName
+        const name = resource?.name ?? resourceName
+        const urlName = encodeURIComponent(name)
 
-        onEvent?.('request', { resource: urlName, payload })
+        onEvent?.('request', { resource: name, payload })
 
+        let result: LomkitGetResult<T>
         try {
-            const result = await request<LomkitGetResult<T>>(`${this.baseUrl}/${urlName}/search`, {
+            result = await request<LomkitGetResult<T>>(`${this.baseUrl}/${urlName}/search`, {
                 method: 'POST',
                 headers: await this.buildHeaders(),
                 body: payload ?? {},
             })
-            onEvent?.('success', result)
-            return result
         } catch (error) {
             throw this.handleError(error, onEvent)
         }
+        onEvent?.('success', result)
+        return result
     }
 
     async mutate<T>(
@@ -77,21 +73,23 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
     ): Promise<LomkitMutateResult<T>> {
         const resource = this.resources.get(resourceName)
-        const urlName = resource?.name ?? resourceName
+        const name = resource?.name ?? resourceName
+        const urlName = encodeURIComponent(name)
 
-        onEvent?.('request', { resource: urlName, payload })
+        onEvent?.('request', { resource: name, payload })
 
+        let result: LomkitMutateResult<T>
         try {
-            const result = await request<LomkitMutateResult<T>>(`${this.baseUrl}/${urlName}/mutate`, {
+            result = await request<LomkitMutateResult<T>>(`${this.baseUrl}/${urlName}/mutate`, {
                 method: 'POST',
                 headers: await this.buildHeaders(),
                 body: { mutate: [payload] },
             })
-            onEvent?.('success', result)
-            return result
         } catch (error) {
             throw this.handleError(error, onEvent)
         }
+        onEvent?.('success', result)
+        return result
     }
 
     async delete(
@@ -100,9 +98,10 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
     ): Promise<LomkitDeleteResult> {
         const resource = this.resources.get(resourceName)
-        const urlName = resource?.name ?? resourceName
+        const name = resource?.name ?? resourceName
+        const urlName = encodeURIComponent(name)
 
-        onEvent?.('request', { resource: urlName, payload })
+        onEvent?.('request', { resource: name, payload })
 
         try {
             await request(`${this.baseUrl}/${urlName}`, {
@@ -110,17 +109,13 @@ export class LomkitDriver implements SdkDriver {
                 headers: await this.buildHeaders(),
                 body: payload,
             })
-            onEvent?.('success', { deleted: true })
-            return { success: true }
         } catch (error) {
             throw this.handleError(error, onEvent)
         }
+        onEvent?.('success', { deleted: true })
+        return { success: true }
     }
 
-    // Emit the typed 'error' event with the full HTTP / validation detail and
-    // return the matching error for the caller to throw. A 422 carries a Lomkit
-    // validation payload (parsed by @nexdk/http's `request` into `HttpError.data`);
-    // anything else (other HTTP status, network failure) is a plain HTTP error.
     private handleError(error: unknown, onEvent?: SdkEventHandler): Error {
         if (error instanceof HttpError && error.status === 422) {
             const body = (error.data ?? {}) as Partial<LomkitValidationError>

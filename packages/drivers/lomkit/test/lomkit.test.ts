@@ -192,3 +192,25 @@ describe('LomkitDriver error contract', () => {
         expect(events.filter(e => e === 'error')).toHaveLength(1)
     })
 })
+
+describe('LomkitDriver encoding and handler isolation', () => {
+    it('encodes the resource name in the URL', async () => {
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, { data: [] }))
+        const driver = new LomkitDriver({ baseUrl: 'http://localhost:8000/api' })
+        await driver.get('a/b?c', {})
+        expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8000/api/a%2Fb%3Fc/search')
+    })
+
+    it.each(['get', 'mutate', 'delete'] as const)('%s keeps a success when the success handler throws', async method => {
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, { data: [] }))
+        const events: string[] = []
+        const onEvent = (event: string) => {
+            events.push(event)
+            if (event === 'success') throw new Error('handler boom')
+        }
+        const driver = makeDriver()
+
+        await expect(driver[method]('users', {}, onEvent)).rejects.toThrow('handler boom')
+        expect(events).toEqual(['request', 'success'])
+    })
+})
