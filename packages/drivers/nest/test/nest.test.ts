@@ -47,6 +47,17 @@ describe('NestDriver verbs', () => {
         expect(result).toEqual([{ id: 1, name: 'Alice', email: 'a@test.com' }])
     })
 
+    it('find encodes the id so it cannot alter the path', async () => {
+        okJson({ id: 1, name: 'Bob', email: 'b@test.com' })
+        const driver = makeDriver()
+        await driver.find('users', { id: '../admin?x=1' })
+
+        expect(mockFetch).toHaveBeenCalledWith(
+            'http://localhost:3000/api/users/..%2Fadmin%3Fx%3D1',
+            expect.objectContaining({ method: 'GET' }),
+        )
+    })
+
     it('find → GET /{resource}/{id}', async () => {
         okJson({ id: 7, name: 'Bob', email: 'b@test.com' })
         const driver = makeDriver()

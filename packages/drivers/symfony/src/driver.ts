@@ -63,7 +63,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         },
         find: async (ctx, payload) => {
             const { id } = payload as SymfonyIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${id}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
             return request(url, {
                 method: 'GET',
                 headers: await ctx.buildHeaders('application/ld+json'),
@@ -79,7 +79,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         },
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${id}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
             return request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders('application/merge-patch+json'),
@@ -88,7 +88,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         },
         remove: async (ctx, payload) => {
             const { id } = payload as SymfonyIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${id}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
             await request(url, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders('application/ld+json'),

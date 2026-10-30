@@ -135,10 +135,12 @@ export class SupabaseDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): () => void {
-        const filter =
+        const roomId =
             payload && typeof payload === 'object' && 'room_id' in (payload as object)
-                ? `room_id=eq.${(payload as Record<string, unknown>)['room_id']}`
+                ? String((payload as Record<string, unknown>)['room_id'])
                 : undefined
+        if (roomId !== undefined && !/^[\w-]+$/.test(roomId)) throw new Error('Invalid room_id')
+        const filter = roomId === undefined ? undefined : `room_id=eq.${roomId}`
 
         const channel: RealtimeChannel = this.client
             .channel(`${resourceName}-${Math.random().toString(36).slice(2)}`)

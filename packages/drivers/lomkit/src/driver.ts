@@ -123,9 +123,10 @@ export class LomkitDriver implements SdkDriver {
     // anything else (other HTTP status, network failure) is a plain HTTP error.
     private handleError(error: unknown, onEvent?: SdkEventHandler): Error {
         if (error instanceof HttpError && error.status === 422) {
-            const body = error.data as LomkitValidationError
-            onEvent?.('error', { message: body.message, errors: body.errors })
-            return new Error(body.message)
+            const body = (error.data ?? {}) as Partial<LomkitValidationError>
+            const message = body.message ?? error.message
+            onEvent?.('error', { message, errors: body.errors })
+            return new Error(message)
         }
         const message = error instanceof HttpError ? error.message : (error as Error).message
         onEvent?.('error', { message })

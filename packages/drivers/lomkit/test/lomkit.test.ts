@@ -72,6 +72,13 @@ describe('LomkitDriver.mutate', () => {
         )
     })
 
+    it('throws on a 422 without a JSON body', async () => {
+        mockFetch.mockResolvedValueOnce(new Response(null, { status: 422 }))
+
+        const driver = makeDriver()
+        await expect(driver.mutate('users', {})).rejects.toThrow()
+    })
+
     it('emits 422 validation errors via the event handler and then throws', async () => {
         mockFetch.mockResolvedValueOnce(
             jsonResponse(422, {

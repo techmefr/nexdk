@@ -106,7 +106,9 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const operationName = buildQueryName(ctx.resourceName)
             const { decls, args, variables } = buildVarArgs(ctx.resourceName, payload)
             const document = `query ${operationName}${decls} { ${ctx.resourceName}${args} { ${fields} } }`
-            return ctx.execute(document, variables)
+            const raw = await ctx.execute(document, variables)
+            assertNoGraphQLErrors(raw)
+            return raw
         },
         // Insert a single record — generates Hasura insert_X_one mutation.
         mutation: async (ctx, payload, options) => {

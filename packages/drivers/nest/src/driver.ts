@@ -45,7 +45,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         find: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${id}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
             return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         create: async (ctx, payload) => {
@@ -58,7 +58,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${id}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
             return request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders(),
@@ -67,7 +67,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         remove: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${id}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
             await request(url, { method: 'DELETE', headers: await ctx.buildHeaders() })
             return { success: true }
         },

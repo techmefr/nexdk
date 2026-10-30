@@ -111,7 +111,14 @@ function connect(conn: SharedConnection, key: string): void {
     }
 
     conn.ws.onmessage = event => {
-        const msg = JSON.parse(event.data as string) as { type: string; id?: string; payload?: unknown }
+        let msg: { type: string; id?: string; payload?: unknown }
+        try {
+            msg = JSON.parse(event.data as string)
+        } catch {
+            return
+        }
+
+        if (!msg || typeof msg !== 'object') return
 
         if (msg.type === 'ping') {
             conn.ws.send(JSON.stringify({ type: 'pong' }))

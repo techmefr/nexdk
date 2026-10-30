@@ -41,7 +41,7 @@ export function useResourceForm<TResource extends FormResource>(
 
     const initial = buildInitialValues(resource)
     let baseline: TValues = { ...initial }
-    const values: Ref<TValues> = ref<TValues>({ ...initial })
+    const values = ref({ ...initial }) as Ref<TValues>
     const errors = ref({} as TErrors)
 
     const isDirty: ComputedRef<boolean> = computed(() => {

@@ -34,7 +34,7 @@ export async function request<T>(url: string, init?: HttpRequestInit): Promise<T
         return await ofetch<T>(url, {
             method: init?.method,
             headers: init?.headers,
-            body: init?.body,
+            body: init?.body as RequestInit["body"],
             retry: 0,
         })
     } catch (error) {
