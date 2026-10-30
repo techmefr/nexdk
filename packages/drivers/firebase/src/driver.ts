@@ -17,6 +17,7 @@ interface FirebaseState {
 
 interface FirestoreList {
     documents?: FirestoreDocument[]
+    nextPageToken?: string
 }
 
 type Ctx = FirebaseState & { resourceName: string }
@@ -54,11 +55,26 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
     },
     methods: {
         get: async (ctx, payload) => {
-            const list = await request<FirestoreList>(`${collectionUrl(ctx)}${toQuery(payload)}`, {
-                method: 'GET',
-                headers: await ctx.buildHeaders(),
-            })
-            return (list.documents ?? []).map(decodeDocument)
+            const query = (payload ?? {}) as Record<string, unknown>
+            const headers = await ctx.buildHeaders()
+            const fetchPage = (extra: Record<string, unknown>): Promise<FirestoreList> =>
+                request<FirestoreList>(`${collectionUrl(ctx)}${toQuery({ ...query, ...extra })}`, {
+                    method: 'GET',
+                    headers,
+                })
+
+            if (query.pageToken !== undefined || query.pageSize !== undefined) {
+                return ((await fetchPage({})).documents ?? []).map(decodeDocument)
+            }
+
+            const documents: FirestoreDocument[] = []
+            let pageToken: string | undefined
+            do {
+                const list = await fetchPage(pageToken === undefined ? {} : { pageToken })
+                documents.push(...(list.documents ?? []))
+                pageToken = list.nextPageToken || undefined
+            } while (pageToken !== undefined)
+            return documents.map(decodeDocument)
         },
         find: async (ctx, payload) => {
             const { id } = payload as FirebaseIdPayload

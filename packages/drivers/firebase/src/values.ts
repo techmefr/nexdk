@@ -16,6 +16,7 @@ export interface FirestoreDocument {
 export function encodeValue(value: unknown): FirestoreValue {
     if (value === null || value === undefined) return { nullValue: null }
     if (typeof value === 'boolean') return { booleanValue: value }
+    if (typeof value === 'bigint') return { integerValue: value.toString() }
     if (typeof value === 'number') {
         return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value }
     }
@@ -28,7 +29,13 @@ export function encodeValue(value: unknown): FirestoreValue {
 export function encodeFields(record: Record<string, unknown>): Record<string, FirestoreValue> {
     const fields: Record<string, FirestoreValue> = {}
     for (const [key, value] of Object.entries(record)) {
-        if (value !== undefined) fields[key] = encodeValue(value)
+        if (value === undefined) continue
+        Object.defineProperty(fields, key, {
+            value: encodeValue(value),
+            enumerable: true,
+            writable: true,
+            configurable: true,
+        })
     }
     return fields
 }
@@ -36,7 +43,13 @@ export function encodeFields(record: Record<string, unknown>): Record<string, Fi
 export function decodeValue(value: FirestoreValue): unknown {
     if ('nullValue' in value) return null
     if ('booleanValue' in value) return value.booleanValue
-    if ('integerValue' in value) return Number(value.integerValue)
+    if ('integerValue' in value) {
+        const integer = Number(value.integerValue)
+        if (!Number.isSafeInteger(integer)) {
+            throw new Error(`Firestore integerValue ${value.integerValue} exceeds the safe integer range`)
+        }
+        return integer
+    }
     if ('doubleValue' in value) return value.doubleValue
     if ('stringValue' in value) return value.stringValue
     if ('timestampValue' in value) return value.timestampValue

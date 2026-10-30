@@ -148,3 +148,65 @@ describe('FirebaseDriver', () => {
         expect(headers.get('Authorization')).toBe('Bearer t')
     })
 })
+
+describe('FirebaseDriver pagination', () => {
+    const doc = (id: string) => ({
+        name: `projects/demo/databases/(default)/documents/notes/${id}`,
+        fields: { title: { stringValue: id } },
+    })
+
+    it('follows nextPageToken until exhausted', async () => {
+        okJson({ documents: [doc('a'), doc('b')], nextPageToken: 'tok1' })
+        okJson({ documents: [doc('c')], nextPageToken: 'tok2' })
+        okJson({ documents: [doc('d')] })
+
+        const result = (await makeDriver().get('notes', {})) as Array<{ id: string }>
+
+        expect(result.map(r => r.id)).toEqual(['a', 'b', 'c', 'd'])
+        expect(mockFetch).toHaveBeenCalledTimes(3)
+        expect(mockFetch.mock.calls[1][0]).toContain('pageToken=tok1')
+        expect(mockFetch.mock.calls[2][0]).toContain('pageToken=tok2')
+    })
+
+    it('respects an explicit pageToken', async () => {
+        okJson({ documents: [doc('c')], nextPageToken: 'tok2' })
+        const result = (await makeDriver().get('notes', { pageToken: 'tok1' })) as Array<{ id: string }>
+        expect(result.map(r => r.id)).toEqual(['c'])
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+
+    it('respects an explicit pageSize', async () => {
+        okJson({ documents: [doc('a')], nextPageToken: 'tok1' })
+        const result = (await makeDriver().get('notes', { pageSize: 1 })) as Array<{ id: string }>
+        expect(result.map(r => r.id)).toEqual(['a'])
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+})
+
+describe('Firestore value codec edge cases', () => {
+    it('keeps a __proto__ key when encoding', () => {
+        const payload = JSON.parse('{"__proto__":"x","a":1}') as Record<string, unknown>
+        const fields = encodeFields(payload)
+        expect(Object.keys(fields)).toContain('__proto__')
+        expect(Object.getPrototypeOf(fields)).toBe(Object.prototype)
+    })
+
+    it('encodes a bigint as an integerValue', () => {
+        expect(encodeFields({ big: 9007199254740993n })).toEqual({ big: { integerValue: '9007199254740993' } })
+    })
+
+    it('throws when an integerValue exceeds the safe range', () => {
+        expect(() => decodeDocument({
+            name: 'projects/demo/databases/(default)/documents/notes/n1',
+            fields: { big: { integerValue: '9007199254740993' } },
+        })).toThrow('safe integer')
+    })
+
+    it('adds the document id when no id field exists', () => {
+        const decoded = decodeDocument({
+            name: 'projects/demo/databases/(default)/documents/notes/n1',
+            fields: { title: { stringValue: 'Hi' } },
+        })
+        expect(decoded.id).toBe('n1')
+    })
+})
