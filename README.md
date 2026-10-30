@@ -92,20 +92,21 @@ on `nexdk` only, and ship independently on npm.
 - [`@nexdk/driver-supabase`](packages/drivers/supabase) — Supabase realtime
 - [`@nexdk/driver-nest`](packages/drivers/nest) — conventional NestJS REST CRUD
 - [`@nexdk/driver-symfony`](packages/drivers/symfony) — Symfony / API Platform (Hydra)
+- [`@nexdk/driver-pocketbase`](packages/drivers/pocketbase) — PocketBase records API
+- [`@nexdk/driver-strapi`](packages/drivers/strapi) — Strapi REST (v5)
+- [`@nexdk/driver-firebase`](packages/drivers/firebase) — Cloud Firestore REST
 
 **Roadmap**, in priority order:
 
-1. Firebase
-2. Appwrite
-3. PocketBase
-4. Convex
-5. Hasura (standalone, no nhost auth wrapper)
-6. Directus
-7. Strapi
-8. AdonisJS
-9. WordPress REST API
-10. Django REST Framework
-11. Rails (JSON:API)
+1. Appwrite
+2. Directus
+3. Django REST Framework
+4. Generic GraphQL (any non-Hasura endpoint)
+5. Convex
+6. Firebase realtime listeners
+7. Rails (JSON:API)
+8. WordPress REST API
+9. AdonisJS
 
 Community drivers use the `nexdk-driver-*` naming convention and live in their
 own repo — see [Writing a driver](https://techmefr.github.io/nexdk/guides/writing-a-driver/).

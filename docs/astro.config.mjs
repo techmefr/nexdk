@@ -64,6 +64,9 @@ export default defineConfig({
 						{ label: '@nexdk/driver-supabase', slug: 'drivers/supabase', attrs: { class: 'sidebar-icon icon-zap' } },
 						{ label: '@nexdk/driver-nest', slug: 'drivers/nest', attrs: { class: 'sidebar-icon icon-hexagon' } },
 						{ label: '@nexdk/driver-symfony', slug: 'drivers/symfony', attrs: { class: 'sidebar-icon icon-server' } },
+						{ label: '@nexdk/driver-pocketbase', slug: 'drivers/pocketbase', attrs: { class: 'sidebar-icon icon-database' } },
+						{ label: '@nexdk/driver-strapi', slug: 'drivers/strapi', attrs: { class: 'sidebar-icon icon-layout-grid' } },
+						{ label: '@nexdk/driver-firebase', slug: 'drivers/firebase', attrs: { class: 'sidebar-icon icon-radio' } },
 					],
 				},
 				{

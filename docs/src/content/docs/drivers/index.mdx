@@ -10,6 +10,8 @@ import cloudIcon from 'lucide-static/icons/cloud.svg?raw';
 import zapIcon from 'lucide-static/icons/zap.svg?raw';
 import hexagonIcon from 'lucide-static/icons/hexagon.svg?raw';
 import serverIcon from 'lucide-static/icons/server.svg?raw';
+import radioIcon from 'lucide-static/icons/radio.svg?raw';
+import layoutGridIcon from 'lucide-static/icons/layout-grid.svg?raw';
 
 A driver translates the SDK's uniform call grammar into one backend's actual protocol. Official drivers ship as `@nexdk/driver-*`; anyone can publish their own as `nexdk-driver-*` — see [Writing a driver](/nexdk/guides/writing-a-driver/).
 
@@ -28,5 +30,14 @@ A driver translates the SDK's uniform call grammar into one backend's actual pro
 	</ModuleCard>
 	<ModuleCard title="symfony" pkg="@nexdk/driver-symfony" link="/nexdk/drivers/symfony/" icon={serverIcon} tags={['REST', 'Hydra', 'API Platform']}>
 		Symfony / API Platform REST driver over Hydra / JSON-LD conventions.
+	</ModuleCard>
+	<ModuleCard title="pocketbase" pkg="@nexdk/driver-pocketbase" link="/nexdk/drivers/pocketbase/" icon={databaseIcon} tags={['REST', 'PocketBase']}>
+		PocketBase records API with filter, sort and pagination.
+	</ModuleCard>
+	<ModuleCard title="strapi" pkg="@nexdk/driver-strapi" link="/nexdk/drivers/strapi/" icon={layoutGridIcon} tags={['REST', 'Headless CMS']}>
+		Strapi REST with the data envelope unwrapped and bracket query strings built for you.
+	</ModuleCard>
+	<ModuleCard title="firebase" pkg="@nexdk/driver-firebase" link="/nexdk/drivers/firebase/" icon={radioIcon} tags={['REST', 'Firestore']}>
+		Firestore REST with typed values converted to plain records.
 	</ModuleCard>
 </ModuleGrid>
