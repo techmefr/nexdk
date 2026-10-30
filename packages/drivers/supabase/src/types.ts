@@ -16,9 +16,6 @@ export interface SupabaseError {
     hint?: string
 }
 
-// Per-resource API surface the supabase driver exposes through the SDK,
-// parameterized by the resource's inferred record type `T`. Core reads this via
-// the driver's phantom `__resourceApi` marker.
 export interface SupabaseResourceApi<T> {
     get(payload?: object, onEvent?: SdkEventHandler): Promise<SupabaseResult<T>>
     insert(payload?: object, onEvent?: SdkEventHandler): Promise<SupabaseResult<T>>

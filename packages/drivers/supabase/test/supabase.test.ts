@@ -70,3 +70,17 @@ describe('SupabaseDriver', () => {
         expect(() => unsub()).not.toThrow()
     })
 })
+
+describe('SupabaseDriver handler isolation', () => {
+    it('does not emit error when the success handler throws', async () => {
+        nextError = null
+        const events: string[] = []
+        const onEvent = (event: string) => {
+            events.push(event)
+            if (event === 'success') throw new Error('handler boom')
+        }
+
+        await expect(makeDriver().get('messages', {}, onEvent)).rejects.toThrow('handler boom')
+        expect(events).toEqual(['request', 'success'])
+    })
+})
