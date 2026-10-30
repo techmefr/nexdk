@@ -1,8 +1,40 @@
+<p align="center">
+  <img src="docs/public/banner.svg" alt="nexdk — one resource grammar, any backend" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://github.com/techmefr/nexdk/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/techmefr/nexdk/ci.yml?branch=main&style=flat-square"></a>
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square">
+  <img alt="zero dependencies" src="https://img.shields.io/badge/core-zero%20dependencies-22c55e?style=flat-square">
+  <img alt="Standard Schema" src="https://img.shields.io/badge/Standard%20Schema-Zod%20%C2%B7%20Valibot%20%C2%B7%20ArkType-6366f1?style=flat-square">
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square"></a>
+</p>
+
+<p align="center">
+  <a href="https://techmefr.github.io/nexdk/"><b>Documentation</b></a> ·
+  <a href="https://techmefr.github.io/nexdk/guides/writing-a-driver/">Write a driver</a> ·
+  <a href="#drivers">Drivers</a>
+</p>
+
 # nexdk
 
 Driver-based SDK. Talk to REST, GraphQL and WebSocket backends through **one
 resource grammar** — the calling code never knows which protocol is behind a
 resource.
+
+> **Keywords** — `sdk` · `typescript` · `driver` · `rest` · `graphql` · `websocket` ·
+> `realtime` · `standard-schema` · `zod` · `laravel` · `lomkit` · `nestjs` · `symfony` ·
+> `supabase` · `nhost` · `hasura` · `vue` · `backend-agnostic` · `type-safe`
+
+## Why nexdk
+
+| Feature | What you get |
+|---|---|
+| 🔌 **Backend-agnostic** | Swap Laravel for Supabase without touching call sites. |
+| 🧬 **End-to-end types** | Return types are inferred from your schema. |
+| 🪶 **Zero dependencies** | The core depends on nothing; validators plug in via Standard Schema. |
+| 🧩 **Driver ecosystem** | Official drivers ship independently; write your own in minutes. |
+| ⚡ **Realtime-ready** | Subscriptions and events share the same grammar. |
 
 ```
 sdk.[driver].[resource].[method](payload?, onEvent?, extra?)

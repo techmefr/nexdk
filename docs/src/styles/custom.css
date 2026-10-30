@@ -200,3 +200,12 @@ a.sidebar-icon::before {
 	background: var(--sl-color-gray-6);
 	color: var(--sl-color-gray-2);
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.module-card {
+		transition: none;
+	}
+	.module-card:hover {
+		transform: none;
+	}
+}

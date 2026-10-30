@@ -11,7 +11,7 @@ const { title, pkg, link, icon, tags } = Astro.props as Props
 
 <a class="module-card not-content" href={link}>
 	<div class="module-card-header">
-		<span class="module-card-icon" set:html={icon} />
+		<span class="module-card-icon" aria-hidden="true" set:html={icon} />
 		<span class="module-card-title">{title}</span>
 	</div>
 	<span class="module-card-package">{pkg}</span>

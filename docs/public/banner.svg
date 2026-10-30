@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="t d">
+  <title id="t">nexdk</title>
+  <desc id="d">One resource grammar connecting an application to REST, GraphQL and WebSocket backends through drivers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#14264d"/>
+    </linearGradient>
+    <linearGradient id="ac" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="420" rx="24" fill="url(#bg)"/>
+  <g stroke="#38bdf8" stroke-opacity=".08">
+    <path d="M0 105H1200M0 210H1200M0 315H1200M300 0V420M600 0V420M900 0V420"/>
+  </g>
+  <text x="70" y="170" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="96" font-weight="800" fill="url(#ac)">nexdk</text>
+  <text x="74" y="222" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" fill="#cbd5e1">One resource grammar. Any backend.</text>
+  <text x="74" y="290" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="26" fill="#e2e8f0">sdk.<tspan fill="#38bdf8">[driver]</tspan>.<tspan fill="#a5b4fc">[resource]</tspan>.<tspan fill="#86efac">[method]</tspan>()</text>
+  <g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="18" text-anchor="middle">
+    <circle cx="760" cy="210" r="46" fill="url(#ac)"/>
+    <text x="760" y="217" fill="#0b1220" font-weight="700">nexdk</text>
+    <g stroke="#38bdf8" stroke-width="2" stroke-opacity=".7">
+      <path d="M806 210H900M796 180L890 110M796 240L890 310"/>
+    </g>
+    <rect x="900" y="90" width="230" height="40" rx="10" fill="#1e293b" stroke="#38bdf8"/>
+    <text x="1015" y="116" fill="#e2e8f0">REST · lomkit · nest</text>
+    <rect x="900" y="190" width="230" height="40" rx="10" fill="#1e293b" stroke="#6366f1"/>
+    <text x="1015" y="216" fill="#e2e8f0">GraphQL · nhost</text>
+    <rect x="900" y="290" width="230" height="40" rx="10" fill="#1e293b" stroke="#22c55e"/>
+    <text x="1015" y="316" fill="#e2e8f0">WebSocket · supabase</text>
+  </g>
+</svg>

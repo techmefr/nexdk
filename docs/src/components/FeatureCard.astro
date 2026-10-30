@@ -7,7 +7,7 @@ const { title, icon } = Astro.props as Props
 ---
 
 <div class="feature-card not-content">
-	<span class="feature-icon" set:html={icon} />
+	<span class="feature-icon" aria-hidden="true" set:html={icon} />
 	<h3>{title}</h3>
 	<p><slot /></p>
 </div>
