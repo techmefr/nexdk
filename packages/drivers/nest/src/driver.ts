@@ -2,23 +2,17 @@ import { defineDriver } from 'nexdk'
 import { encodeId, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { NestConfig, NestIdPayload, NestResourceApi } from './types.ts'
 
-// Register the nest per-resource API in core's registry so the typed SDK can
-// resolve `sdk.nest.<resource>` to NestResourceApi<T>.
 declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         nest: NestResourceApi<T>
     }
 }
 
-// State built once from the config and spread into every method's ctx.
 interface NestState {
     baseUrl: string
     buildHeaders: () => Promise<Record<string, string>>
 }
 
-// Conventional REST CRUD driver for the common NestJS controller shape. Built
-// with defineDriver: the method bodies carry only the protocol translation; the
-// request/success/error events are supplied by the helper.
 export const nestDriver = defineDriver<NestConfig, NestState, {
     get: (ctx: NestState & { resourceName: string }, payload: unknown) => Promise<unknown>
     find: (ctx: NestState & { resourceName: string }, payload: unknown) => Promise<unknown>
@@ -40,16 +34,16 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
     },
     methods: {
         get: async (ctx, payload) => {
-            const url = `${ctx.baseUrl}/${ctx.resourceName}${toQuery(payload)}`
+            const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}${toQuery(payload)}`
             return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         find: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
+            const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
             return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         create: async (ctx, payload) => {
-            const url = `${ctx.baseUrl}/${ctx.resourceName}`
+            const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}`
             return request(url, {
                 method: 'POST',
                 headers: await ctx.buildHeaders(),
@@ -58,7 +52,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
+            const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
             return request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders(),
@@ -67,15 +61,13 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         remove: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
+            const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
             await request(url, { method: 'DELETE', headers: await ctx.buildHeaders() })
             return { success: true }
         },
     },
 })
 
-// Factory returning a nest driver carrying the `__apiUri` phantom marker, so the
-// typed SDK resolves each resource to NestResourceApi<T>.
 export function createNestDriver(config: NestConfig): ReturnType<typeof nestDriver> & { __apiUri: 'nest' } {
     return nestDriver(config) as ReturnType<typeof nestDriver> & { __apiUri: 'nest' }
 }

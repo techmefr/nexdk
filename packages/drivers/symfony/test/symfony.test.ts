@@ -147,3 +147,14 @@ describe('SymfonyDriver error contract', () => {
         expect(events).not.toContain('success')
     })
 })
+
+describe('resource name URL encoding', () => {
+    it('encodes the resource name in the URL', async () => {
+        okJson([])
+        const driver = createSymfonyDriver({ baseUrl: 'http://localhost:8000/api' }) as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>
+        await driver.get('a/b?c#d', {})
+        const url = mockFetch.mock.calls[0][0] as string
+        expect(url).toContain('/a%2Fb%3Fc%23d')
+        expect(url).not.toContain('/a/b')
+    })
+})
