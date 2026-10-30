@@ -7,6 +7,17 @@ import type {
 } from './types.ts'
 import type { TypedSdk } from './typed-sdk.ts'
 
+const RESERVED_DRIVER_KEYS = new Set(['name', 'bindResource'])
+
+function isDriverMethodName(driver: SdkDriver, name: string | symbol): name is string {
+    return (
+        typeof name === 'string'
+        && !(name in Object.prototype)
+        && !RESERVED_DRIVER_KEYS.has(name)
+        && typeof (driver as unknown as Record<string, unknown>)[name] === 'function'
+    )
+}
+
 export function createSdk<
     TDrivers extends Record<string, SdkDriver>,
     TResources extends ResourcesByDriver<TDrivers> = Record<never, never>,
@@ -41,9 +52,12 @@ function createDriverProxy<TDriver extends SdkDriver>(
     globalHandler?: SdkEventHandler,
 ): TDriver {
     return new Proxy(driver, {
-        get(target, prop: string) {
+        get(target, prop: string | symbol) {
+            if (typeof prop === 'symbol' || prop in Object.prototype) {
+                return Reflect.get(target, prop)
+            }
             if (prop in target) {
-                const value = (target as Record<string, unknown>)[prop]
+                const value = (target as unknown as Record<string, unknown>)[prop]
                 return typeof value === 'function' ? value.bind(target) : value
             }
 
@@ -60,19 +74,17 @@ function createResourceProxy(
     return new Proxy(
         {},
         {
-            get(_target, methodName: string) {
-                // The 4th positional slot is opaque here: most drivers ignore it,
-                // a few (e.g. nhost's per-call GraphQL fragment selection) give it
-                // their own meaning. It is not a shared "mock" concept — mocking
-                // is shamock's job, used standalone alongside the SDK, not through it.
-                return (payload?: unknown, onEvent?: unknown, extra?: unknown) => {
-                    const method = (driver as unknown as Record<string, unknown>)[methodName]
+            get(_target, methodName: string | symbol) {
+                if (typeof methodName === 'symbol' || methodName in Object.prototype) return undefined
 
-                    if (typeof method !== 'function') {
+                return (payload?: unknown, onEvent?: unknown, extra?: unknown) => {
+                    if (!isDriverMethodName(driver, methodName)) {
                         throw new Error(
                             `Driver "${driver.name}" has no method "${methodName}" for resource "${resourceName}"`,
                         )
                     }
+
+                    const method = (driver as unknown as Record<string, unknown>)[methodName]
 
                     const handler = mergeEventHandlers(
                         globalHandler,

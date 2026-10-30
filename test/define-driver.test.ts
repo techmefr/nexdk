@@ -152,3 +152,58 @@ describe('defineDriver', () => {
         expect(headers.Authorization).toBe('Bearer refreshed')
     })
 })
+
+describe('defineDriver error event payload', () => {
+    class FakeHttpError extends Error {
+        readonly status: number
+        readonly data: unknown
+        constructor(status: number, data: unknown) {
+            super('HTTP ' + status)
+            this.name = 'HttpError'
+            this.status = status
+            this.data = data
+        }
+    }
+
+    function makeThrower(thrown: unknown) {
+        return defineDriver<Record<string, never>, Record<string, never>, {
+            fail: () => Promise<never>
+            failSync: () => never
+        }>({
+            name: 'thrower',
+            setup: () => ({}),
+            methods: {
+                fail: async () => { throw thrown },
+                failSync: () => { throw thrown },
+            },
+        })({}) as unknown as Record<string, (...args: unknown[]) => unknown>
+    }
+
+    it('emits status and errors for an HttpError', async () => {
+        const events: Array<[string, unknown?]> = []
+        const driver = makeThrower(new FakeHttpError(422, { message: 'bad' }))
+        await expect(driver.fail('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).rejects.toThrow('HTTP 422')
+        expect(events[1]).toEqual(['error', { message: 'HTTP 422', status: 422, errors: { message: 'bad' } }])
+    })
+
+    it('emits status and errors for a synchronous HttpError', () => {
+        const events: Array<[string, unknown?]> = []
+        const driver = makeThrower(new FakeHttpError(500, null))
+        expect(() => driver.failSync('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).toThrow('HTTP 500')
+        expect(events[1]).toEqual(['error', { message: 'HTTP 500', status: 500, errors: null }])
+    })
+
+    it('normalizes a non-Error throw with String()', async () => {
+        const events: Array<[string, unknown?]> = []
+        const driver = makeThrower('plain failure')
+        await expect(driver.fail('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).rejects.toBe('plain failure')
+        expect(events[1]).toEqual(['error', { message: 'plain failure' }])
+    })
+
+    it('normalizes a non-Error object throw without crashing', () => {
+        const events: Array<[string, unknown?]> = []
+        const driver = makeThrower(undefined)
+        expect(() => driver.failSync('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).toThrow()
+        expect(events[1]).toEqual(['error', { message: 'undefined' }])
+    })
+})

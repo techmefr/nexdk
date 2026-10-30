@@ -128,3 +128,26 @@ describe('createSdk', () => {
         expect(globalEvents).toEqual(localEvents)
     })
 })
+
+describe('createSdk prototype safety', () => {
+    it('does not expose Object.prototype members as callable resource methods', () => {
+        const sdk = createSdk({ drivers: { mock: new MockDriver('mock') } })
+        const users = sdk.mock.users as unknown as Record<string, unknown>
+        expect(typeof users.constructor).not.toBe('function')
+        expect(typeof users.hasOwnProperty).not.toBe('function')
+        expect(typeof users.toString).not.toBe('function')
+    })
+
+    it('does not let a resource call bindResource or name as a method', () => {
+        const driver = new MockDriver('mock')
+        const sdk = createSdk({ drivers: { mock: driver } })
+        const users = sdk.mock.users as unknown as Record<string, (...args: unknown[]) => unknown>
+        expect(() => users.bindResource('x')).toThrow('has no method')
+        expect(driver.boundResources).toEqual([])
+    })
+
+    it('still dispatches own and class-prototype driver methods', async () => {
+        const sdk = createSdk({ drivers: { mock: new MockDriver('mock') } })
+        await expect(sdk.mock.users.get({ id: 1 })).resolves.toEqual({ id: 1, fromDriver: 'mock' })
+    })
+})

@@ -1,13 +1,9 @@
 import type { AnyResource, SdkDriver, SdkEventHandler } from './types.ts'
 
-// Request headers may be a static object or a resolver called before every
-// request, so a driver can supply a fresh (e.g. refreshed) bearer token. This
-// matches the lomkit/nhost Tier-2 shape; authors reuse it in their config type.
 export type HeadersResolver =
     | Record<string, string>
     | (() => Record<string, string> | Promise<Record<string, string>>)
 
-// Resolve a headers config to a plain record, awaiting the function form.
 export async function resolveHeaders(
     headers: HeadersResolver | undefined,
 ): Promise<Record<string, string>> {
@@ -15,25 +11,12 @@ export async function resolveHeaders(
     return headers ?? {}
 }
 
-// Base context every author method receives. The object returned by `setup`
-// is merged on top of this, so a method sees both the framework-provided
-// fields (resourceName, resource, emit) and the driver's own state.
 export interface DriverMethodContext {
-    // The resource key used in the SDK call (e.g. "cartItems").
     resourceName: string
-    // The bound resource, or undefined when the app declared none for this key.
     resource: AnyResource | undefined
-    // The (already merged global + local) event handler. Reactive methods use
-    // it to emit 'data' / 'connected' / 'disconnected'. Request/success/error
-    // around a normal method are emitted by the wrapper — authors need not.
     emit: SdkEventHandler | undefined
 }
 
-// A single author-written method: it receives the context, the call payload and
-// an opaque 4th value the framework never interprets (most methods ignore it; a
-// driver may give it its own meaning, e.g. nhost's per-call GraphQL fragment
-// selection). Returns either a value/Promise (async method) or an unsubscribe
-// function (reactive method) — the wrapper tells the two apart.
 export type DriverMethod<TState> = (
     ctx: DriverMethodContext & TState,
     payload: unknown,
@@ -46,13 +29,10 @@ export interface DriverDefinition<
     TMethods extends Record<string, DriverMethod<TState>>,
 > {
     name: string
-    // Build the per-driver state from the config (baseUrl, header resolver, …).
-    // Its return is spread into every method's ctx.
     setup: (config: TConfig) => TState
     methods: TMethods
 }
 
-// The proxy-invoked signature createSdk calls for every method.
 type ProxyMethod = (
     resourceName: string,
     payload?: unknown,
@@ -60,23 +40,31 @@ type ProxyMethod = (
     extra?: unknown,
 ) => unknown
 
-// The built driver: a SdkDriver plus one proxy-shaped function per method.
 export type DefinedDriver<TMethods> = SdkDriver & {
     [K in keyof TMethods]: ProxyMethod
 }
 
-// A function result is treated as a reactive unsubscribe handle and returned
-// untouched — no success/error envelope, so subscribe-style methods keep their
-// synchronous teardown contract.
+export interface ErrorEventPayload {
+    message: string
+    status?: number
+    errors?: unknown
+}
+
+function toErrorPayload(error: unknown): ErrorEventPayload {
+    if (error instanceof Error) {
+        const candidate = error as Error & { status?: unknown; data?: unknown }
+        if (error.name === 'HttpError' && typeof candidate.status === 'number') {
+            return { message: error.message, status: candidate.status, errors: candidate.data }
+        }
+        return { message: error.message }
+    }
+    return { message: String(error) }
+}
+
 function isReactiveResult(value: unknown): value is () => void {
     return typeof value === 'function'
 }
 
-// Wrap an author method with the unified event contract:
-//   emit('request', { resource, payload }) before
-//   → success: emit('success', result) and return it
-//   → reactive (returns a function): return the unsubscribe as-is
-//   → throw: emit('error', { message }) then rethrow
 function runMethod<TState>(
     method: DriverMethod<TState>,
     ctx: DriverMethodContext & TState,
@@ -88,7 +76,7 @@ function runMethod<TState>(
     try {
         result = method(ctx, payload, extra)
     } catch (error) {
-        ctx.emit?.('error', { message: (error as Error).message })
+        ctx.emit?.('error', toErrorPayload(error))
         throw error
     }
 
@@ -101,7 +89,7 @@ function runMethod<TState>(
                 return value
             },
             (error: unknown) => {
-                ctx.emit?.('error', { message: (error as Error).message })
+                ctx.emit?.('error', toErrorPayload(error))
                 throw error
             },
         )
@@ -111,10 +99,6 @@ function runMethod<TState>(
     return result
 }
 
-// Declare a driver by writing only the protocol translation. The helper returns
-// an object implementing SdkDriver (name + bindResource with a private
-// resource Map) plus one proxy-shaped function per declared method, each wrapped
-// with the unified event contract.
 export function defineDriver<
     TConfig,
     TState,

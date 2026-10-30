@@ -1,7 +1,3 @@
-// Minimal Standard Schema v1 contract (https://standardschema.dev), copied
-// verbatim per the spec's own guidance instead of adding a dependency — any
-// validator that implements it (Zod 3.24+, Valibot, ArkType, …) plugs into
-// `defineResource` as-is, so nexdk stays validator-agnostic and dependency-free.
 export interface StandardSchemaV1<Input = unknown, Output = Input> {
     readonly '~standard': StandardSchemaV1.Props<Input, Output>
 }

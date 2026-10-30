@@ -1,7 +1,5 @@
 import type { SdkEventHandler } from './types.ts'
 
-// Combine a global and a per-call event handler into one. If either side is
-// missing, the other is returned untouched; otherwise both are invoked in order.
 export function mergeEventHandlers(
     global: SdkEventHandler | undefined,
     local: SdkEventHandler | undefined,
@@ -9,7 +7,14 @@ export function mergeEventHandlers(
     if (global === undefined) return local
     if (local === undefined) return global
     return (event, data) => {
-        global(event, data)
-        local(event, data)
+        let failure: { error: unknown } | undefined
+        for (const handler of [global, local]) {
+            try {
+                handler(event, data)
+            } catch (error) {
+                failure ??= { error }
+            }
+        }
+        if (failure) throw failure.error
     }
 }
