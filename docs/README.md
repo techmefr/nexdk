@@ -10,7 +10,7 @@ Covers the core concepts (call grammar, driver contract, Standard Schema), one p
 pnpm --filter docs dev
 ```
 
-Site runs at `http://localhost:4321` (or the port set in `.claude/launch.json` if launched that way).
+Site runs at `http://localhost:4321`.
 
 ## Build
 
