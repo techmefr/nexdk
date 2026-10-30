@@ -427,3 +427,124 @@ describe('backoffDelay', () => {
         expect(backoffDelay(10)).toBe(15_000)
     })
 })
+
+describe('NhostDriver GraphQL injection guards', () => {
+    function okEmpty() {
+        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: { users: [] } }) })
+    }
+
+    it('rejects a payload key that is not a GraphQL name', async () => {
+        okEmpty()
+        const driver = makeDriver()
+        await expect(driver.query('users', { 'limit: 1) { id } } mutation X { x': 1 })).rejects.toThrow(
+            'Invalid GraphQL enum identifier',
+        )
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('rejects an injected key on subscriptions', () => {
+        vi.stubGlobal('WebSocket', class {})
+        const driver = makeDriver()
+        expect(() => driver.subscription('users', { 'where) { id } }': 1 })).toThrow(
+            'Invalid GraphQL enum identifier',
+        )
+    })
+
+    it('rejects an injected resource name on every method', async () => {
+        okEmpty()
+        const driver = new NhostDriver({ endpoint: 'http://localhost:1337/v1/graphql' })
+        const bad = 'users { id } } mutation Evil { delete_users(where: {}) { affected_rows }'
+        await expect(driver.query(bad, {})).rejects.toThrow('Invalid GraphQL enum identifier')
+        await expect(driver.mutation(bad, {})).rejects.toThrow('Invalid GraphQL enum identifier')
+        await expect(driver.deleteById(bad, { id: '1' })).rejects.toThrow('Invalid GraphQL enum identifier')
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('rejects an injected resource name at bind time', () => {
+        const driver = new NhostDriver({ endpoint: 'http://localhost:1337/v1/graphql' })
+        expect(() => driver.bindResource('users) { id }', userResource)).toThrow('Invalid GraphQL enum identifier')
+    })
+
+    it('still accepts well-formed keys and names', async () => {
+        okEmpty()
+        const driver = makeDriver()
+        await driver.query('users', { where: { name: { _eq: 'A' } }, limit: 5, order_by: [{ name: 'asc' }] })
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+})
+
+describe('NhostDriver WebSocket endpoint', () => {
+    beforeEach(() => {
+        _resetConnectionPool()
+        MockWebSocket.instances = []
+        vi.stubGlobal('WebSocket', MockWebSocket)
+    })
+
+    it('refuses a plain http endpoint on a remote host', () => {
+        const driver = new NhostDriver({ endpoint: 'http://api.example.com/v1/graphql' })
+        driver.bindResource('users', userResource)
+        expect(() => driver.subscription('users', {})).toThrow('unencrypted WebSocket')
+        expect(MockWebSocket.instances).toHaveLength(0)
+    })
+
+    it.each(['http://localhost:1337/v1/graphql', 'http://127.0.0.1:1337/v1/graphql', 'http://[::1]:1337/v1/graphql'])(
+        'allows a plain http endpoint on %s',
+        endpoint => {
+            const driver = new NhostDriver({ endpoint })
+            driver.bindResource('users', userResource)
+            driver.subscription('users', {})
+            expect(MockWebSocket.instances[0].url.startsWith('ws://')).toBe(true)
+        },
+    )
+
+    it('upgrades https to wss', () => {
+        const driver = new NhostDriver({ endpoint: 'https://api.example.com/v1/graphql' })
+        driver.bindResource('users', userResource)
+        driver.subscription('users', {})
+        expect(MockWebSocket.instances[0].url.startsWith('wss://')).toBe(true)
+    })
+})
+
+describe('nhost connection pool isolation', () => {
+    beforeEach(() => {
+        _resetConnectionPool()
+        MockWebSocket.instances = []
+        vi.stubGlobal('WebSocket', MockWebSocket)
+    })
+
+    function driverWith(config: { adminSecret?: string; token?: string }) {
+        const driver = new NhostDriver({
+            endpoint: 'http://localhost:1337/v1/graphql',
+            adminSecret: config.adminSecret,
+            headers: () => (config.token ? { Authorization: `Bearer ${config.token}` } : {}),
+        })
+        driver.bindResource('users', userResource)
+        return driver
+    }
+
+    it('does not share a socket between users without an admin secret', () => {
+        driverWith({ token: 'alice' }).subscription('users', {})
+        driverWith({ token: 'bob' }).subscription('users', {})
+        expect(MockWebSocket.instances).toHaveLength(2)
+    })
+
+    it('does not share a socket between subscriptions without an admin secret', () => {
+        const driver = driverWith({ token: 'alice' })
+        driver.subscription('users', {})
+        driver.subscription('users', {})
+        expect(MockWebSocket.instances).toHaveLength(2)
+    })
+
+    it('shares a socket across subscriptions of one driver with an admin secret', () => {
+        const driver = driverWith({ adminSecret: 's3cret' })
+        driver.subscription('users', {})
+        driver.subscription('users', {})
+        expect(MockWebSocket.instances).toHaveLength(1)
+    })
+
+    it('does not share a socket between two drivers with different resolvers', () => {
+        driverWith({ adminSecret: 's3cret', token: 'alice' }).subscription('users', {})
+        driverWith({ adminSecret: 's3cret', token: 'bob' }).subscription('users', {})
+        expect(MockWebSocket.instances).toHaveLength(2)
+    })
+})

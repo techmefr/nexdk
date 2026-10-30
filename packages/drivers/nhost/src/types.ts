@@ -1,8 +1,5 @@
 import type { SdkEventHandler } from 'nexdk'
 
-// Request headers may be a static object or a resolver function called before
-// every request (and on every WS (re)connect), so callers can supply a fresh
-// (e.g. refreshed) bearer token.
 export type HeadersResolver = Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
 
 export interface NhostConfig {
@@ -51,10 +48,6 @@ export interface NhostMutationResult<T> {
     data: T | null
 }
 
-// Per-resource API surface the nhost driver exposes through the SDK.
-// `T` is the resource's inferred record type. GraphQL list operations return a
-// keyed wrapper (e.g. { products: Product[] }) rather than the record itself,
-// so query/subscription accept an explicit `TData` override, defaulting to `T`.
 export interface NhostResourceApi<T> {
     query<TData = T>(
         payload?: object,

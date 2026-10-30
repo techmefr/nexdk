@@ -19,32 +19,22 @@ import {
     singular,
 } from './document.ts'
 
-// Register the nhost per-resource API in core's registry so the typed SDK can
-// resolve `sdk.nhost.<resource>` to NhostResourceApi<T>.
 declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         nhost: NhostResourceApi<T>
     }
 }
 
-// The SDK's 4th call-time argument is opaque at the core level; nhost is the
-// one driver that gives it meaning, narrowing it to its own GraphQL options.
 function asOptions(value: unknown): GraphQLOptions | undefined {
     return value as GraphQLOptions | undefined
 }
 
-// Hasura returns HTTP 200 with an `errors` array for application-level GraphQL
-// failures (e.g. constraint violation) — only a transport failure throws in
-// `execute`. Surface these the same way, so runMethod's emit('error')+throw
-// contract holds regardless of which layer rejected the request.
 function assertNoGraphQLErrors(raw: NhostQueryResult<unknown>): void {
     if (raw.errors && raw.errors.length > 0) {
         throw new Error(raw.errors.map(error => error.message).join('; '))
     }
 }
 
-// Generate a subscription id. Prefer the standard crypto UUID, with a tiny
-// fallback for the rare runtime that lacks it.
 function subscriptionId(): string {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID()
@@ -52,9 +42,6 @@ function subscriptionId(): string {
     return `sub-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-// State built once from the config and spread into every method's ctx: the
-// endpoint, the admin secret, the (per-request) header builder, the raw headers
-// resolver reused on every WS (re)connect, and the GraphQL POST executor.
 interface NhostState {
     endpoint: string
     adminSecret: string | undefined
@@ -62,14 +49,24 @@ interface NhostState {
     execute: <T>(document: string, variables?: Record<string, unknown>) => Promise<NhostQueryResult<T>>
 }
 
-// Conventional Hasura/Nhost GraphQL driver. Built with defineDriver: each method
-// carries only the document building + result shaping; the request/success/error
-// events are supplied by the helper. `subscription` returns a teardown function,
-// so the helper treats it as reactive and returns it untouched.
-// The SDK grammar is `sdk.nhost.<resource>.<method>(payload, onEvent, options)`.
-// nhost is the one driver that uses the SDK's opaque 4th call argument,
-// interpreting it as GraphQL options (fragment selection).
-export const nhostDriver = defineDriver<NhostConfig, NhostState, {
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+function toWebSocketUrl(endpoint: string): string {
+    const url = new URL(endpoint)
+    if (url.protocol === 'https:') {
+        url.protocol = 'wss:'
+    } else if (url.protocol === 'http:') {
+        if (!LOCAL_HOSTS.has(url.hostname)) {
+            throw new Error(`Refusing an unencrypted WebSocket to ${url.hostname}: use an https endpoint`)
+        }
+        url.protocol = 'ws:'
+    } else {
+        throw new Error(`Unsupported endpoint protocol: ${url.protocol}`)
+    }
+    return url.toString()
+}
+
+const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
     query: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
     mutation: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
     upsert: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
@@ -102,6 +99,7 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
     },
     methods: {
         query: async (ctx, payload, options) => {
+            enumIdentifier(ctx.resourceName)
             const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
             const operationName = buildQueryName(ctx.resourceName)
             const { decls, args, variables } = buildVarArgs(ctx.resourceName, payload)
@@ -110,8 +108,8 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             assertNoGraphQLErrors(raw)
             return raw
         },
-        // Insert a single record — generates Hasura insert_X_one mutation.
         mutation: async (ctx, payload, options) => {
+            enumIdentifier(ctx.resourceName)
             const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
             const data = (payload ?? {}) as Record<string, unknown>
             const document = `mutation Insert${singular(ctx.resourceName)}($object: ${ctx.resourceName}_insert_input!) { insert_${ctx.resourceName}_one(object: $object) { ${fields} } }`
@@ -120,12 +118,8 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const result = (raw.data as Record<string, unknown>)?.[`insert_${ctx.resourceName}_one`] ?? null
             return { data: result }
         },
-        // Upsert — insert with on_conflict (Hasura-specific). `object` carries user
-        // data and travels as a variable. `conflictConstraint` and `updateColumns`
-        // are GraphQL enum identifiers from developer code, never end-user input,
-        // so they are kept inline (older Hasura cannot pass on_conflict enums as
-        // variables) after being validated as enum-safe identifiers.
         upsert: async (ctx, payload, options) => {
+            enumIdentifier(ctx.resourceName)
             const { data, conflictConstraint, updateColumns } = payload as UpsertPayload
             const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
             const constraint = enumIdentifier(conflictConstraint)
@@ -136,8 +130,8 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const result = (raw.data as Record<string, unknown>)?.[`insert_${ctx.resourceName}_one`] ?? null
             return { data: result }
         },
-        // Update by PK.
         updateById: async (ctx, payload, options) => {
+            enumIdentifier(ctx.resourceName)
             const { id, data } = payload as UpdateByIdPayload
             const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
             const document = `mutation Update${singular(ctx.resourceName)}($pk: ${ctx.resourceName}_pk_columns_input!, $set: ${ctx.resourceName}_set_input!) { update_${ctx.resourceName}_by_pk(pk_columns: $pk, _set: $set) { ${fields} } }`
@@ -146,8 +140,8 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const result = (raw.data as Record<string, unknown>)?.[`update_${ctx.resourceName}_by_pk`] ?? null
             return { data: result }
         },
-        // Update many rows matching a where clause.
         updateWhere: async (ctx, payload) => {
+            enumIdentifier(ctx.resourceName)
             const { where, data } = payload as UpdateWherePayload
             const document = `mutation UpdateWhere${singular(ctx.resourceName)}($where: ${ctx.resourceName}_bool_exp!, $set: ${ctx.resourceName}_set_input!) { update_${ctx.resourceName}(where: $where, _set: $set) { affected_rows } }`
             const raw = await ctx.execute<Record<string, { affected_rows: number }>>(document, { where, set: data })
@@ -155,8 +149,8 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             const affected = (raw.data as Record<string, { affected_rows: number }>)?.[`update_${ctx.resourceName}`]?.affected_rows ?? 0
             return { affectedRows: affected }
         },
-        // Delete by PK.
         deleteById: async (ctx, payload) => {
+            enumIdentifier(ctx.resourceName)
             const { id } = payload as DeleteByIdPayload
             const document = `mutation Delete${singular(ctx.resourceName)}($id: uuid!) { delete_${ctx.resourceName}_by_pk(id: $id) { id } }`
             const raw = await ctx.execute(document, { id })
@@ -164,13 +158,12 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
             return { success: true }
         },
         subscription: (ctx, payload, options) => {
+            enumIdentifier(ctx.resourceName)
             const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
             const { decls, args, variables } = buildVarArgs(ctx.resourceName, payload)
             const document = `subscription On${singular(ctx.resourceName)}${decls} { ${ctx.resourceName}${args} { ${fields} } }`
 
-            const wsUrl = ctx.endpoint.replace(/^http/, 'ws')
-            // The pool merges the admin secret; the resolver supplies dynamic
-            // headers (e.g. a bearer token) into connection_init on every reconnect.
+            const wsUrl = toWebSocketUrl(ctx.endpoint)
             const conn = getSharedConnection(wsUrl, ctx.adminSecret, ctx.resolveInitHeaders)
 
             const id = subscriptionId()
@@ -193,7 +186,6 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
                 }
                 conn.refCount--
                 if (conn.refCount <= 0) {
-                    // Mark the teardown as intentional so onclose does not reconnect.
                     conn.intentionalClose = true
                     conn.ws.close()
                 }
@@ -202,5 +194,14 @@ export const nhostDriver = defineDriver<NhostConfig, NhostState, {
     },
 })
 
-// Base ctx fields every method receives from defineDriver.
 type CtxBase = { resourceName: string; resource: AnyResource | undefined; emit: SdkEventHandler | undefined }
+
+export function nhostDriver(config: NhostConfig): ReturnType<typeof defineNhostDriver> {
+    const driver = defineNhostDriver(config)
+    const bindResource = driver.bindResource.bind(driver)
+    driver.bindResource = (resourceName, resource) => {
+        enumIdentifier(resourceName)
+        bindResource(resourceName, resource)
+    }
+    return driver
+}
