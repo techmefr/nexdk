@@ -37,6 +37,28 @@ importers:
         specifier: ^7.0.8
         version: 7.0.8(@astrojs/markdown-satteri@0.3.8)(astro@7.4.4(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
 
+  packages/drivers/firebase:
+    dependencies:
+      '@nexdk/http':
+        specifier: workspace:*
+        version: link:../../http
+    devDependencies:
+      nexdk:
+        specifier: workspace:*
+        version: link:../../..
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      unbuild:
+        specifier: ^3.6.1
+        version: 3.6.1(typescript@5.9.3)(vue@3.5.40(typescript@5.9.3))
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+
   packages/drivers/lomkit:
     dependencies:
       '@nexdk/http':
@@ -82,6 +104,50 @@ importers:
         version: 3.25.76
 
   packages/drivers/nhost:
+    devDependencies:
+      nexdk:
+        specifier: workspace:*
+        version: link:../../..
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      unbuild:
+        specifier: ^3.6.1
+        version: 3.6.1(typescript@5.9.3)(vue@3.5.40(typescript@5.9.3))
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+
+  packages/drivers/pocketbase:
+    dependencies:
+      '@nexdk/http':
+        specifier: workspace:*
+        version: link:../../http
+    devDependencies:
+      nexdk:
+        specifier: workspace:*
+        version: link:../../..
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      unbuild:
+        specifier: ^3.6.1
+        version: 3.6.1(typescript@5.9.3)(vue@3.5.40(typescript@5.9.3))
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+
+  packages/drivers/strapi:
+    dependencies:
+      '@nexdk/http':
+        specifier: workspace:*
+        version: link:../../http
     devDependencies:
       nexdk:
         specifier: workspace:*

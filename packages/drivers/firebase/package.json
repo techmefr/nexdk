@@ -1,0 +1,48 @@
+{
+    "name": "@nexdk/driver-firebase",
+    "version": "0.0.1",
+    "description": "Firebase Firestore REST driver for nexdk - converts Firestore typed values to plain records.",
+    "type": "module",
+    "license": "MIT",
+    "author": "techmefr",
+    "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/drivers/firebase#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/techmefr/nexdk.git",
+        "directory": "packages/drivers/firebase"
+    },
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "unbuild",
+        "test": "vitest run",
+        "dev": "unbuild --stub"
+    },
+    "dependencies": {
+        "@nexdk/http": "workspace:*"
+    },
+    "peerDependencies": {
+        "nexdk": "workspace:*"
+    },
+    "devDependencies": {
+        "nexdk": "workspace:*",
+        "typescript": "^5.9.3",
+        "unbuild": "^3.6.1",
+        "vitest": "^5.0.5",
+        "zod": "^3.24.0"
+    }
+}
