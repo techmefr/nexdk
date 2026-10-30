@@ -15,6 +15,7 @@ interface PocketbaseState {
 
 interface PocketbaseList {
     items: unknown[]
+    totalPages?: number
 }
 
 type Ctx = PocketbaseState & { resourceName: string }
@@ -40,11 +41,24 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
     }),
     methods: {
         get: async (ctx, payload) => {
-            const list = await request<PocketbaseList>(`${recordsUrl(ctx)}${toQuery(payload)}`, {
-                method: 'GET',
-                headers: await ctx.buildHeaders(),
-            })
-            return list.items
+            const query = (payload ?? {}) as Record<string, unknown>
+            const headers = await ctx.buildHeaders()
+            const fetchPage = (extra: Record<string, unknown>): Promise<PocketbaseList> =>
+                request<PocketbaseList>(`${recordsUrl(ctx)}${toQuery({ ...query, ...extra })}`, {
+                    method: 'GET',
+                    headers,
+                })
+
+            if (query.page !== undefined || query.perPage !== undefined) {
+                return (await fetchPage({})).items
+            }
+
+            const first = await fetchPage({})
+            const items: unknown[] = [...first.items]
+            for (let page = 2; page <= (first.totalPages ?? 1); page++) {
+                items.push(...(await fetchPage({ page })).items)
+            }
+            return items
         },
         find: async (ctx, payload) => {
             const { id } = payload as PocketbaseIdPayload

@@ -93,3 +93,32 @@ describe('PocketbaseDriver', () => {
         expect(headers.get('Authorization')).toBe('token')
     })
 })
+
+describe('PocketbaseDriver pagination', () => {
+    it('follows every page when the caller sets none', async () => {
+        okJson({ page: 1, perPage: 2, totalPages: 3, items: [{ id: 'a' }, { id: 'b' }] })
+        okJson({ page: 2, perPage: 2, totalPages: 3, items: [{ id: 'c' }, { id: 'd' }] })
+        okJson({ page: 3, perPage: 2, totalPages: 3, items: [{ id: 'e' }] })
+
+        const result = await makeDriver().get('posts', { filter: 'x=1' })
+
+        expect(result).toEqual([{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }, { id: 'e' }])
+        expect(mockFetch).toHaveBeenCalledTimes(3)
+        expect(mockFetch.mock.calls[1][0]).toContain('page=2')
+        expect(mockFetch.mock.calls[2][0]).toContain('page=3')
+    })
+
+    it('respects an explicit page', async () => {
+        okJson({ page: 2, perPage: 2, totalPages: 3, items: [{ id: 'c' }] })
+        const result = await makeDriver().get('posts', { page: 2 })
+        expect(result).toEqual([{ id: 'c' }])
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+
+    it('respects an explicit perPage', async () => {
+        okJson({ page: 1, perPage: 1, totalPages: 3, items: [{ id: 'a' }] })
+        const result = await makeDriver().get('posts', { perPage: 1 })
+        expect(result).toEqual([{ id: 'a' }])
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+})
