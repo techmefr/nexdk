@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { request, resolveHeaders, splitId } from '@nexdk/http'
+import { encodeId, request, resolveHeaders, splitId } from '@nexdk/http'
 import { toStrapiQuery } from './query.ts'
 import type { StrapiConfig, StrapiIdPayload, StrapiResourceApi } from './types.ts'
 
@@ -48,7 +48,7 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
         },
         find: async (ctx, payload) => {
             const { id } = payload as StrapiIdPayload
-            const envelope = await request<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeURIComponent(id)}`, {
+            const envelope = await request<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'GET',
                 headers: await ctx.buildHeaders(),
             })
@@ -64,7 +64,7 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
         },
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
-            const envelope = await request<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeURIComponent(id)}`, {
+            const envelope = await request<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'PUT',
                 headers: await ctx.buildHeaders(),
                 body: { data: body },
@@ -73,7 +73,7 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
         },
         remove: async (ctx, payload) => {
             const { id } = payload as StrapiIdPayload
-            await request(`${collectionUrl(ctx)}/${encodeURIComponent(id)}`, {
+            await request(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders(),
             })

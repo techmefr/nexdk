@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { encodeId, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { SymfonyConfig, SymfonyIdPayload, SymfonyResourceApi } from './types.ts'
 
 // Register the symfony per-resource API in core's registry so the typed SDK can
@@ -63,7 +63,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         },
         find: async (ctx, payload) => {
             const { id } = payload as SymfonyIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
             return request(url, {
                 method: 'GET',
                 headers: await ctx.buildHeaders('application/ld+json'),
@@ -79,7 +79,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         },
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
             return request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders('application/merge-patch+json'),
@@ -88,7 +88,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         },
         remove: async (ctx, payload) => {
             const { id } = payload as SymfonyIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
             await request(url, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders('application/ld+json'),

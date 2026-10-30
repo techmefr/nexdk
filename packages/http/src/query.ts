@@ -16,3 +16,11 @@ export function splitId(payload: unknown): { id: number | string; body: Record<s
     const { id, ...body } = (payload ?? {}) as { id: number | string } & Record<string, unknown>
     return { id, body }
 }
+
+// URL-encode an id for use as a single path segment. Rejects empty ids and the
+// dot segments, which URL normalisation would resolve to a parent path.
+export function encodeId(id: number | string): string {
+    const value = String(id ?? '')
+    if (value === '' || value === '.' || value === '..') throw new Error(`Invalid id: "${value}"`)
+    return encodeURIComponent(value)
+}

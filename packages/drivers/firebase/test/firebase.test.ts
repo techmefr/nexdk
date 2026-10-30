@@ -96,9 +96,40 @@ describe('FirebaseDriver', () => {
         await makeDriver().update('notes', { id: 'n1', title: 'Edited' })
 
         const [url, init] = mockFetch.mock.calls[0]
-        expect(url).toBe(`${DOCS}/notes/n1?updateMask.fieldPaths=title`)
+        expect(url).toBe(`${DOCS}/notes/n1?updateMask.fieldPaths=title&currentDocument.exists=true`)
         expect(init.method).toBe('PATCH')
         expect(JSON.parse(init.body)).toEqual({ fields: { title: { stringValue: 'Edited' } } })
+    })
+
+    it('update quotes field names that are not simple identifiers', async () => {
+        okJson(firestoreNote)
+        await makeDriver().update('notes', { id: 'n1', 'a.b': 1 })
+
+        expect(decodeURIComponent(mockFetch.mock.calls[0][0])).toContain('updateMask.fieldPaths=`a.b`')
+    })
+
+    it('update rejects an empty body instead of replacing the document', async () => {
+        await expect(makeDriver().update('notes', { id: 'n1' })).rejects.toThrow()
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('rejects dot-segment ids', async () => {
+        await expect(makeDriver().remove('notes', { id: '..' })).rejects.toThrow('Invalid id')
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('decodes reference values without throwing and keeps the document id', async () => {
+        okJson({
+            documents: [
+                {
+                    name: 'projects/demo/databases/(default)/documents/notes/n9',
+                    fields: { ref: { referenceValue: 'projects/demo/x' }, id: { stringValue: 'spoof' } },
+                },
+            ],
+        })
+        const [note] = (await makeDriver().get('notes', {})) as Array<Record<string, unknown>>
+
+        expect(note).toEqual({ ref: 'projects/demo/x', id: 'n9' })
     })
 
     it('remove → DELETE document', async () => {

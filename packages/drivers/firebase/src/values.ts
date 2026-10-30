@@ -41,16 +41,24 @@ export function decodeValue(value: FirestoreValue): unknown {
     if ('stringValue' in value) return value.stringValue
     if ('timestampValue' in value) return value.timestampValue
     if ('arrayValue' in value) return (value.arrayValue.values ?? []).map(decodeValue)
-    return decodeFields(value.mapValue.fields)
+    if ('mapValue' in value) return decodeFields(value.mapValue.fields)
+    return Object.values(value)[0]
 }
 
 export function decodeFields(fields: Record<string, FirestoreValue> | undefined): Record<string, unknown> {
     const record: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(fields ?? {})) record[key] = decodeValue(value)
+    for (const [key, value] of Object.entries(fields ?? {})) {
+        Object.defineProperty(record, key, {
+            value: decodeValue(value),
+            enumerable: true,
+            writable: true,
+            configurable: true,
+        })
+    }
     return record
 }
 
 export function decodeDocument(document: FirestoreDocument): Record<string, unknown> {
     const id = document.name.slice(document.name.lastIndexOf('/') + 1)
-    return { id, ...decodeFields(document.fields) }
+    return { ...decodeFields(document.fields), id }
 }

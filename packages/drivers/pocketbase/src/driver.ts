@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { encodeId, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { PocketbaseConfig, PocketbaseIdPayload, PocketbaseResourceApi } from './types.ts'
 
 declare module 'nexdk' {
@@ -48,7 +48,7 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
         },
         find: async (ctx, payload) => {
             const { id } = payload as PocketbaseIdPayload
-            return request(`${recordsUrl(ctx)}/${encodeURIComponent(id)}`, {
+            return request(`${recordsUrl(ctx)}/${encodeId(id)}`, {
                 method: 'GET',
                 headers: await ctx.buildHeaders(),
             })
@@ -61,7 +61,7 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
             }),
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
-            return request(`${recordsUrl(ctx)}/${encodeURIComponent(id)}`, {
+            return request(`${recordsUrl(ctx)}/${encodeId(id)}`, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders(),
                 body,
@@ -69,7 +69,7 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
         },
         remove: async (ctx, payload) => {
             const { id } = payload as PocketbaseIdPayload
-            await request(`${recordsUrl(ctx)}/${encodeURIComponent(id)}`, {
+            await request(`${recordsUrl(ctx)}/${encodeId(id)}`, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders(),
             })

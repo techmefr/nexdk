@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { encodeId, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { NestConfig, NestIdPayload, NestResourceApi } from './types.ts'
 
 // Register the nest per-resource API in core's registry so the typed SDK can
@@ -45,7 +45,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         find: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
             return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         create: async (ctx, payload) => {
@@ -58,7 +58,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
             return request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders(),
@@ -67,7 +67,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         },
         remove: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
-            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeURIComponent(id)}`
+            const url = `${ctx.baseUrl}/${ctx.resourceName}/${encodeId(id)}`
             await request(url, { method: 'DELETE', headers: await ctx.buildHeaders() })
             return { success: true }
         },
