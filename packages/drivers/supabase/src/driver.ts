@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
+import { SdkError, toErrorPayload } from 'nexdk'
 import type { AnyResource, SdkDriver, SdkEventHandler } from 'nexdk'
 import type { SupabaseConfig, SupabaseError, SupabaseResourceApi, SupabaseResult } from './types.ts'
 
@@ -9,13 +10,17 @@ declare module 'nexdk' {
     }
 }
 
-export class SupabaseQueryError extends Error {
+export class SupabaseQueryError extends SdkError {
     readonly code: string | undefined
     readonly details: string | undefined
     readonly hint: string | undefined
 
-    constructor(error: SupabaseError) {
-        super(error.message)
+    constructor(error: SupabaseError, status?: number) {
+        super(error.message, {
+            status,
+            errors: { code: error.code, details: error.details, hint: error.hint },
+            data: error,
+        })
         this.name = 'SupabaseQueryError'
         this.code = error.code
         this.details = error.details
@@ -32,16 +37,21 @@ export class SupabaseDriver implements SdkDriver {
     private readonly resources = new Map<string, AnyResource>()
 
     constructor(config: SupabaseConfig) {
-        this.client = createClient(config.url, config.key)
+        this.client = createClient(
+            config.url,
+            config.key,
+            config.fetch ? { global: { fetch: config.fetch } } : undefined,
+        )
     }
 
     bindResource(resourceName: string, resource: AnyResource): void {
         this.resources.set(resourceName, resource)
     }
 
-    private fail(error: SupabaseError, onEvent?: SdkEventHandler): never {
-        onEvent?.('error', error)
-        throw new SupabaseQueryError(error)
+    private fail(error: SupabaseError, status: number | undefined, onEvent?: SdkEventHandler): never {
+        const queryError = new SupabaseQueryError(error, status)
+        onEvent?.('error', { ...error, ...toErrorPayload(queryError) })
+        throw queryError
     }
 
     async get<T>(
@@ -59,9 +69,9 @@ export class SupabaseDriver implements SdkDriver {
             }
         }
 
-        const { data, error } = await query
+        const { data, error, status } = await query
 
-        if (error !== null) this.fail(error, onEvent)
+        if (error !== null) this.fail(error, status, onEvent)
 
         onEvent?.('success', { data })
         return { data: data as T[] }
@@ -74,12 +84,12 @@ export class SupabaseDriver implements SdkDriver {
     ): Promise<SupabaseResult<T>> {
         onEvent?.('request', { resource: resourceName, payload })
 
-        const { data, error } = await this.client
+        const { data, error, status } = await this.client
             .from(resourceName)
             .insert(payload as Record<string, unknown>)
             .select()
 
-        if (error !== null) this.fail(error, onEvent)
+        if (error !== null) this.fail(error, status, onEvent)
 
         onEvent?.('success', { data })
         return { data: data as T[] }
@@ -94,13 +104,13 @@ export class SupabaseDriver implements SdkDriver {
 
         const { id, ...rest } = payload as Record<string, unknown>
 
-        const { data, error } = await this.client
+        const { data, error, status } = await this.client
             .from(resourceName)
             .update(rest)
             .eq('id', id)
             .select()
 
-        if (error !== null) this.fail(error, onEvent)
+        if (error !== null) this.fail(error, status, onEvent)
 
         onEvent?.('success', { data })
         return { data: data as T[] }
@@ -115,9 +125,9 @@ export class SupabaseDriver implements SdkDriver {
 
         const { id } = payload as Record<string, unknown>
 
-        const { error } = await this.client.from(resourceName).delete().eq('id', id)
+        const { error, status } = await this.client.from(resourceName).delete().eq('id', id)
 
-        if (error !== null) this.fail(error, onEvent)
+        if (error !== null) this.fail(error, status, onEvent)
 
         onEvent?.('success', { deleted: true })
         return { success: true }

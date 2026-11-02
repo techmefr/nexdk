@@ -42,7 +42,10 @@ describe('SupabaseDriver', () => {
         const onEvent = vi.fn()
 
         await expect(driver.get('messages', {}, onEvent)).rejects.toThrow(SupabaseQueryError)
-        expect(onEvent).toHaveBeenCalledWith('error', nextError)
+        expect(onEvent).toHaveBeenCalledWith('error', {
+            ...nextError,
+            errors: { code: '42P01' },
+        })
         expect(onEvent).not.toHaveBeenCalledWith('success', expect.anything())
 
         nextError = null

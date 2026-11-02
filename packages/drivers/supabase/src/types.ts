@@ -3,6 +3,7 @@ import type { SdkEventHandler } from 'nexdk'
 export interface SupabaseConfig {
     url: string
     key: string
+    fetch?: typeof fetch
 }
 
 export interface SupabaseResult<T> {

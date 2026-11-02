@@ -12,7 +12,7 @@ Driver over the Supabase client: `get`, `insert`, `update`, `remove`, plus `subs
 - `@supabase/supabase-js`: real `dependency`.
 
 ## Contract
-Emit `error` with `{ message, code?, details?, hint? }`, then throw `SupabaseQueryError`. `subscribe` returns an unsubscribe function.
+Emit `error` with `{ message, status, errors, code?, details?, hint? }` (`toErrorPayload` merged over the Postgrest error), then throw `SupabaseQueryError`, an `SdkError` (`status` from the supabase-js response, `errors` = `{ code, details, hint }`). `config.fetch` (optional) is passed to `createClient` as `global.fetch`. `subscribe` returns an unsubscribe function.
 
 ## Build/test
 `pnpm --filter @nexdk/driver-supabase build` · `... test`.

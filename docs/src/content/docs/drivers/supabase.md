@@ -22,6 +22,8 @@ const sdk = createSdk({
 
 `key` is the anon or the service key.
 
+`fetch` is optional and is forwarded to supabase-js as `global.fetch`, so every request of the client goes through it.
+
 ## Methods
 
 The resource name is the table name.
@@ -46,7 +48,7 @@ unsubscribe()
 
 ## Errors
 
-A Postgrest error emits `error` with `{ message, code?, details?, hint? }`, then throws a `SupabaseQueryError` that exposes `code`, `details` and `hint`.
+A Postgrest error emits `error` with `{ message, status, errors, code?, details?, hint? }`, then throws a `SupabaseQueryError`, an `SdkError` that exposes `status` (the HTTP status of the response), `errors` (`{ code, details, hint }`), `code`, `details` and `hint`.
 
 ```ts
 import { SupabaseQueryError } from '@nexdk/driver-supabase'
