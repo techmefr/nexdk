@@ -10,14 +10,14 @@ The workspace is split into small packages, each usable on its own. None is publ
 | `nexdk` | The SDK: `createSdk`, `defineResource`, `defineDriver`, `resolveHeaders` and the types. See the [API reference](/nexdk/reference/nexdk/). | nothing |
 | [`@nexdk/http`](/nexdk/packages/http/) | REST toolkit: `request`, `createRequest`, `HttpError`, `toQuery`, `splitId`, `encodeId`. | `nexdk` (peer), `ofetch` |
 | [`@nexdk/hooks`](/nexdk/packages/hooks/) | `useResourceForm` (Vue forms with Zod). | `nexdk`, `vue`, `zod` 3 or 4 (peers) |
-| [`@nexdk/driver-lomkit`](/nexdk/drivers/lomkit/) | Laravel + Lomkit (`search`, `mutate`, `delete`). | `nexdk` (peer), `@nexdk/http` |
+| [`@nexdk/driver-lomkit`](/nexdk/drivers/lomkit/) | Laravel + Lomkit (`search`, `mutate`, `delete`). | `nexdk`, `@nexdk/http` (peers) |
 | [`@nexdk/driver-nhost`](/nexdk/drivers/nhost/) | Hasura GraphQL and subscriptions. | `nexdk` (peer) |
-| [`@nexdk/driver-supabase`](/nexdk/drivers/supabase/) | Supabase queries and `postgres_changes`. | `nexdk` (peer), `@supabase/supabase-js` |
-| [`@nexdk/driver-nest`](/nexdk/drivers/nest/) | Conventional REST CRUD (NestJS). | `nexdk` (peer), `@nexdk/http` |
-| [`@nexdk/driver-symfony`](/nexdk/drivers/symfony/) | Symfony / API Platform (Hydra). | `nexdk` (peer), `@nexdk/http` |
-| [`@nexdk/driver-pocketbase`](/nexdk/drivers/pocketbase/) | PocketBase records API. | `nexdk` (peer), `@nexdk/http` |
-| [`@nexdk/driver-strapi`](/nexdk/drivers/strapi/) | Strapi v5 REST. | `nexdk` (peer), `@nexdk/http` |
-| [`@nexdk/driver-firebase`](/nexdk/drivers/firebase/) | Cloud Firestore REST. | `nexdk` (peer), `@nexdk/http` |
+| [`@nexdk/driver-supabase`](/nexdk/drivers/supabase/) | Supabase queries and `postgres_changes`. | `nexdk`, `@supabase/supabase-js` (peers) |
+| [`@nexdk/driver-nest`](/nexdk/drivers/nest/) | Conventional REST CRUD (NestJS). | `nexdk`, `@nexdk/http` (peers) |
+| [`@nexdk/driver-symfony`](/nexdk/drivers/symfony/) | Symfony / API Platform (Hydra). | `nexdk`, `@nexdk/http` (peers) |
+| [`@nexdk/driver-pocketbase`](/nexdk/drivers/pocketbase/) | PocketBase records API. | `nexdk`, `@nexdk/http` (peers) |
+| [`@nexdk/driver-strapi`](/nexdk/drivers/strapi/) | Strapi v5 REST. | `nexdk`, `@nexdk/http` (peers) |
+| [`@nexdk/driver-firebase`](/nexdk/drivers/firebase/) | Cloud Firestore REST. | `nexdk`, `@nexdk/http` (peers) |
 
 ## The independence rule
 

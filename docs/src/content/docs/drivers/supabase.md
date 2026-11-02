@@ -7,7 +7,7 @@ Driver over the Supabase client: table reads and writes, and `postgres_changes` 
 
 ## Install
 
-Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/supabase`). It depends on `@supabase/supabase-js`.
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/supabase`). It peer-depends on `nexdk` and `@supabase/supabase-js` (`^2.43.0`): install the client yourself, so you control its version.
 
 ## Config
 

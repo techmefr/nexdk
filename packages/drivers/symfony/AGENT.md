@@ -10,7 +10,7 @@ API Platform (Symfony) driver over Hydra / JSON-LD: `get`, `find`, `create`, `up
 
 ## Dependency rule
 - `nexdk`: `peerDependency` (+ devDependency `workspace:*`).
-- `@nexdk/http`: real `dependency`. `unwrapCollection` stays local, it is Hydra-specific.
+- `@nexdk/http`: `peerDependency` (`>=0.0.1 <1`) + devDependency. `unwrapCollection` stays local, it is Hydra-specific.
 - Typing: `declare module 'nexdk'` + `__apiUri: 'symfony'`.
 
 ## Contract

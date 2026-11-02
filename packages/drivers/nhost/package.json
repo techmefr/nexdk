@@ -6,10 +6,25 @@
     "license": "MIT",
     "author": "techmefr",
     "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/drivers/nhost#readme",
+    "bugs": {
+        "url": "https://github.com/techmefr/nexdk/issues"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/techmefr/nexdk.git",
         "directory": "packages/drivers/nhost"
+    },
+    "keywords": [
+        "nexdk",
+        "driver",
+        "sdk",
+        "nhost",
+        "hasura",
+        "graphql",
+        "subscriptions"
+    ],
+    "engines": {
+        "node": ">=22"
     },
     "sideEffects": false,
     "exports": {
@@ -33,7 +48,7 @@
         "dev": "unbuild --stub"
     },
     "peerDependencies": {
-        "nexdk": "workspace:*"
+        "nexdk": ">=0.0.1 <1"
     },
     "devDependencies": {
         "nexdk": "workspace:*",

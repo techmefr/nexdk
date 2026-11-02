@@ -7,7 +7,7 @@ It is the reference driver and the worked example of `docs/src/content/docs/guid
 
 ## Dependency rule
 - `nexdk`: `peerDependency` (+ devDependency `workspace:*`). Uses `defineDriver`.
-- `@nexdk/http`: real `dependency` (`createRequest`, `toQuery`, `splitId`, `encodeId`, `resolveHeaders`). Do not hand-roll `fetch` here.
+- `@nexdk/http`: `peerDependency` (`>=0.0.1 <1`) + devDependency (`createRequest`, `toQuery`, `splitId`, `encodeId`, `resolveHeaders`). Do not hand-roll `fetch` here.
 - Typing: `declare module 'nexdk'` + `__apiUri: 'nest'`.
 
 ## Contract

@@ -38,11 +38,10 @@ importers:
         version: 7.0.8(@astrojs/markdown-satteri@0.3.8)(astro@7.4.4(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
 
   packages/drivers/firebase:
-    dependencies:
+    devDependencies:
       '@nexdk/http':
         specifier: workspace:*
         version: link:../../http
-    devDependencies:
       nexdk:
         specifier: workspace:*
         version: link:../../..
@@ -60,11 +59,10 @@ importers:
         version: 3.25.76
 
   packages/drivers/lomkit:
-    dependencies:
+    devDependencies:
       '@nexdk/http':
         specifier: workspace:*
         version: link:../../http
-    devDependencies:
       nexdk:
         specifier: workspace:*
         version: link:../../..
@@ -82,11 +80,10 @@ importers:
         version: 3.25.76
 
   packages/drivers/nest:
-    dependencies:
+    devDependencies:
       '@nexdk/http':
         specifier: workspace:*
         version: link:../../http
-    devDependencies:
       nexdk:
         specifier: workspace:*
         version: link:../../..
@@ -122,11 +119,10 @@ importers:
         version: 3.25.76
 
   packages/drivers/pocketbase:
-    dependencies:
+    devDependencies:
       '@nexdk/http':
         specifier: workspace:*
         version: link:../../http
-    devDependencies:
       nexdk:
         specifier: workspace:*
         version: link:../../..
@@ -144,11 +140,10 @@ importers:
         version: 3.25.76
 
   packages/drivers/strapi:
-    dependencies:
+    devDependencies:
       '@nexdk/http':
         specifier: workspace:*
         version: link:../../http
-    devDependencies:
       nexdk:
         specifier: workspace:*
         version: link:../../..
@@ -166,11 +161,10 @@ importers:
         version: 3.25.76
 
   packages/drivers/supabase:
-    dependencies:
+    devDependencies:
       '@supabase/supabase-js':
         specifier: ^2.43.0
         version: 2.111.0
-    devDependencies:
       nexdk:
         specifier: workspace:*
         version: link:../../..
@@ -185,11 +179,10 @@ importers:
         version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
 
   packages/drivers/symfony:
-    dependencies:
+    devDependencies:
       '@nexdk/http':
         specifier: workspace:*
         version: link:../../http
-    devDependencies:
       nexdk:
         specifier: workspace:*
         version: link:../../..

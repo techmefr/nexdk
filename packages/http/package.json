@@ -6,6 +6,9 @@
     "license": "MIT",
     "author": "techmefr",
     "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/http#readme",
+    "bugs": {
+        "url": "https://github.com/techmefr/nexdk/issues"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/techmefr/nexdk.git",
@@ -18,6 +21,9 @@
         "rest",
         "driver"
     ],
+    "engines": {
+        "node": ">=22"
+    },
     "sideEffects": false,
     "exports": {
         ".": {
@@ -43,7 +49,7 @@
         "ofetch": "^1.5.1"
     },
     "peerDependencies": {
-        "nexdk": "workspace:*"
+        "nexdk": ">=0.0.1 <1"
     },
     "devDependencies": {
         "nexdk": "workspace:*",

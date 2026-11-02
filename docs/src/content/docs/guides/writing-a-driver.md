@@ -147,13 +147,13 @@ By hand, add `declare readonly __apiUri: 'my'` to the class. Without `__apiUri`,
 ## Conventions
 
 - Official drivers: `@nexdk/driver-*`. Community drivers: `nexdk-driver-*`.
-- `nexdk` goes in `peerDependencies`, plus a `devDependency` so the package builds alone.
+- `nexdk` goes in `peerDependencies` with an explicit 0.x range (`>=0.0.1 <1`), plus a `workspace:*` `devDependency` so the package builds alone. Do the same for `@nexdk/http`.
 - Import the event types from `nexdk`. Do not depend on another driver.
-- A library the driver needs at runtime goes in `dependencies` (for example `@nexdk/http`, or `@supabase/supabase-js`).
+- A library the user already owns or must pick the version of (`@nexdk/http`, `@supabase/supabase-js`) is a `peerDependency` plus a `devDependency`. Only a private implementation detail goes in `dependencies`.
 
 ```json
 {
-  "peerDependencies": { "nexdk": "workspace:*" },
+  "peerDependencies": { "nexdk": ">=0.0.1 <1" },
   "devDependencies": { "nexdk": "workspace:*" }
 }
 ```

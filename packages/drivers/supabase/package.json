@@ -6,10 +6,24 @@
     "license": "MIT",
     "author": "techmefr",
     "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/drivers/supabase#readme",
+    "bugs": {
+        "url": "https://github.com/techmefr/nexdk/issues"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/techmefr/nexdk.git",
         "directory": "packages/drivers/supabase"
+    },
+    "keywords": [
+        "nexdk",
+        "driver",
+        "sdk",
+        "supabase",
+        "postgres",
+        "realtime"
+    ],
+    "engines": {
+        "node": ">=22"
     },
     "sideEffects": false,
     "exports": {
@@ -33,12 +47,11 @@
         "dev": "unbuild --stub"
     },
     "peerDependencies": {
-        "nexdk": "workspace:*"
-    },
-    "dependencies": {
+        "nexdk": ">=0.0.1 <1",
         "@supabase/supabase-js": "^2.43.0"
     },
     "devDependencies": {
+        "@supabase/supabase-js": "^2.43.0",
         "nexdk": "workspace:*",
         "typescript": "^5.9.3",
         "unbuild": "^3.6.1",

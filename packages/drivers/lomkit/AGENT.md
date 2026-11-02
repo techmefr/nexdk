@@ -5,7 +5,7 @@ REST driver for Laravel + Lomkit REST API. `get` posts to `/{resource}/search`, 
 
 ## Dependency rule
 - `nexdk`: `peerDependency` (+ devDependency `workspace:*`), type-only usage.
-- `@nexdk/http`: real `dependency` (`createRequest`, `resolveHeaders`; `HttpError` is thrown by `request`). Not `toQuery` or `splitId`.
+- `@nexdk/http`: `peerDependency` (`>=0.0.1 <1`) + devDependency (`createRequest`, `resolveHeaders`; `HttpError` is thrown by `request`). Not `toQuery` or `splitId`.
 - No dependency on `shamock` or `dialectr`: they are combined in application code (`toLomkit` output is the `get` payload).
 
 ## Contract

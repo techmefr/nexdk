@@ -1,0 +1,41 @@
+# @nexdk/driver-nest
+
+nexdk driver for the conventional NestJS REST controller shape (GET, POST, PATCH, DELETE).
+
+Part of [nexdk](https://github.com/techmefr/nexdk).
+
+## Install
+
+Not published to npm yet. Clone the repository and build it:
+
+```bash
+git clone https://github.com/techmefr/nexdk.git
+cd nexdk
+pnpm install
+pnpm build
+```
+
+Peer dependencies: `nexdk`, `@nexdk/http`.
+
+## Usage
+
+```ts
+import { createSdk } from 'nexdk'
+import { createNestDriver } from '@nexdk/driver-nest'
+
+const sdk = createSdk({
+  drivers: { nest: createNestDriver({ baseUrl: 'https://api.example.com' }) },
+})
+
+const users = await sdk.nest.users.get({ page: 1 })
+```
+
+## Documentation
+
+- [Reference](https://techmefr.github.io/nexdk/drivers/nest/)
+- [Repository](https://github.com/techmefr/nexdk/tree/main/packages/drivers/nest)
+- [Issues](https://github.com/techmefr/nexdk/issues)
+
+## License
+
+MIT

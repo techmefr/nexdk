@@ -9,7 +9,7 @@ Driver over the Supabase client: `get`, `insert`, `update`, `remove`, plus `subs
 
 ## Dependency rule
 - `nexdk`: `peerDependency` (+ devDependency `workspace:*`), type-only usage.
-- `@supabase/supabase-js`: real `dependency`.
+- `@supabase/supabase-js`: `peerDependency` (`^2.43.0`) + devDependency, like every external library of a driver. Never `dependencies`.
 
 ## Contract
 Emit `error` with `{ message, status, errors, code?, details?, hint? }` (`toErrorPayload` merged over the Postgrest error), then throw `SupabaseQueryError`, an `SdkError` (`status` from the supabase-js response, `errors` = `{ code, details, hint }`). `config.fetch` (optional) is passed to `createClient` as `global.fetch`. `subscribe` returns an unsubscribe function.

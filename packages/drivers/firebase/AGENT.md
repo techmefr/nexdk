@@ -12,7 +12,7 @@ Cloud Firestore REST driver: `get`, `find`, `create`, `update`, `remove`. Encode
 - Collection name and ids are URL-encoded. Errors: `error` with `{ message, status, errors }`, then an `HttpError` (an `SdkError` with `status`, `errors`, `data`) is thrown. `config.fetch` (optional) is given to `createRequest` and kept in the driver state as `ctx.request`: always call `ctx.request`, never the global `request`.
 
 ## Dependency rule
-`nexdk`: `peerDependency` (+ devDependency). `@nexdk/http`: real `dependency`.
+`nexdk` and `@nexdk/http`: `peerDependencies` (`>=0.0.1 <1`) + devDependencies.
 
 ## Build/test
 `pnpm --filter @nexdk/driver-firebase build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).
