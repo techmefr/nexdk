@@ -1,9 +1,9 @@
 import { defineDriver } from 'nexdk'
-import { createRequest, encodeId, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import type { FirebaseConfig, FirebaseIdPayload, FirebaseResourceApi } from './types.ts'
-import { decodeDocument, encodeFields } from './values.ts'
-import type { FirestoreDocument } from './values.ts'
+import { decodeDocument, deleteField, encodeFields } from './values.ts'
+import type { DecodeOptions, FirestoreDocument } from './values.ts'
 
 declare module 'nexdk' {
     interface ResourceApiKinds<T> {
@@ -26,7 +26,9 @@ type Ctx = FirebaseState & { resourceName: string }
 
 const DEFAULT_BASE_URL = 'https://firestore.googleapis.com'
 
-const collectionUrl = (ctx: Ctx): string => `${ctx.documentsUrl}/${encodeURIComponent(ctx.resourceName)}`
+const collectionUrl = (ctx: Ctx): string => `${ctx.documentsUrl}/${encodeResource(ctx.resourceName)}`
+
+const WRITTEN: DecodeOptions = { unsafeIntegers: 'bigint' }
 
 const SIMPLE_FIELD = /^[A-Za-z_][A-Za-z0-9_]*$/
 
@@ -48,7 +50,7 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
         const databaseId = encodeURIComponent(config.databaseId ?? '(default)')
         return {
             documentsUrl: `${baseUrl}/v1/projects/${encodeURIComponent(config.projectId)}/databases/${databaseId}/documents`,
-            request: createRequest(config.fetch),
+            request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal }),
             buildHeaders: async () => ({
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
@@ -67,7 +69,9 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
                 })
 
             if (query.pageToken !== undefined || query.pageSize !== undefined) {
-                return ((await fetchPage({})).documents ?? []).map(decodeDocument)
+                const page = await fetchPage({})
+                const rows = (page.documents ?? []).map(document => decodeDocument(document))
+                return Object.defineProperty(rows, 'nextPageToken', { value: page.nextPageToken || undefined, enumerable: false })
             }
 
             const documents: FirestoreDocument[] = []
@@ -77,7 +81,7 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
                 documents.push(...(list.documents ?? []))
                 pageToken = list.nextPageToken || undefined
             } while (pageToken !== undefined)
-            return documents.map(decodeDocument)
+            return documents.map(document => decodeDocument(document))
         },
         find: async (ctx, payload) => {
             const { id } = payload as FirebaseIdPayload
@@ -95,12 +99,13 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
                 headers: await ctx.buildHeaders(),
                 body: { fields: encodeFields(fields) },
             })
-            return decodeDocument(document)
+            return decodeDocument(document, WRITTEN)
         },
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
             const fields = encodeFields(body)
-            const keys = Object.keys(fields)
+            const removed = Object.keys(body).filter(key => body[key] === deleteField)
+            const keys = [...Object.keys(fields), ...removed]
             if (keys.length === 0) throw new Error('update requires at least one field')
             const document = await ctx.request<FirestoreDocument>(
                 `${collectionUrl(ctx)}/${encodeId(id)}?${updateMask(keys)}&currentDocument.exists=true`,
@@ -110,7 +115,7 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
                     body: { fields },
                 },
             )
-            return decodeDocument(document)
+            return decodeDocument(document, WRITTEN)
         },
         remove: async (ctx, payload) => {
             const { id } = payload as FirebaseIdPayload

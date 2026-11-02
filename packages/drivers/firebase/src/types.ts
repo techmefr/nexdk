@@ -8,6 +8,8 @@ export interface FirebaseConfig {
     baseUrl?: string
     headers?: HeadersResolver
     fetch?: typeof fetch
+    timeout?: number
+    signal?: AbortSignal
 }
 
 export interface FirebaseIdPayload {
@@ -30,8 +32,10 @@ export interface FirebaseRemoveResult {
     success: boolean
 }
 
+export type FirebasePage<T> = T[] & { readonly nextPageToken?: string }
+
 export interface FirebaseResourceApi<T> {
-    get(query?: FirebaseListQuery, onEvent?: SdkEventHandler): Promise<T[]>
+    get(query?: FirebaseListQuery, onEvent?: SdkEventHandler): Promise<FirebasePage<T>>
     find(payload: FirebaseIdPayload, onEvent?: SdkEventHandler): Promise<T>
     create(body: Partial<T> & { id?: string }, onEvent?: SdkEventHandler): Promise<T>
     update(payload: FirebaseUpdatePayload, onEvent?: SdkEventHandler): Promise<T>

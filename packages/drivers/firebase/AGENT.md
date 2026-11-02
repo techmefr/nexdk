@@ -14,5 +14,10 @@ Cloud Firestore REST driver: `get`, `find`, `create`, `update`, `remove`. Encode
 ## Dependency rule
 `nexdk` and `@nexdk/http`: `peerDependencies` (`>=0.0.1 <1`) + devDependencies.
 
+## Errors and options
+- `message` is the backend message when identifiable and `errors` is normalized (see `@nexdk/http`); the thrown error and the `error` event carry the same `status` and `errors`. `config.timeout` and `config.signal` go to `createRequest`. A resource name that is empty, `.` or `..` throws `Invalid resource name`.
+
+- `get` with `pageSize` or `pageToken` returns one page with a non-enumerable `nextPageToken`. Numbers beyond the safe integer range, `NaN` and the infinities are `doubleValue`; `create` and `update` decode unsafe `integerValue` as `bigint`, reads still throw. The `deleteField` sentinel in `update` removes a field (mask only); sub-fields are not targetable.
+
 ## Build/test
 `pnpm --filter @nexdk/driver-firebase build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).

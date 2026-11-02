@@ -44,20 +44,21 @@ The resource name is the collection name. Every returned record has its document
 | `get(query?, onEvent?)` | `GET …/documents/{resource}` | `query` accepts `pageSize`, `pageToken`, `orderBy`. Returns `T[]`. |
 | `find({ id }, onEvent?)` | `GET …/documents/{resource}/{id}` | Returns `T`. |
 | `create(body, onEvent?)` | `POST …/documents/{resource}` | Put `id` in the body to choose the document id. |
-| `update({ id, ...fields }, onEvent?)` | `PATCH …/{id}` | Only the given fields change (`updateMask`). The document must exist. Needs at least one field. |
+| `update({ id, ...fields }, onEvent?)` | `PATCH …/{id}` | Only the given fields change (`updateMask`). Set a field to `deleteField` (exported by the driver) to remove it; targeting a sub-field of a map is not supported, send the whole map. The document must exist. Needs at least one field. |
 | `remove({ id }, onEvent?)` | `DELETE …/{id}` | Returns `{ success: boolean }`. |
 
 ## Pagination
 
-`get` follows every `nextPageToken` and returns all the documents. If you set `pageSize` or `pageToken`, it makes one request and returns that page only.
+`get` follows every `nextPageToken` and returns all the documents. If you set `pageSize` or `pageToken`, it makes one request and returns that page only; the array carries a non-enumerable `nextPageToken` property (`undefined` on the last page) to pass as the next `pageToken`.
 
 ## Values
 
 | JavaScript | Firestore |
 |------------|-----------|
 | `string`, `boolean`, `null` | `stringValue`, `booleanValue`, `nullValue` |
-| integer `number`, `bigint` | `integerValue` |
-| other `number` | `doubleValue` |
+| safe integer `number` | `integerValue` |
+| other `number` (above 2^53, `NaN`, `Infinity`) | `doubleValue` |
+| `bigint` | `integerValue` (`create` and `update` return it as a `bigint` when it is beyond the safe range; reads throw) |
 | `Date` | `timestampValue` |
 | array, object | `arrayValue`, `mapValue` |
 
@@ -67,4 +68,4 @@ Real-time listeners are not part of this driver.
 
 ## Errors
 
-The collection name and the ids are URL-encoded. A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`.
+The collection name and the ids are URL-encoded. A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`. The `message` is the backend message when there is one and `errors` is normalized to `{ field: [message] }` when possible (see [`@nexdk/http`](/nexdk/packages/http/)); `data` keeps the raw body. The thrown error and the event carry the same `status` and `errors`. The `timeout` (milliseconds) and `signal` (`AbortSignal`) config options abort a request with a status 0 error; neither is set by default. A resource name that is empty, `.` or `..` is refused like an id.
