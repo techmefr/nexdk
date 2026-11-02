@@ -14,3 +14,6 @@ PocketBase records API driver (`/api/collections/{collection}/records`): `get`, 
 
 ## Build/test
 `pnpm --filter @nexdk/driver-pocketbase build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).
+
+## Totals
+`get` returns the items with a non-enumerable `pagination` property `{ page, perPage, totalItems, totalPages }` (from the first page when every page is followed; a negative value from `skipTotal` becomes `undefined`), same pattern as symfony and firebase. Typed as `PocketbaseCollection<T>`. `config.fetch` is a `FetchLike` (from `nexdk`), not `typeof fetch`.

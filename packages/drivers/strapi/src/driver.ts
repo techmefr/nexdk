@@ -2,7 +2,7 @@ import { defineDriver } from 'nexdk'
 import { createRequest, encodeId, encodeResource, resolveHeaders, splitId } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import { toStrapiQuery } from './query.ts'
-import type { StrapiConfig, StrapiIdPayload, StrapiResourceApi } from './types.ts'
+import type { StrapiConfig, StrapiIdPayload, StrapiPagination, StrapiResourceApi } from './types.ts'
 
 declare module 'nexdk' {
     interface ResourceApiKinds<T> {
@@ -18,7 +18,13 @@ interface StrapiState {
 
 interface StrapiEnvelope {
     data: unknown
-    meta?: { pagination?: { pageCount?: number } }
+    meta?: { pagination?: StrapiPagination }
+}
+
+function withPagination(rows: unknown, envelope: StrapiEnvelope): unknown {
+    const pagination = envelope.meta?.pagination
+    if (pagination === undefined || !Array.isArray(rows)) return rows
+    return Object.defineProperty(rows, 'pagination', { value: pagination, enumerable: false })
 }
 
 const EXPLICIT_PAGINATION_KEYS = ['page', 'pageSize', 'start', 'limit']
@@ -63,7 +69,10 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
                 })
             }
 
-            if (hasExplicitPagination(query)) return (await fetchPage(undefined)).data
+            if (hasExplicitPagination(query)) {
+                const single = await fetchPage(undefined)
+                return withPagination(single.data, single)
+            }
 
             const first = await fetchPage(undefined)
             if (!Array.isArray(first.data)) return first.data
@@ -73,7 +82,7 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
                 const next = await fetchPage(page)
                 if (Array.isArray(next.data)) items.push(...next.data)
             }
-            return items
+            return withPagination(items, first)
         },
         find: async (ctx, payload) => {
             const { id } = payload as StrapiIdPayload

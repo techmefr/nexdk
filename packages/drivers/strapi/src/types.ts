@@ -1,11 +1,11 @@
-import type { HeadersResolver, SdkEventHandler } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler } from 'nexdk'
 
 export type { HeadersResolver }
 
 export interface StrapiConfig {
     baseUrl: string
     headers?: HeadersResolver
-    fetch?: typeof fetch
+    fetch?: FetchLike
     timeout?: number
     signal?: AbortSignal
 }
@@ -29,8 +29,19 @@ export interface StrapiRemoveResult {
     success: boolean
 }
 
+export interface StrapiPagination {
+    page?: number
+    pageSize?: number
+    pageCount?: number
+    start?: number
+    limit?: number
+    total?: number
+}
+
+export type StrapiCollection<T> = T[] & { readonly pagination?: StrapiPagination }
+
 export interface StrapiResourceApi<T> {
-    get(query?: StrapiListQuery, onEvent?: SdkEventHandler): Promise<T[]>
+    get(query?: StrapiListQuery, onEvent?: SdkEventHandler): Promise<StrapiCollection<T>>
     find(payload: StrapiIdPayload, onEvent?: SdkEventHandler): Promise<T>
     create(body: Partial<T>, onEvent?: SdkEventHandler): Promise<T>
     update(payload: StrapiUpdatePayload, onEvent?: SdkEventHandler): Promise<T>

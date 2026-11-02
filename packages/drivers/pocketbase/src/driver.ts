@@ -17,8 +17,24 @@ interface PocketbaseState {
 
 interface PocketbaseList {
     items: unknown[]
+    page?: number
+    totalItems?: number
     totalPages?: number
     perPage?: number
+}
+
+function nonNegative(value: number | undefined): number | undefined {
+    return typeof value === 'number' && value >= 0 ? value : undefined
+}
+
+function withPagination(rows: unknown[], list: PocketbaseList): unknown[] {
+    const pagination = {
+        page: list.page,
+        perPage: list.perPage,
+        totalItems: nonNegative(list.totalItems),
+        totalPages: nonNegative(list.totalPages),
+    }
+    return Object.defineProperty(rows, 'pagination', { value: pagination, enumerable: false })
 }
 
 const REJECTED_PREFIX = 'PocketBase rejected the request: '
@@ -69,7 +85,8 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
                 })
 
             if (query.page !== undefined || query.perPage !== undefined) {
-                return (await fetchPage({})).items
+                const single = await fetchPage({})
+                return withPagination(single.items, single)
             }
 
             const first = await fetchPage({})
@@ -80,14 +97,14 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
                 for (let page = 2; page <= totalPages; page++) {
                     items.push(...(await fetchPage({ page })).items)
                 }
-                return items
+                return withPagination(items, first)
             }
             let last = first.items
             for (let page = 2; perPage > 0 && last.length >= perPage; page++) {
                 last = (await fetchPage({ page })).items
                 items.push(...last)
             }
-            return items
+            return withPagination(items, first)
         },
         find: async (ctx, payload) => {
             const { id } = payload as PocketbaseIdPayload

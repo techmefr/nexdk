@@ -19,3 +19,6 @@ Strapi v5 REST driver (`/api/{resource}`): `get`, `find`, `create`, `update` (PU
 
 ## Build/test
 `pnpm --filter @nexdk/driver-strapi build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).
+
+## Totals
+`get` returns the data with a non-enumerable `pagination` property holding `meta.pagination` as sent (`page`, `pageSize`, `pageCount`, `start`, `limit`, `total`), from the first page when every page is followed; absent without `meta.pagination`. Typed as `StrapiCollection<T>`. `config.fetch` is a `FetchLike` (from `nexdk`), not `typeof fetch`.

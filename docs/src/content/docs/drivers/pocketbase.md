@@ -27,7 +27,7 @@ const sdk = createSdk({
 const posts = await sdk.pocketbase.posts.get({ sort: '-created' })
 ```
 
-`fetch` is optional: pass any `fetch` implementation and every HTTP request goes through it instead of `globalThis.fetch`, for example a mock or a custom transport.
+`fetch` is optional: pass any function `(input, init?) => Promise<Response>` (the `FetchLike` type, exported by `nexdk` and `@nexdk/http`) and every HTTP request goes through it instead of `globalThis.fetch`, for example `mock.fetch` from shamock or the `fetch` of bun-types, without a cast.
 
 
 
@@ -78,3 +78,12 @@ An invalid query (unknown filter field, unknown sort field, malformed filter) is
 ## Collection names
 
 A fresh PocketBase ships an auth collection named `users`. A resource named `users` talks to that collection: delete or rename it, or use another resource name, if you want your own base collection.
+
+## Totals
+
+The array returned by `get` carries a non-enumerable `pagination` property, as the Symfony and Firebase drivers do: `{ page, perPage, totalItems, totalPages }`, read from the page answer (the first page when `get` follows every page). With `skipTotal`, PocketBase answers `-1`: `totalItems` and `totalPages` are then `undefined`. It does not show up in `Object.keys`, `JSON.stringify` or `toEqual`.
+
+```ts
+const rows = await sdk.pocketbase.posts.get({ page: 2, perPage: 20 })
+rows.pagination?.totalItems
+```
