@@ -6,6 +6,8 @@ export interface PocketbaseConfig {
     baseUrl: string
     headers?: HeadersResolver
     fetch?: typeof fetch
+    timeout?: number
+    signal?: AbortSignal
 }
 
 export interface PocketbaseIdPayload {

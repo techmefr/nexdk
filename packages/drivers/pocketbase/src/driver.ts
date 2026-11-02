@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { HttpError, createRequest, encodeId, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { HttpError, createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import type { PocketbaseConfig, PocketbaseIdPayload, PocketbaseResourceApi } from './types.ts'
 
@@ -39,7 +39,7 @@ function explainRejections(request: HttpRequest): HttpRequest {
 type Ctx = PocketbaseState & { resourceName: string }
 
 const recordsUrl = (ctx: Ctx): string =>
-    `${ctx.baseUrl}/api/collections/${encodeURIComponent(ctx.resourceName)}/records`
+    `${ctx.baseUrl}/api/collections/${encodeResource(ctx.resourceName)}/records`
 
 export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, {
     get: (ctx: Ctx, payload: unknown) => Promise<unknown>
@@ -51,7 +51,7 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
     name: 'pocketbase',
     setup: config => ({
         baseUrl: config.baseUrl.replace(/\/$/, ''),
-        request: explainRejections(createRequest(config.fetch)),
+        request: explainRejections(createRequest(config.fetch, { timeout: config.timeout, signal: config.signal })),
         buildHeaders: async () => ({
             'Content-Type': 'application/json',
             Accept: 'application/json',
