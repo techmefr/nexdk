@@ -1,4 +1,4 @@
-import { defineDriver, resolveHeaders } from 'nexdk'
+import { SdkError, defineDriver, resolveHeaders } from 'nexdk'
 import type { AnyResource, SdkEventHandler } from 'nexdk'
 import type {
     DeleteByIdPayload,
@@ -31,7 +31,7 @@ function asOptions(value: unknown): GraphQLOptions | undefined {
 
 function assertNoGraphQLErrors(raw: NhostQueryResult<unknown>): void {
     if (raw.errors && raw.errors.length > 0) {
-        throw new Error(raw.errors.map(error => error.message).join('; '))
+        throw new SdkError(raw.errors.map(error => error.message).join('; '), { errors: raw.errors, data: raw })
     }
 }
 
@@ -87,12 +87,12 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
             adminSecret: config.adminSecret,
             resolveInitHeaders: () => resolveHeaders(config.headers),
             execute: async <T>(document: string, variables?: Record<string, unknown>) => {
-                const response = await fetch(config.endpoint, {
+                const response = await (config.fetch ?? fetch)(config.endpoint, {
                     method: 'POST',
                     headers: await buildHeaders(),
                     body: JSON.stringify({ query: document, variables }),
                 })
-                if (!response.ok) throw new Error(`HTTP ${response.status}`)
+                if (!response.ok) throw await toHttpError(response)
                 return (await response.json()) as NhostQueryResult<T>
             },
         }
@@ -204,4 +204,16 @@ export function nhostDriver(config: NhostConfig): ReturnType<typeof defineNhostD
         bindResource(resourceName, resource)
     }
     return driver
+}
+
+async function toHttpError(response: Response): Promise<SdkError> {
+    let data: unknown
+    try {
+        data = await response.json()
+    } catch {
+        data = undefined
+    }
+    const body = data !== null && typeof data === 'object' ? (data as Record<string, unknown>) : undefined
+    const errors = body?.errors
+    return new SdkError(`HTTP ${response.status}`, { status: response.status, errors, data })
 }

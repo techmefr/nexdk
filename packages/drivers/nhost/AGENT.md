@@ -17,7 +17,7 @@ GraphQL + subscriptions driver for Hasura / Nhost: `query`, `mutation`, `upsert`
 `nexdk`: `peerDependency` (+ devDependency `workspace:*`). No other runtime dependency. It uses `fetch` directly, not `@nexdk/http`.
 
 ## Contract
-Emit `error`, then throw. A GraphQL `errors` array throws even with HTTP 200. The event is `{ message }` only. `headers` is a record or a resolver (per request and on every WS `connection_init`).
+Emit `error`, then throw an `SdkError`. A GraphQL `errors` array throws even with HTTP 200 (`errors` = the GraphQL array); a non-2xx response throws `HTTP {status}` with `status`, `data` (parsed body) and `errors` (body `errors` key). The event is `{ message, status?, errors? }`. `config.fetch` (optional) replaces `globalThis.fetch` for HTTP calls, not for the WebSocket. `headers` is a record or a resolver (per request and on every WS `connection_init`).
 
 ## Build/test
 `pnpm --filter @nexdk/driver-nhost build` · `... test`. Tests mock `fetch` and `WebSocket` (reconnect and replay with fake timers).

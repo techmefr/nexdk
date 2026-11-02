@@ -5,6 +5,7 @@ export type HeadersResolver = Record<string, string> | (() => Record<string, str
 export interface NhostConfig {
     endpoint: string
     adminSecret?: string
+    fetch?: typeof fetch
     headers?: HeadersResolver
 }
 

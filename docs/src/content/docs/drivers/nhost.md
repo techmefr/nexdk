@@ -35,6 +35,8 @@ const sdk = createSdk({
 
 `adminSecret` is optional. `headers` is a record or a resolver, evaluated on every request and on every WebSocket (re)connection.
 
+`fetch` is optional: pass any `fetch` implementation and every HTTP query and mutation goes through it instead of `globalThis.fetch`. WebSocket subscriptions are not affected.
+
 ## Methods
 
 | Method | GraphQL operation | Notes |
@@ -80,4 +82,4 @@ Resource names, payload keys, `conflictConstraint` and `updateColumns` must matc
 
 ## Errors
 
-A GraphQL `errors` array (even with HTTP 200) emits `error`, then throws an `Error` with the messages joined by `; `. A non-2xx response throws `HTTP {status}`. The `error` event carries `{ message }`.
+A GraphQL `errors` array (even with HTTP 200) emits `error`, then throws an `SdkError` with the messages joined by `; ` and the GraphQL `errors` array in `errors`. A non-2xx response throws an `SdkError` with message `HTTP {status}`, `status`, the parsed body in `data` and its `errors` key, when it has one, in `errors`. The `error` event carries `{ message, status?, errors? }`.
