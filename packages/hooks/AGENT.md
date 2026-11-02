@@ -10,6 +10,7 @@ Vue form helper: `useResourceForm(resource)` returns `values`, `errors`, `isDirt
 - The resource schema must be a Zod object: `FormSchema` is structural (`StandardSchemaV1` plus `shape` and `safeParse`), and the value types come from the Standard Schema output. Valibot and ArkType are supported by the core only, not by this package.
 
 ## Behaviour notes
+- `useResourceForm` throws `ResourceFormSchemaError` at creation when the schema has no `shape` or no `safeParse` (a Standard Schema that is not a Zod object); the types already reject it.
 - `values` start at the Zod default, else `null`. `isDirty` compares against a baseline that `fill` and `reset` move.
 - `setServerErrors` replaces `errors`. `handleSubmit` clears `errors`, validates with `safeParse`, then calls `onValid` with the parsed data.
 

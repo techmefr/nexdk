@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { defineResource } from 'nexdk'
-import { useResourceForm } from '../src/use-resource-form.ts'
+import { ResourceFormSchemaError, useResourceForm } from '../src/use-resource-form.ts'
 
 const UserSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -140,5 +140,22 @@ describe('useResourceForm', () => {
         const { values, isDirty } = useResourceForm(productResource)
         values.value.name = ''
         expect(isDirty.value).toBe(false)
+    })
+})
+
+describe('useResourceForm with an unsupported schema', () => {
+    const standardOnly = {
+        '~standard': { version: 1, vendor: 'custom', validate: (value: unknown) => ({ value }) },
+    }
+    const customResource = defineResource({ name: 'custom', schema: standardOnly as never })
+
+    it('throws a clear error at creation when the schema has no shape', () => {
+        expect(() => useResourceForm(customResource as never)).toThrow(ResourceFormSchemaError)
+        expect(() => useResourceForm(customResource as never)).toThrow(/resource "custom"/)
+    })
+
+    it('throws when the schema has a shape but no safeParse', () => {
+        const withShape = defineResource({ name: 'partial', schema: { ...standardOnly, shape: {} } as never })
+        expect(() => useResourceForm(withShape as never)).toThrow(ResourceFormSchemaError)
     })
 })

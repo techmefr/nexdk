@@ -46,4 +46,4 @@ The resource schema must be a Zod object schema (`z.object`): `useResourceForm` 
 - Because nothing is compared with `instanceof`, a schema built by another copy of `zod` (a duplicated install, a monorepo, `zod/v4`) behaves like any other.
 - Validation calls `schema.safeParse`, and the types come from the Standard Schema output of the schema, so `values` and the data given to `onValid` are typed for both Zod versions.
 - Defaults wrapped by another modifier (`.default(1).optional()`) are not unwrapped: the field starts at `null`.
-- Valibot and ArkType schemas work with `nexdk`, the drivers and `defineResource`, but not with `useResourceForm`: they have no `shape` and no `safeParse`.
+- Valibot and ArkType schemas work with `nexdk`, the drivers and `defineResource`, but not with `useResourceForm`: they have no `shape` and no `safeParse`. Passing one throws a `ResourceFormSchemaError` when the form is created, and the types reject it.

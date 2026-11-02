@@ -62,6 +62,19 @@ function readDefault(field: unknown): unknown {
     return null
 }
 
+export class ResourceFormSchemaError extends Error {
+    constructor(resourceName: string) {
+        super(`useResourceForm needs a Zod object schema with shape and safeParse: resource "${resourceName}" has none`)
+        this.name = 'ResourceFormSchemaError'
+    }
+}
+
+function assertFormSchema(resource: AnyResource): void {
+    const schema = resource.schema as { shape?: unknown; safeParse?: unknown }
+    const hasShape = schema.shape !== null && typeof schema.shape === 'object'
+    if (!hasShape || typeof schema.safeParse !== 'function') throw new ResourceFormSchemaError(resource.name)
+}
+
 function buildInitialValues<TResource extends FormResource>(resource: TResource): FormValues<TResource> {
     return Object.fromEntries(
         Object.entries(resource.schema.shape).map(([key, field]) => [key, readDefault(field)]),
@@ -73,6 +86,8 @@ export function useResourceForm<TResource extends FormResource>(
 ): ResourceFormReturn<TResource> {
     type TValues = FormValues<TResource>
     type TErrors = FormErrors<TResource>
+
+    assertFormSchema(resource)
 
     const initial = buildInitialValues(resource)
     let baseline: TValues = { ...initial }
