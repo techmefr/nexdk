@@ -12,7 +12,7 @@ The common `Repository<T, Id, Params>` interface (`list`, `find`, `create`, `upd
 - `total` is the backend number (Lomkit root `total`, PocketBase `pagination.totalItems`, Strapi `pagination.total`, Symfony `pagination.totalItems`) when it is a non-negative integer, else `null`. Nest is always `null`. No second request to count.
 - `items` is a plain copy of the driver array (the non-enumerable `pagination` is dropped). `page` and `perPage` always come from the arguments, never from `params`.
 - `paging` throws `RangeError` for a page or size that is not a positive integer. Defaults: page 1, `DEFAULT_PER_PAGE` 20.
-- Errors are the nexdk `SdkError` untouched, except `notFound()` (status 404, Lomkit `find` on an empty search) and the Lomkit adapter, which rethrows an `SdkError` with `mutate.N.attributes.` stripped from `errors` keys. No repository-specific error class.
+- Errors are the nexdk `SdkError` untouched, except `notFound()` (status 404, Lomkit `find` on an empty search). The Lomkit field names (`mutate.N.attributes.` stripped from `errors` keys) come from `@nexdk/driver-lomkit` itself, the adapter does nothing. No repository-specific error class.
 - `update` sends `{ ...patch, id }`: the id argument wins over an `id` in the patch.
 - Lomkit `create` and `update` are two requests (mutate, then a search by `key`, default `id`).
 - Not covered, documented as such: supabase (no range or count), firebase (token pages), nhost (GraphQL).

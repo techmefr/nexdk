@@ -13,26 +13,6 @@ export interface LomkitRepositoryOptions {
     key?: string
 }
 
-const ATTRIBUTE_PREFIX = /^mutate\.\d+\.attributes\./
-
-function withoutPrefix(error: unknown): unknown {
-    if (!(error instanceof SdkError)) return error
-    const { errors } = error
-    if (errors === null || typeof errors !== 'object' || Array.isArray(errors)) return error
-    const fields = Object.entries(errors).map(([field, messages]) => [field.replace(ATTRIBUTE_PREFIX, ''), messages])
-    return new SdkError(error.message, { status: error.status, errors: Object.fromEntries(fields), data: error.data })
-}
-
-function guarded<A extends unknown[], R>(work: (...args: A) => Promise<R>): (...args: A) => Promise<R> {
-    return async (...args) => {
-        try {
-            return await work(...args)
-        } catch (error) {
-            throw withoutPrefix(error)
-        }
-    }
-}
-
 export function lomkitRepository<T extends object>(
     api: LomkitResourceApi<T>,
     options: LomkitRepositoryOptions = {},
@@ -53,20 +33,20 @@ export function lomkitRepository<T extends object>(
     }
 
     return {
-        list: guarded(async (listOptions: ListOptions<LomkitParams> = {}): Promise<Page<T>> => {
+        list: async (listOptions: ListOptions<LomkitParams> = {}): Promise<Page<T>> => {
             const { page, perPage } = paging(listOptions)
             const params = listOptions.params ?? {}
             const result = await api.get({ ...params, search: { ...params.search, page, limit: perPage } })
             return { items: result.data, total: totalOf(result.total), page, perPage }
-        }),
-        find: guarded(find),
-        create: guarded(async input => find(await created(input))),
-        update: guarded(async (id, patch) => {
+        },
+        find,
+        create: async input => find(await created(input)),
+        update: async (id, patch) => {
             await api.mutate({ operation: 'update', key: id, attributes: patch })
             return find(id)
-        }),
-        remove: guarded(async id => {
+        },
+        remove: async id => {
             await api.delete({ resources: [id] })
-        }),
+        },
     }
 }
