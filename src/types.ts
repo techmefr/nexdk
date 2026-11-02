@@ -1,5 +1,7 @@
 import type { StandardSchemaV1 } from './standard-schema.ts'
 
+export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+
 export type SdkEvent =
     | 'request'
     | 'success'
@@ -18,6 +20,7 @@ export interface ResourceConfig<TSchema extends StandardSchemaV1> {
     schema: TSchema
     fragments?: Record<string, string[]>
     relations?: Record<string, () => AnyResource>
+    validateResponses?: boolean
 }
 
 export interface Resource<TSchema extends StandardSchemaV1> {
@@ -25,6 +28,7 @@ export interface Resource<TSchema extends StandardSchemaV1> {
     schema: TSchema
     fragments: Record<string, string[]>
     relations: Record<string, () => AnyResource>
+    validateResponses?: boolean
 }
 
 export type InferSchema<TResource extends AnyResource> =
@@ -62,6 +66,7 @@ export type SdkConfig<
     drivers: TDrivers
     resources?: TResources
     notify?: SdkEventHandler
+    validateResponses?: boolean
 }
 
 export type ResourceProxy = Record<string, (...args: unknown[]) => unknown>

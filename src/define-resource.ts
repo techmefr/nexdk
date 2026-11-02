@@ -9,5 +9,6 @@ export function defineResource<TSchema extends StandardSchemaV1>(
         schema: config.schema,
         fragments: config.fragments ?? {},
         relations: config.relations ?? {},
+        ...(config.validateResponses === undefined ? {} : { validateResponses: config.validateResponses }),
     }
 }

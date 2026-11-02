@@ -18,7 +18,7 @@ The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHea
 `create-sdk.ts` (proxy, resource binding) · `errors.ts` (`SdkError`, `toErrorPayload`) · `define-resource.ts` · `define-driver.ts` · `typed-sdk.ts` (type registry) · `types.ts` · `merge.ts` · `standard-schema.ts`.
 
 ## Workspace
-`packages/http` (REST toolkit), `packages/hooks` (Vue forms), `packages/drivers/*` (lomkit, nhost, supabase, nest, symfony, pocketbase, strapi, firebase), `docs/` (Starlight site).
+`packages/http` (REST toolkit), `packages/hooks` (Vue forms), `packages/repository` (common repository interface), `packages/drivers/*` (lomkit, nhost, supabase, nest, symfony, pocketbase, strapi, firebase), `docs/` (Starlight site).
 
 ## Docs rules
 English, short, no comments in code blocks. Examples must run against the built packages. Nothing is published to npm: link to GitHub, never to npmjs.
@@ -27,3 +27,9 @@ English, short, no comments in code blocks. Examples must run against the built 
 `pnpm build` builds the core first, then every package in `packages/**` in dependency order (not `docs`). `pnpm typecheck` · `pnpm test` runs the core tests, then the tests of every package. `pnpm --filter docs build` builds the site. On a fresh clone: `pnpm install --frozen-lockfile && pnpm build && pnpm typecheck && pnpm test`.
 
 Publishable packages declare `nexdk` (and `@nexdk/http` for REST drivers) as `peerDependencies` with the range `>=0.0.1 <1` (0.x aware), plus a `workspace:*` devDependency. `docs` is `private`.
+
+## Response validation (opt-in)
+`createSdk({ validateResponses: true })` or `defineResource({ validateResponses })` (the resource wins) validates the answers of `get`, `find`, `create` and `update` against the resource schema with `schema['~standard'].validate`. Off by default: no behaviour change. `get` accepts an array or a `{ data: [...] }` envelope, the other methods a record; each row is validated, the validated output is returned (non-enumerable properties such as `pagination` are kept). A failure throws `ResponseValidationError` (an `SdkError`, status 0, `errors` keyed by dotted path with a row index, `_` for the root, raw answer in `data`) and emits `error`, after the driver emitted `success`. Code: `src/validate-response.ts`, wired in `src/create-sdk.ts`. Other methods (`remove`, `mutate`, nhost `query`...) are never validated.
+
+## Types and packages
+`FetchLike` is the type of every `fetch` option (see `@nexdk/http`). `packages/repository` (`@nexdk/repository`) is the common list/find/create/update/remove interface over the REST drivers; see its AGENT.md.

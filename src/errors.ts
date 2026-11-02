@@ -24,6 +24,13 @@ export class SdkError extends Error {
     }
 }
 
+export class ResponseValidationError extends SdkError {
+    constructor(resourceName: string, errors: Record<string, string[]>, data: unknown) {
+        super(`Response does not match the schema of resource "${resourceName}"`, { status: 0, errors, data })
+        this.name = 'ResponseValidationError'
+    }
+}
+
 export function toErrorPayload(error: unknown): ErrorEventPayload {
     if (error instanceof Error) {
         const candidate = error as Error & { status?: unknown; errors?: unknown; data?: unknown }

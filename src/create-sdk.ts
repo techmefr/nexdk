@@ -1,5 +1,8 @@
+import { toErrorPayload } from './errors.ts'
 import { mergeEventHandlers } from './merge.ts'
+import { VALIDATED_METHODS, validateResponse } from './validate-response.ts'
 import type {
+    AnyResource,
     SdkConfig,
     SdkDriver,
     SdkEventHandler,
@@ -27,8 +30,9 @@ export function createSdk<
 
     for (const key in config.drivers) {
         const driver = config.drivers[key]
-        bindDriverResources(key, driver, config.resources?.[key])
-        sdk[key] = createDriverProxy(driver, globalHandler)
+        const resources = config.resources?.[key]
+        bindDriverResources(key, driver, resources)
+        sdk[key] = createDriverProxy(driver, globalHandler, resources, config.validateResponses === true)
     }
 
     return sdk as TypedSdk<TDrivers, TResources>
@@ -55,7 +59,9 @@ function bindDriverResources(
 
 function createDriverProxy<TDriver extends SdkDriver>(
     driver: TDriver,
-    globalHandler?: SdkEventHandler,
+    globalHandler: SdkEventHandler | undefined,
+    resources: Record<string, AnyResource> | undefined,
+    validateAll: boolean,
 ): TDriver {
     return new Proxy(driver, {
         get(target, prop: string | symbol) {
@@ -67,7 +73,9 @@ function createDriverProxy<TDriver extends SdkDriver>(
                 return typeof value === 'function' ? value.bind(target) : value
             }
 
-            return createResourceProxy(target, prop, globalHandler)
+            const resource = resources?.[prop]
+            const validate = resource !== undefined && (resource.validateResponses ?? validateAll)
+            return createResourceProxy(target, prop, globalHandler, validate ? resource : undefined)
         },
     })
 }
@@ -75,7 +83,8 @@ function createDriverProxy<TDriver extends SdkDriver>(
 function createResourceProxy(
     driver: SdkDriver,
     resourceName: string,
-    globalHandler?: SdkEventHandler,
+    globalHandler: SdkEventHandler | undefined,
+    validated: AnyResource | undefined,
 ): unknown {
     return new Proxy(
         {},
@@ -97,7 +106,16 @@ function createResourceProxy(
                         onEvent as SdkEventHandler | undefined,
                     )
 
-                    return (method as (...args: unknown[]) => unknown).call(driver, resourceName, payload, handler, extra)
+                    const result = (method as (...args: unknown[]) => unknown).call(driver, resourceName, payload, handler, extra)
+                    if (validated === undefined || !VALIDATED_METHODS.has(methodName) || !(result instanceof Promise)) return result
+                    return result.then(async value => {
+                        try {
+                            return await validateResponse(validated, methodName, value)
+                        } catch (error) {
+                            handler?.('error', toErrorPayload(error))
+                            throw error
+                        }
+                    })
                 }
             },
         },

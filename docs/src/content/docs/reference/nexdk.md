@@ -4,7 +4,7 @@ description: Every runtime export of the nexdk core package.
 ---
 
 ```ts
-import { SdkError, createSdk, defineDriver, defineResource, resolveHeaders, toErrorPayload } from 'nexdk'
+import { ResponseValidationError, SdkError, createSdk, defineDriver, defineResource, resolveHeaders, toErrorPayload } from 'nexdk'
 ```
 
 ## `createSdk(config)`
@@ -22,6 +22,7 @@ Binds resources to drivers and returns the typed proxy.
 | `drivers` | `Record<string, SdkDriver>` | Any object with `{ name, bindResource() }`. |
 | `resources?` | `Record<driverKey, Record<resourceKey, AnyResource>>` | Bound with `driver.bindResource(resourceKey, resource)`. |
 | `notify?` | `SdkEventHandler` | Runs on every call, together with the per-call `onEvent`. See [Events](/nexdk/guides/events/). |
+| `validateResponses?` | `boolean` | Off by default. Validates the answers of `get`, `find`, `create` and `update` against the resource schema. See [Validating responses](/nexdk/guides/standard-schema/#validating-responses-opt-in). |
 
 The call proxy is described in [Anatomy of a call](/nexdk/guides/anatomy-of-a-call/).
 
@@ -33,7 +34,7 @@ function defineResource<TSchema extends StandardSchemaV1>(
 ): Resource<TSchema>
 ```
 
-`config` is `{ name, schema, fragments?, relations? }`. `schema` is any [Standard Schema](/nexdk/guides/standard-schema/) validator. `fragments` (`Record<string, string[]>`) and `relations` (`Record<string, () => AnyResource>`) default to `{}`. nhost reads `fragments` to choose the fields of a query.
+`config` is `{ name, schema, fragments?, relations?, validateResponses? }`. `validateResponses` overrides the SDK-wide setting for this resource. `schema` is any [Standard Schema](/nexdk/guides/standard-schema/) validator. `fragments` (`Record<string, string[]>`) and `relations` (`Record<string, () => AnyResource>`) default to `{}`. nhost reads `fragments` to choose the fields of a query.
 
 ## `defineDriver(definition)`
 
@@ -84,6 +85,17 @@ The typed error thrown by every driver. `toErrorPayload` builds the `error` even
 | `AsyncMethod`, `ReactiveMethod` | Signatures of a driver method. |
 | `DriverDefinition`, `DriverMethod`, `DriverMethodContext`, `DefinedDriver` | Types behind `defineDriver`. |
 | `HeadersResolver` | A record, or a function returning one. |
+| `FetchLike` | `(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>`: the type of the `fetch` option of the REST drivers. Narrower than `typeof fetch`, so `mock.fetch` and the `fetch` of bun-types are accepted without a cast. |
 | `ErrorEventPayload`, `SdkErrorInit` | The `error` event payload `{ message, status?, errors? }`, and the init of `SdkError`. |
 | `ResourceApiKinds<T>` | The registry a driver augments to type its API. See [End-to-end typing](/nexdk/guides/writing-a-driver/#end-to-end-typing). |
 | `ResourceApiFor`, `ResourceApiUri`, `TypedSdk`, `Sdk`, `ResourcesByDriver` | Types behind the typed SDK. |
+
+## `ResponseValidationError`
+
+```ts
+class ResponseValidationError extends SdkError {
+  constructor(resourceName: string, errors: Record<string, string[]>, data: unknown)
+}
+```
+
+Thrown when `validateResponses` is on and an answer does not match the schema: `status` is 0, `errors` is keyed by dotted path (`1.name` for the second row, `data.0.name` inside a `data` envelope, `_` for the root), `data` is the raw answer. See [Validating responses](/nexdk/guides/standard-schema/#validating-responses-opt-in).

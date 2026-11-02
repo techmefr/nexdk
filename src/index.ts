@@ -7,13 +7,14 @@ export type {
     DriverMethodContext,
     HeadersResolver,
 } from './define-driver.ts'
-export { SdkError, toErrorPayload } from './errors.ts'
+export { ResponseValidationError, SdkError, toErrorPayload } from './errors.ts'
 export type { ErrorEventPayload, SdkErrorInit } from './errors.ts'
 export { defineResource } from './define-resource.ts'
 export type { StandardSchemaV1 } from './standard-schema.ts'
 export type {
     AnyResource,
     AsyncMethod,
+    FetchLike,
     InferSchema,
     SdkConfig,
     SdkDriver,
