@@ -9,10 +9,10 @@ Cloud Firestore REST driver: `get`, `find`, `create`, `update`, `remove`. Encode
 - Decoding an `integerValue` outside the safe integer range throws.
 - The document id (last segment of `name`) wins over a stored `id` field.
 - `update` uses `updateMask` and `currentDocument.exists=true`, and needs at least one field.
-- Collection name and ids are URL-encoded. Errors: `error` with `{ message, status, errors }`, then an `HttpError` is thrown.
+- Collection name and ids are URL-encoded. Errors: `error` with `{ message, status, errors }`, then an `HttpError` (an `SdkError` with `status`, `errors`, `data`) is thrown. `config.fetch` (optional) is given to `createRequest` and kept in the driver state as `ctx.request`: always call `ctx.request`, never the global `request`.
 
 ## Dependency rule
 `nexdk`: `peerDependency` (+ devDependency). `@nexdk/http`: real `dependency`.
 
 ## Build/test
-`pnpm --filter @nexdk/driver-firebase build` · `... test`. Tests mock `fetch`.
+`pnpm --filter @nexdk/driver-firebase build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).

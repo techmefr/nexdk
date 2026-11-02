@@ -33,6 +33,7 @@ const todos = await sdk.firebase.todos.get({ orderBy: 'title' })
 | `databaseId` | `(default)` | Named Firestore database. |
 | `baseUrl` | `https://firestore.googleapis.com` | Point it at the emulator for local work. |
 | `headers` | none | A record or a resolver, typically the user ID token. |
+| `fetch` | `globalThis.fetch` | A `fetch` implementation used for every request, for example a mock. |
 
 ## Methods
 

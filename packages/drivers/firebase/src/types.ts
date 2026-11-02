@@ -7,6 +7,7 @@ export interface FirebaseConfig {
     databaseId?: string
     baseUrl?: string
     headers?: HeadersResolver
+    fetch?: typeof fetch
 }
 
 export interface FirebaseIdPayload {
