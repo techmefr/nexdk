@@ -59,7 +59,7 @@ const { data } = await sdk.lomkit.users.get({ search: { filters: [{ field: 'age'
 mock.restore()
 ```
 
-Use `createMock` instead when you want to keep the global `fetch` untouched: its `mock.fetch` is a drop-in `fetch` to hand to any client that accepts one. The nexdk drivers do not take a `fetch` option, so use `installMock` with them.
+Use `createMock` instead when you want to keep the global `fetch` untouched: its `mock.fetch` is a drop-in `fetch` to hand to any client that accepts one. Every nexdk REST driver takes a `fetch` option, so pass it `mock.fetch`; use `installMock` only for code that calls the global `fetch`.
 
 ## dialectr
 
