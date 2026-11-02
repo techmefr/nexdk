@@ -59,6 +59,27 @@ export type ResourcesByDriver<TDrivers extends Record<string, SdkDriver>> = {
     [K in keyof TDrivers]?: ResourceMap
 }
 
+export interface StatusError extends Error {
+    status: number
+    errors?: unknown
+    data?: unknown
+}
+
+export interface StatusContext {
+    error: StatusError
+    driver: string
+    resource: string
+    method: string
+}
+
+export type StatusHandler = (context: StatusContext) => void | Promise<void>
+
+export type StatusHandlers = {
+    [status: number]: StatusHandler | undefined
+    '4xx'?: StatusHandler
+    '5xx'?: StatusHandler
+}
+
 export type SdkConfig<
     TDrivers extends Record<string, SdkDriver>,
     TResources extends ResourcesByDriver<TDrivers> = ResourcesByDriver<TDrivers>,
@@ -67,6 +88,7 @@ export type SdkConfig<
     resources?: TResources
     notify?: SdkEventHandler
     validateResponses?: boolean
+    onStatus?: StatusHandlers
 }
 
 export type ResourceProxy = Record<string, (...args: unknown[]) => unknown>

@@ -48,6 +48,7 @@ export default defineConfig({
 						{ label: 'Packages overview', slug: 'guides/packages', attrs: { class: 'sidebar-icon icon-layout-grid' } },
 						{ label: 'Standard Schema (validators)', slug: 'guides/standard-schema', attrs: { class: 'sidebar-icon icon-shield-check' } },
 						{ label: 'Events', slug: 'guides/events', attrs: { class: 'sidebar-icon icon-radio' } },
+						{ label: 'React to statuses', slug: 'guides/react-to-statuses', attrs: { class: 'sidebar-icon icon-shield-check' } },
 					],
 				},
 				{

@@ -14,8 +14,11 @@ The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHea
 - `mergeEventHandlers` runs global then local, isolates each handler (a throw does not skip the other) and rethrows the first error after both ran.
 - `defineDriver` emits `request`, then `success` or `error`. `error` payload (`toErrorPayload`): `{ message, status?, errors? }`. `status` is set when the error has a numeric `status`; `errors` is `error.errors` when defined, else `error.data` for an error with a status. A method returning a function is reactive and returned as is.
 
+## Status reactions
+`createSdk({ onStatus: { 401: h, 403: h, '4xx': h, '5xx': h } })` runs one handler per failed call, in `src/on-status.ts`, wired in `src/create-sdk.ts`. The exact status wins over the family. The handler gets `{ error, driver, resource, method }` (`driver` is `driver.name`, `resource` the call key), runs after the driver emitted `error` (so after `notify` and the local `onEvent`), is awaited before the call rejects, and never replaces the original error: a throw or rejection of the handler is dropped. Errors without a numeric `status` and status 0 match nothing. No retry or refresh here. Keep it driver-agnostic: Lomkit or other protocol specifics never go in the core.
+
 ## Layout
-`create-sdk.ts` (proxy, resource binding) · `errors.ts` (`SdkError`, `toErrorPayload`) · `define-resource.ts` · `define-driver.ts` · `typed-sdk.ts` (type registry) · `types.ts` · `merge.ts` · `standard-schema.ts`.
+`create-sdk.ts` (proxy, resource binding) · `on-status.ts` (status handlers) · `errors.ts` (`SdkError`, `toErrorPayload`) · `define-resource.ts` · `define-driver.ts` · `typed-sdk.ts` (type registry) · `types.ts` · `merge.ts` · `standard-schema.ts`.
 
 ## Workspace
 `packages/http` (REST toolkit), `packages/hooks` (Vue forms), `packages/repository` (common repository interface), `packages/drivers/*` (lomkit, nhost, supabase, nest, symfony, pocketbase, strapi, firebase), `docs/` (Starlight site).

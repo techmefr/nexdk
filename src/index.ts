@@ -26,6 +26,10 @@ export type {
     ResourceConfig,
     ResourceMap,
     ResourcesByDriver,
+    StatusContext,
+    StatusError,
+    StatusHandler,
+    StatusHandlers,
     WriteInput,
 } from './types.ts'
 export type {

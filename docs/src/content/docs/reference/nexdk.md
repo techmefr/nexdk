@@ -22,6 +22,7 @@ Binds resources to drivers and returns the typed proxy.
 | `drivers` | `Record<string, SdkDriver>` | Any object with `{ name, bindResource() }`. |
 | `resources?` | `Record<driverKey, Record<resourceKey, AnyResource>>` | Bound with `driver.bindResource(resourceKey, resource)`. |
 | `notify?` | `SdkEventHandler` | Runs on every call, together with the per-call `onEvent`. See [Events](/nexdk/guides/events/). |
+| `onStatus?` | `{ [status: number]: handler, '4xx'?: handler, '5xx'?: handler }` | One handler per failed call, by exact status then by family, after `notify`. The handler receives `{ error, driver, resource, method }`. See [React to statuses](/nexdk/guides/react-to-statuses/). |
 | `validateResponses?` | `boolean` | Off by default. Validates the answers of `get`, `find`, `create` and `update` against the resource schema. See [Validating responses](/nexdk/guides/standard-schema/#validating-responses-opt-in). |
 
 The call proxy is described in [Anatomy of a call](/nexdk/guides/anatomy-of-a-call/).
@@ -88,6 +89,7 @@ The typed error thrown by every driver. `toErrorPayload` builds the `error` even
 | `HeadersResolver` | A record, or a function returning one. |
 | `FetchLike` | `(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>`: the type of the `fetch` option of the REST drivers. Narrower than `typeof fetch`, so `mock.fetch` and the `fetch` of bun-types are accepted without a cast. |
 | `ErrorEventPayload`, `SdkErrorInit` | The `error` event payload `{ message, status?, errors? }`, and the init of `SdkError`. |
+| `StatusHandlers`, `StatusHandler`, `StatusContext`, `StatusError` | The `onStatus` option, a handler, the object it receives and its `error`. |
 | `ResourceApiKinds<T>` | The registry a driver augments to type its API. See [End-to-end typing](/nexdk/guides/writing-a-driver/#end-to-end-typing). |
 | `ResourceApiFor`, `ResourceApiUri`, `TypedSdk`, `Sdk`, `ResourcesByDriver` | Types behind the typed SDK. |
 
