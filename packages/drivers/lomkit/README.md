@@ -1,6 +1,6 @@
 # @nexdk/driver-lomkit
 
-nexdk driver for a Laravel backend using the Lomkit search, mutate and delete conventions.
+nexdk driver for a Laravel backend using the Lomkit REST API: search, mutate (with typed relations), delete, restore, forceDelete, actions, details, gates, and simple field names on 422 errors.
 
 Part of [nexdk](https://github.com/techmefr/nexdk).
 
