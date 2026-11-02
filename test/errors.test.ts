@@ -33,3 +33,10 @@ describe('toErrorPayload', () => {
         expect(toErrorPayload('nope')).toEqual({ message: 'nope' })
     })
 })
+
+describe('toErrorPayload consistency with SdkError', () => {
+    it('does not invent errors from data for an SdkError without errors', () => {
+        const error = new SdkError('Bad', { status: 500, data: { detail: 'x' } })
+        expect(toErrorPayload(error)).toEqual({ message: 'Bad', status: 500 })
+    })
+})

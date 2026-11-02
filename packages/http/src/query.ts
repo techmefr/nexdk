@@ -6,7 +6,7 @@ export function toQuery(payload: unknown): string {
         if (Array.isArray(value)) for (const item of value) params.append(key, String(item))
         else params.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
     }
-    const query = params.toString()
+    const query = params.toString().replace(/\+/g, '%20')
     return query ? `?${query}` : ''
 }
 
@@ -15,8 +15,15 @@ export function splitId(payload: unknown): { id: number | string; body: Record<s
     return { id, body }
 }
 
-export function encodeId(id: number | string): string {
-    const value = String(id ?? '')
-    if (value === '' || value === '.' || value === '..') throw new Error(`Invalid id: "${value}"`)
+function encodeSegment(value: string, label: string): string {
+    if (value === '' || value === '.' || value === '..') throw new Error(`Invalid ${label}: "${value}"`)
     return encodeURIComponent(value)
+}
+
+export function encodeId(id: number | string): string {
+    return encodeSegment(String(id ?? ''), 'id')
+}
+
+export function encodeResource(name: string): string {
+    return encodeSegment(String(name ?? ''), 'resource name')
 }

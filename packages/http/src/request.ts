@@ -1,7 +1,13 @@
 import { FetchError, createFetch, ofetch } from 'ofetch'
 import { SdkError } from 'nexdk'
+import { errorsFromData, messageFromData } from './error-data.ts'
 
-export interface HttpRequestInit {
+export interface HttpRequestOptions {
+    timeout?: number
+    signal?: AbortSignal
+}
+
+export interface HttpRequestInit extends HttpRequestOptions {
     method?: string
     headers?: Record<string, string>
     body?: unknown
@@ -10,28 +16,6 @@ export interface HttpRequestInit {
 
 export type HttpRequest = <T>(url: string, init?: HttpRequestInit) => Promise<T>
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === 'object' && !Array.isArray(value)
-}
-
-function messageFromData(data: unknown): string | undefined {
-    return isRecord(data) && typeof data.message === 'string' && data.message !== '' ? data.message : undefined
-}
-
-function isFieldIssue(value: unknown): value is { message: string } {
-    return isRecord(value) && typeof value.message === 'string'
-}
-
-function fieldErrorsFromData(data: unknown): unknown {
-    if (!isRecord(data)) return undefined
-    if (data.errors !== undefined) return data.errors
-    const fields = data.data
-    if (!isRecord(fields)) return undefined
-    const entries = Object.entries(fields)
-    if (entries.length === 0 || !entries.every(([, issue]) => isFieldIssue(issue))) return undefined
-    return Object.fromEntries(entries.map(([field, issue]) => [field, [(issue as { message: string }).message]]))
-}
-
 export class HttpError extends SdkError {
     declare readonly status: number
 
@@ -39,7 +23,7 @@ export class HttpError extends SdkError {
         super(message ?? messageFromData(data) ?? `HTTP ${status}`, {
             status,
             data,
-            errors: fieldErrorsFromData(data),
+            errors: errorsFromData(data),
         })
         this.name = 'HttpError'
     }
@@ -52,6 +36,8 @@ export async function request<T>(url: string, init?: HttpRequestInit): Promise<T
             method: init?.method,
             headers: init?.headers,
             body: init?.body as RequestInit['body'],
+            timeout: init?.timeout,
+            signal: init?.signal,
             retry: 0,
         })
     } catch (error) {
@@ -63,7 +49,7 @@ export async function request<T>(url: string, init?: HttpRequestInit): Promise<T
     }
 }
 
-export function createRequest(fetchImpl?: typeof fetch): HttpRequest {
-    if (fetchImpl === undefined) return request
-    return (url, init) => request(url, { ...init, fetch: fetchImpl })
+export function createRequest(fetchImpl?: typeof fetch, options?: HttpRequestOptions): HttpRequest {
+    if (fetchImpl === undefined && options === undefined) return request
+    return (url, init) => request(url, { ...options, ...init, fetch: fetchImpl })
 }

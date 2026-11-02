@@ -16,5 +16,10 @@ Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (
 - `encodeId` URL-encodes an id and throws on an empty id, `.` and `..`. Drivers also `encodeURIComponent` the resource name.
 - Used by nest, symfony, pocketbase, strapi, firebase (all), lomkit (`createRequest`, `resolveHeaders` only). nhost and supabase do not use it.
 
+## Error shapes and options
+- `HttpError.message` is the first usable backend message (`message` string or array joined by `, `, `detail`, `error.message`, `error.details`, string `error`, `title`), else `HTTP {status}`. `errors` is normalized to `Record<string, string[]>` from `errors`, API Platform `violations`, Strapi `error.details.errors` or the PocketBase `data` map, else `undefined`. `data` is the raw body. `toErrorPayload` no longer falls back to `data` for an `SdkError`, so the thrown error and the `error` event carry the same `status` and `errors`.
+- `timeout` and `signal` are optional on `request` and `createRequest(fetch, { timeout, signal })`; an abort is an `HttpError` with status 0.
+- `toQuery` encodes a space as `%20`. `encodeResource(name)` applies the `encodeId` guard to resource names.
+
 ## Build/test
 `pnpm --filter @nexdk/http build` · `... test`. Tests stub the global `fetch` and inject one through `init.fetch`.

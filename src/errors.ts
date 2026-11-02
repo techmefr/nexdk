@@ -32,7 +32,7 @@ export function toErrorPayload(error: unknown): ErrorEventPayload {
         const errors =
             candidate.errors !== undefined
                 ? candidate.errors
-                : typeof candidate.status === 'number'
+                : typeof candidate.status === 'number' && !(error instanceof SdkError)
                   ? candidate.data
                   : undefined
         if (errors !== undefined) payload.errors = errors
