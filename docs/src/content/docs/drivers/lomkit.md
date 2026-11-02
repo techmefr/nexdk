@@ -9,6 +9,12 @@ REST driver for a Laravel backend using the [Lomkit](https://github.com/lomkit/l
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/lomkit`).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/driver-lomkit
+```
+
 ## Config
 
 ```ts
@@ -38,12 +44,12 @@ const sdk = createSdk({
 | Method | Maps to | Notes |
 |--------|---------|-------|
 | `get(payload?, onEvent?)` | `POST /{resource}/search` | The payload is the body. Returns the Laravel page: `{ data: T[], current_page, last_page, per_page, total, from, to, meta }`. |
-| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`, or `{ mutate: payload }` when `payload` is an array. Returns `{ created: key[], updated: key[] }`. `payload` is a `LomkitMutatePayload<T>`: `attributes` is typed `Partial<T>` from the resource schema. |
+| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`, or `{ mutate: payload }` when `payload` is an array. Returns `{ created: key[], updated: key[] }`. `payload` is a `LomkitMutatePayload<T>`: `attributes` is typed `WriteInput<T>`: the schema fields are optional and typed, other keys are accepted. |
 | `delete({ resources }, onEvent?)` | `DELETE /{resource}` | Sends `{ resources: [...] }`. Returns `{ success: true }`. |
 
 The URL uses the `name` of the bound resource, URL-encoded, or the call key when no resource is bound.
 
-`LomkitMutatePayload<T>` is `{ operation?, key?, attributes?: Partial<T>, relations?, ...other keys }`: a wrong attribute name or type is a type error, other keys stay free.
+`LomkitMutatePayload<T>` is `{ operation?, key?, attributes?: WriteInput<T>, relations?, ...other keys }`, with `WriteInput<T> = Partial<T> & Record<string, unknown>`. A schema field with the wrong type is a type error, while a field the resource does not return (a `password` sent on creation) is accepted. Reads keep the exact `T`.
 
 `get` returns one page; the pagination fields (`current_page`, `last_page`, `per_page`, `total`) are at the root of the result. It does not follow pages: set `search.page` and `search.limit` yourself.
 

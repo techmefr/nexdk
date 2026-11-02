@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -37,7 +37,7 @@ export type FirebasePage<T> = T[] & { readonly nextPageToken?: string }
 export interface FirebaseResourceApi<T> {
     get(query?: FirebaseListQuery, onEvent?: SdkEventHandler): Promise<FirebasePage<T>>
     find(payload: FirebaseIdPayload, onEvent?: SdkEventHandler): Promise<T>
-    create(body: Partial<T> & { id?: string }, onEvent?: SdkEventHandler): Promise<T>
+    create(body: WriteInput<T> & { id?: string }, onEvent?: SdkEventHandler): Promise<T>
     update(payload: FirebaseUpdatePayload, onEvent?: SdkEventHandler): Promise<T>
     remove(payload: FirebaseIdPayload, onEvent?: SdkEventHandler): Promise<FirebaseRemoveResult>
 }

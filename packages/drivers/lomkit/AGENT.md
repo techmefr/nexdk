@@ -11,7 +11,7 @@ REST driver for Laravel + Lomkit REST API. `get` posts to `/{resource}/search`, 
 ## Contract
 - Emit `error`, then rethrow the `HttpError` (an `SdkError`: `status`, `errors`, `data`). The event is `toErrorPayload(error)`: `{ message, status, errors }`. On a Laravel 422 `message` is the body message and `errors` the field map; without an `errors` key, `errors` is the raw body.
 - `config.fetch` (optional) is passed to `createRequest` and replaces `globalThis.fetch`. The `request` and `httpRequest` names are private fields: a resource keyed like a driver member is refused by `createSdk`.
-- `mutate` payload type is `LomkitMutatePayload<T>`: `attributes` is `Partial<T>` (schema output), `operation`, `key`, `relations` are typed, other keys stay free. Type tests live in `test/mutate-types.test-d.ts` (vitest typecheck).
+- `mutate` payload type is `LomkitMutatePayload<T>`: `attributes` is `WriteInput<T>` (`Partial<T> & Record<string, unknown>`, from `nexdk`: schema fields typed, extra input fields such as a password accepted), `operation`, `key`, `relations` are typed, other keys stay free. Type tests live in `test/mutate-types.test-d.ts` (vitest typecheck).
 - The resource name in the URL is `resource.name` (bound resource) else the call key, URL-encoded.
 - `get` returns one page with `meta`. It never follows pages.
 - `headers` is a record or a resolver, evaluated per request.

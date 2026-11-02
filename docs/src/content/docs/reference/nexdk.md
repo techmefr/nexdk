@@ -81,6 +81,7 @@ The typed error thrown by every driver. `toErrorPayload` builds the `error` even
 | `SdkEvent` | `'request' \| 'success' \| 'error' \| 'data' \| 'complete' \| 'connected' \| 'disconnected'`. |
 | `SdkEventHandler` | `(event: SdkEvent, data?: unknown) => void`. |
 | `Resource`, `AnyResource`, `ResourceConfig`, `ResourceMap` | The object returned by `defineResource`, and its config. |
+| `WriteInput<T>` | `Partial<T> & Record<string, unknown>`: the type of a write body (`create` of the REST drivers, `attributes` of lomkit `mutate`). Schema fields stay typed, fields the resource does not return (a `password`) are accepted. |
 | `InferSchema<TResource>` | The inferred record type of a resource. |
 | `AsyncMethod`, `ReactiveMethod` | Signatures of a driver method. |
 | `DriverDefinition`, `DriverMethod`, `DriverMethodContext`, `DefinedDriver` | Types behind `defineDriver`. |

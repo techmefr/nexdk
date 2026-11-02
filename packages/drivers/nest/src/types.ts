@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -30,7 +30,7 @@ export interface NestResourceApi<T> {
         onEvent?: SdkEventHandler,
     ): Promise<T>
     create(
-        body: Partial<T>,
+        body: WriteInput<T>,
         onEvent?: SdkEventHandler,
     ): Promise<T>
     update(

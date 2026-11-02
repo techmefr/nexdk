@@ -1,5 +1,6 @@
 import type { LomkitResourceApi } from '@nexdk/driver-lomkit'
 import { SdkError } from 'nexdk'
+import type { WriteInput } from 'nexdk'
 import { notFound, paging, totalOf } from './core.ts'
 import type { ListOptions, Page, Repository } from './types.ts'
 
@@ -45,7 +46,7 @@ export function lomkitRepository<T extends object>(
         return row
     }
 
-    const created = async (input: Partial<T>): Promise<string | number> => {
+    const created = async (input: WriteInput<T>): Promise<string | number> => {
         const [id] = (await api.mutate({ operation: 'create', attributes: input })).created
         if (id === undefined) throw new SdkError('The backend did not return the id of the created record', { status: 0 })
         return id

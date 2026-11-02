@@ -1,4 +1,5 @@
 import { createSdk, defineResource } from 'nexdk'
+import type { WriteInput } from 'nexdk'
 import { describe, expectTypeOf, it } from 'vitest'
 import { z } from 'zod'
 import { LomkitDriver } from '../src/driver.ts'
@@ -18,7 +19,17 @@ type User = { id: number; name: string; age: number }
 
 describe('lomkit mutate payload types', () => {
     it('types attributes as a partial of the schema output', () => {
-        expectTypeOf<LomkitMutatePayload<User>['attributes']>().toEqualTypeOf<Partial<User> | undefined>()
+        expectTypeOf<LomkitMutatePayload<User>['attributes']>().toEqualTypeOf<WriteInput<User> | undefined>()
+    })
+
+    it('keeps the schema fields typed for reading', () => {
+        expectTypeOf<NonNullable<LomkitMutatePayload<User>['attributes']>['age']>().toEqualTypeOf<number | undefined>()
+        expectTypeOf<NonNullable<LomkitMutatePayload<User>['attributes']>['password']>().toEqualTypeOf<unknown>()
+    })
+
+    it('accepts input fields that the resource does not return', () => {
+        sdk.lomkit.users.mutate({ operation: 'create', attributes: { name: 'Alice', password: 'secret' } })
+        sdk.lomkit.users.mutate({ attributes: { nickname: 'x' } })
     })
 
     it('accepts a valid partial update', () => {
@@ -37,8 +48,8 @@ describe('lomkit mutate payload types', () => {
     it('rejects attributes that do not match the schema', () => {
         // @ts-expect-error age must be a number
         sdk.lomkit.users.mutate({ attributes: { age: 'old' } })
-        // @ts-expect-error unknown attribute
-        sdk.lomkit.users.mutate({ attributes: { nickname: 'x' } })
+        // @ts-expect-error a schema field keeps its type even with extra input fields
+        sdk.lomkit.users.mutate({ attributes: { age: 'old', password: 'secret' } })
     })
 
     it('still resolves the result type from the schema', () => {

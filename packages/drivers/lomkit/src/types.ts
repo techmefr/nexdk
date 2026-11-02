@@ -1,4 +1,4 @@
-import type { SdkEventHandler } from 'nexdk'
+import type { SdkEventHandler, WriteInput } from 'nexdk'
 import type { FetchLike, HeadersResolver } from '@nexdk/http'
 
 export interface LomkitConfig {
@@ -37,7 +37,7 @@ export interface LomkitValidationError {
 export interface LomkitMutatePayload<T> {
     operation?: 'create' | 'update' | (string & {})
     key?: number | string
-    attributes?: Partial<T>
+    attributes?: WriteInput<T>
     relations?: Record<string, unknown>
     [field: string]: unknown
 }

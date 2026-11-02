@@ -1,3 +1,5 @@
+import type { WriteInput } from 'nexdk'
+
 export interface Page<T> {
     items: T[]
     total: number | null
@@ -18,8 +20,8 @@ export interface Repository<
 > {
     list: (options?: ListOptions<Params>) => Promise<Page<T>>
     find: (id: Id) => Promise<T>
-    create: (input: Partial<T>) => Promise<T>
-    update: (id: Id, patch: Partial<T>) => Promise<T>
+    create: (input: WriteInput<T>) => Promise<T>
+    update: (id: Id, patch: WriteInput<T>) => Promise<T>
     remove: (id: Id) => Promise<void>
 }
 

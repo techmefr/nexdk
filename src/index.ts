@@ -26,6 +26,7 @@ export type {
     ResourceConfig,
     ResourceMap,
     ResourcesByDriver,
+    WriteInput,
 } from './types.ts'
 export type {
     ResourceApiFor,
