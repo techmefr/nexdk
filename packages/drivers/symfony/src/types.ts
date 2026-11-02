@@ -6,6 +6,8 @@ export interface SymfonyConfig {
     baseUrl: string
     headers?: HeadersResolver
     fetch?: typeof fetch
+    timeout?: number
+    signal?: AbortSignal
 }
 
 export interface SymfonyIdPayload {
@@ -18,11 +20,18 @@ export interface SymfonyRemoveResult {
     success: boolean
 }
 
+export interface SymfonyPagination {
+    totalItems?: number
+    view?: Record<string, unknown>
+}
+
+export type SymfonyCollection<T> = T[] & { readonly pagination?: SymfonyPagination }
+
 export interface SymfonyResourceApi<T> {
     get(
         query?: Record<string, unknown>,
         onEvent?: SdkEventHandler,
-    ): Promise<T[]>
+    ): Promise<SymfonyCollection<T>>
     find(
         payload: SymfonyIdPayload,
         onEvent?: SdkEventHandler,
