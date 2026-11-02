@@ -1,0 +1,86 @@
+{
+    "name": "@nexdk/repository",
+    "version": "0.0.1",
+    "description": "One list/find/create/update/remove interface over the nexdk REST drivers, with a normalised page and nexdk errors.",
+    "type": "module",
+    "license": "MIT",
+    "author": "techmefr",
+    "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/repository#readme",
+    "bugs": {
+        "url": "https://github.com/techmefr/nexdk/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/techmefr/nexdk.git",
+        "directory": "packages/repository"
+    },
+    "keywords": [
+        "nexdk",
+        "repository",
+        "pagination",
+        "sdk",
+        "rest"
+    ],
+    "engines": {
+        "node": ">=22"
+    },
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "unbuild",
+        "test": "vitest run",
+        "dev": "unbuild --stub"
+    },
+    "peerDependencies": {
+        "nexdk": ">=0.0.1 <1",
+        "@nexdk/driver-lomkit": ">=0.0.1 <1",
+        "@nexdk/driver-nest": ">=0.0.1 <1",
+        "@nexdk/driver-pocketbase": ">=0.0.1 <1",
+        "@nexdk/driver-strapi": ">=0.0.1 <1",
+        "@nexdk/driver-symfony": ">=0.0.1 <1"
+    },
+    "peerDependenciesMeta": {
+        "@nexdk/driver-lomkit": {
+            "optional": true
+        },
+        "@nexdk/driver-nest": {
+            "optional": true
+        },
+        "@nexdk/driver-pocketbase": {
+            "optional": true
+        },
+        "@nexdk/driver-strapi": {
+            "optional": true
+        },
+        "@nexdk/driver-symfony": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@nexdk/driver-lomkit": "workspace:*",
+        "@nexdk/driver-nest": "workspace:*",
+        "@nexdk/driver-pocketbase": "workspace:*",
+        "@nexdk/driver-strapi": "workspace:*",
+        "@nexdk/driver-symfony": "workspace:*",
+        "@nexdk/http": "workspace:*",
+        "nexdk": "workspace:*",
+        "typescript": "^5.9.3",
+        "unbuild": "^3.6.1",
+        "vitest": "^5.0.5",
+        "zod": "^3.24.0"
+    }
+}

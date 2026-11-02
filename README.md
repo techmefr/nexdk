@@ -79,7 +79,7 @@ const { data } = await sdk.lomkit.products.get({
 `data` is typed as `{ id: number; name: string; price: number }[]`.
 
 - **`defineResource({ name, schema, fragments?, relations? })`**: declares a resource. `schema` is any [Standard Schema](https://standardschema.dev) validator (Zod, Valibot, ArkType).
-- **`createSdk({ drivers, resources?, notify? })`**: binds resources to drivers and returns the typed SDK. `notify` runs on every call, together with the per-call `onEvent`. Each handler is isolated: if one throws, the other still runs.
+- **`createSdk({ drivers, resources?, notify?, validateResponses? })`**: binds resources to drivers and returns the typed SDK. `validateResponses` (off by default) checks answers against the schemas, see [Standard Schema](https://techmefr.github.io/nexdk/guides/standard-schema/#validating-responses-opt-in). `notify` runs on every call, together with the per-call `onEvent`. Each handler is isolated: if one throws, the other still runs.
 - **`defineDriver({ name, setup, methods })`**: authors a driver. It emits `request`, `success` and `error` for you.
 - **`extra`** (third argument): opaque to the core. nhost reads `{ fragment }` from it.
 
@@ -98,7 +98,7 @@ Official drivers live in `packages/drivers/` and peer-depend on `nexdk` only.
 - [`@nexdk/driver-strapi`](packages/drivers/strapi): Strapi v5 REST
 - [`@nexdk/driver-firebase`](packages/drivers/firebase): Cloud Firestore REST
 
-Shared packages: [`@nexdk/http`](packages/http) (REST toolkit) and [`@nexdk/hooks`](packages/hooks) (Vue forms).
+Shared packages: [`@nexdk/http`](packages/http) (REST toolkit), [`@nexdk/hooks`](packages/hooks) (Vue forms) and [`@nexdk/repository`](packages/repository) (one list/find/create/update/remove interface over the REST drivers).
 
 The pocketbase, strapi and firebase drivers follow every page on `get`, unless you set the page size or the page yourself.
 

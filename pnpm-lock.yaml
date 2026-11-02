@@ -239,6 +239,42 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
 
+  packages/repository:
+    devDependencies:
+      '@nexdk/driver-lomkit':
+        specifier: workspace:*
+        version: link:../drivers/lomkit
+      '@nexdk/driver-nest':
+        specifier: workspace:*
+        version: link:../drivers/nest
+      '@nexdk/driver-pocketbase':
+        specifier: workspace:*
+        version: link:../drivers/pocketbase
+      '@nexdk/driver-strapi':
+        specifier: workspace:*
+        version: link:../drivers/strapi
+      '@nexdk/driver-symfony':
+        specifier: workspace:*
+        version: link:../drivers/symfony
+      '@nexdk/http':
+        specifier: workspace:*
+        version: link:../http
+      nexdk:
+        specifier: workspace:*
+        version: link:../..
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      unbuild:
+        specifier: ^3.6.1
+        version: 3.6.1(typescript@5.9.3)(vue@3.5.40(typescript@5.9.3))
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.1))
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+
 packages:
 
   '@astrojs/compiler-binding-android-arm64@0.5.2':
