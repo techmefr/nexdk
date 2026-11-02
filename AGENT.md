@@ -1,7 +1,7 @@
 # AGENT.md — nexdk (the SDK)
 
 ## Role
-The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHeaders` and the types (`SdkEvent`, `SdkEventHandler`, `SdkDriver`, `Resource`, `AnyResource`, `TypedSdk`, `ResourceApiKinds`, `HeadersResolver`, `StandardSchemaV1`...). Runtime proxy: `sdk.[driver].[resource].[method](payload?, onEvent?, extra?)`.
+The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHeaders`, `SdkError`, `toErrorPayload` and the types (`SdkEvent`, `SdkEventHandler`, `SdkDriver`, `Resource`, `AnyResource`, `TypedSdk`, `ResourceApiKinds`, `HeadersResolver`, `StandardSchemaV1`...). Runtime proxy: `sdk.[driver].[resource].[method](payload?, onEvent?, extra?)`.
 
 ## Hard rule: nexdk depends on NOTHING
 - No runtime or peer `dependencies`. Never import `beepr`, `shamock`, `dialectr`, a driver or `zod`.
@@ -10,12 +10,12 @@ The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHea
 - The event handler is structural (`(event, data) => void`). The SDK works with no `notify`: beepr, shamock and dialectr stay optional and are combined in application code (see `docs/src/content/docs/guides/ecosystem.md`).
 
 ## Behaviour to keep
-- `createSdk` proxy: an unknown method throws `Driver "x" has no method "y" for resource "z"`. Methods of `Object.prototype`, `name` and `bindResource` are never callable as resource methods.
+- `createSdk` proxy: an unknown method throws `Driver "x" has no method "y" for resource "z"`. Methods of `Object.prototype`, `name` and `bindResource` are never callable as resource methods. `createSdk` refuses, at binding time, a `resources` key that is already a member of the driver (`name`, `bindResource`, methods, fields), so a resource can never shadow driver internals.
 - `mergeEventHandlers` runs global then local, isolates each handler (a throw does not skip the other) and rethrows the first error after both ran.
-- `defineDriver` emits `request`, then `success` or `error`. `error` payload: `{ message, status, errors }` for an `HttpError`, `{ message }` otherwise. A method returning a function is reactive and returned as is.
+- `defineDriver` emits `request`, then `success` or `error`. `error` payload (`toErrorPayload`): `{ message, status?, errors? }`. `status` is set when the error has a numeric `status`; `errors` is `error.errors` when defined, else `error.data` for an error with a status. A method returning a function is reactive and returned as is.
 
 ## Layout
-`create-sdk.ts` (proxy, resource binding) · `define-resource.ts` · `define-driver.ts` · `typed-sdk.ts` (type registry) · `types.ts` · `merge.ts` · `standard-schema.ts`.
+`create-sdk.ts` (proxy, resource binding) · `errors.ts` (`SdkError`, `toErrorPayload`) · `define-resource.ts` · `define-driver.ts` · `typed-sdk.ts` (type registry) · `types.ts` · `merge.ts` · `standard-schema.ts`.
 
 ## Workspace
 `packages/http` (REST toolkit), `packages/hooks` (Vue forms), `packages/drivers/*` (lomkit, nhost, supabase, nest, symfony, pocketbase, strapi, firebase), `docs/` (Starlight site).

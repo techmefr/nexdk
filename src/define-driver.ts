@@ -1,3 +1,4 @@
+import { toErrorPayload } from './errors.ts'
 import type { AnyResource, SdkDriver, SdkEventHandler } from './types.ts'
 
 export type HeadersResolver =
@@ -42,23 +43,6 @@ type ProxyMethod = (
 
 export type DefinedDriver<TMethods> = SdkDriver & {
     [K in keyof TMethods]: ProxyMethod
-}
-
-export interface ErrorEventPayload {
-    message: string
-    status?: number
-    errors?: unknown
-}
-
-function toErrorPayload(error: unknown): ErrorEventPayload {
-    if (error instanceof Error) {
-        const candidate = error as Error & { status?: unknown; data?: unknown }
-        if (error.name === 'HttpError' && typeof candidate.status === 'number') {
-            return { message: error.message, status: candidate.status, errors: candidate.data }
-        }
-        return { message: error.message }
-    }
-    return { message: String(error) }
 }
 
 function isReactiveResult(value: unknown): value is () => void {

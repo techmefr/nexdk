@@ -4,7 +4,7 @@ description: Every runtime export of the nexdk core package.
 ---
 
 ```ts
-import { createSdk, defineDriver, defineResource, resolveHeaders } from 'nexdk'
+import { SdkError, createSdk, defineDriver, defineResource, resolveHeaders, toErrorPayload } from 'nexdk'
 ```
 
 ## `createSdk(config)`
@@ -55,6 +55,21 @@ function resolveHeaders(
 
 Resolves a record, or a function (sync or async) returning one. Also exported by [`@nexdk/http`](/nexdk/packages/http/).
 
+## `SdkError`, `toErrorPayload(error)`
+
+```ts
+class SdkError extends Error {
+  readonly status: number | undefined
+  readonly errors: unknown
+  readonly data: unknown
+  constructor(message: string, init?: { status?: number; errors?: unknown; data?: unknown })
+}
+
+function toErrorPayload(error: unknown): { message: string; status?: number; errors?: unknown }
+```
+
+The typed error thrown by every driver. `toErrorPayload` builds the `error` event payload: `status` when the error has a numeric `status`, `errors` from `error.errors`, else `error.data` for an error with a status. See [Events](/nexdk/guides/events/#error-payload).
+
 ## Types
 
 | Type | Role |
@@ -69,5 +84,6 @@ Resolves a record, or a function (sync or async) returning one. Also exported by
 | `AsyncMethod`, `ReactiveMethod` | Signatures of a driver method. |
 | `DriverDefinition`, `DriverMethod`, `DriverMethodContext`, `DefinedDriver` | Types behind `defineDriver`. |
 | `HeadersResolver` | A record, or a function returning one. |
+| `ErrorEventPayload`, `SdkErrorInit` | The `error` event payload `{ message, status?, errors? }`, and the init of `SdkError`. |
 | `ResourceApiKinds<T>` | The registry a driver augments to type its API. See [End-to-end typing](/nexdk/guides/writing-a-driver/#end-to-end-typing). |
 | `ResourceApiFor`, `ResourceApiUri`, `TypedSdk`, `Sdk`, `ResourcesByDriver` | Types behind the typed SDK. |
