@@ -12,8 +12,8 @@ declare module 'nexdk' {
 
 export class SupabaseQueryError extends SdkError {
     readonly code: string | undefined
-    readonly details: string | undefined
-    readonly hint: string | undefined
+    readonly details: string | null | undefined
+    readonly hint: string | null | undefined
 
     constructor(error: SupabaseError, status?: number) {
         super(error.message, {
@@ -54,6 +54,17 @@ export class SupabaseDriver implements SdkDriver {
         throw queryError
     }
 
+    private requireId(
+        method: string,
+        payload: unknown,
+        onEvent?: SdkEventHandler,
+    ): Record<string, unknown> {
+        if (payload !== null && typeof payload === 'object') return payload as Record<string, unknown>
+        const error = new SdkError(`${method} requires a payload with an id`)
+        onEvent?.('error', toErrorPayload(error))
+        throw error
+    }
+
     async get<T>(
         resourceName: string,
         payload?: unknown,
@@ -65,7 +76,8 @@ export class SupabaseDriver implements SdkDriver {
 
         if (payload && typeof payload === 'object') {
             for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
-                query.eq(key, value)
+                if (value === null) query.is(key, null)
+                else query.eq(key, value)
             }
         }
 
@@ -102,7 +114,7 @@ export class SupabaseDriver implements SdkDriver {
     ): Promise<SupabaseResult<T>> {
         onEvent?.('request', { resource: resourceName, payload })
 
-        const { id, ...rest } = payload as Record<string, unknown>
+        const { id, ...rest } = this.requireId('update', payload, onEvent)
 
         const { data, error, status } = await this.client
             .from(resourceName)
@@ -123,7 +135,7 @@ export class SupabaseDriver implements SdkDriver {
     ): Promise<{ success: boolean }> {
         onEvent?.('request', { resource: resourceName, payload })
 
-        const { id } = payload as Record<string, unknown>
+        const { id } = this.requireId('remove', payload, onEvent)
 
         const { error, status } = await this.client.from(resourceName).delete().eq('id', id)
 

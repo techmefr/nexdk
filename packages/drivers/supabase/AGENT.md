@@ -14,5 +14,7 @@ Driver over the Supabase client: `get`, `insert`, `update`, `remove`, plus `subs
 ## Contract
 Emit `error` with `{ message, status, errors, code?, details?, hint? }` (`toErrorPayload` merged over the Postgrest error), then throw `SupabaseQueryError`, an `SdkError` (`status` from the supabase-js response, `errors` = `{ code, details, hint }`). `config.fetch` (optional) is passed to `createClient` as `global.fetch`. `subscribe` returns an unsubscribe function.
 
+- A `null` payload value is an `is.null` filter. `update` and `remove` without a payload throw an `SdkError`. `details` and `hint` can be `null`.
+
 ## Build/test
 `pnpm --filter @nexdk/driver-supabase build` · `... test`.

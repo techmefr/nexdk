@@ -48,7 +48,7 @@ unsubscribe()
 
 ## Errors
 
-A Postgrest error emits `error` with `{ message, status, errors, code?, details?, hint? }`, then throws a `SupabaseQueryError`, an `SdkError` that exposes `status` (the HTTP status of the response), `errors` (`{ code, details, hint }`), `code`, `details` and `hint`.
+A Postgrest error emits `error` with `{ message, status, errors, code?, details?, hint? }`, then throws a `SupabaseQueryError`, an `SdkError` that exposes `status` (the HTTP status of the response), `errors` (`{ code, details, hint }`), `code`, `details` and `hint`. `details` and `hint` are `null` when Postgrest sends none. A `null` value in a `get` payload becomes an `is.null` filter, not `eq.null`. `update` and `remove` without a payload throw an `SdkError`.
 
 ```ts
 import { SupabaseQueryError } from '@nexdk/driver-supabase'

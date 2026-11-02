@@ -13,8 +13,8 @@ export interface SupabaseResult<T> {
 export interface SupabaseError {
     message: string
     code?: string
-    details?: string
-    hint?: string
+    details?: string | null
+    hint?: string | null
 }
 
 export interface SupabaseResourceApi<T> {
