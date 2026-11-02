@@ -5,22 +5,24 @@ export interface LomkitConfig {
     baseUrl: string
     headers?: HeadersResolver
     fetch?: typeof fetch
-}
-
-export interface LomkitPaginationMeta {
-    current_page: number
-    last_page: number
-    per_page: number
-    total: number
+    timeout?: number
+    signal?: AbortSignal
 }
 
 export interface LomkitGetResult<T> {
     data: T[]
-    meta?: LomkitPaginationMeta
+    current_page?: number
+    last_page?: number
+    per_page?: number
+    total?: number
+    from?: number | null
+    to?: number | null
+    meta?: Record<string, unknown>
 }
 
-export interface LomkitMutateResult<T> {
-    data: T[]
+export interface LomkitMutateResult {
+    created: (number | string)[]
+    updated: (number | string)[]
 }
 
 export interface LomkitDeleteResult {
@@ -46,9 +48,9 @@ export interface LomkitResourceApi<T> {
         onEvent?: SdkEventHandler,
     ): Promise<LomkitGetResult<T>>
     mutate(
-        payload?: LomkitMutatePayload<T>,
+        payload?: LomkitMutatePayload<T> | LomkitMutatePayload<T>[],
         onEvent?: SdkEventHandler,
-    ): Promise<LomkitMutateResult<T>>
+    ): Promise<LomkitMutateResult>
     delete(
         payload: { resources: (number | string)[] },
         onEvent?: SdkEventHandler,

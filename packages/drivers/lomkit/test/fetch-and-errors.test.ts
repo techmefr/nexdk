@@ -68,7 +68,7 @@ describe('lomkit typed errors', () => {
         expect(events.map(([event]) => event)).not.toContain('success')
     })
 
-    it('reports the status and falls back to the raw body when there are no field errors', async () => {
+    it('reports the same status and errors on the thrown error and on the event when there are no field errors', async () => {
         const injected = vi.fn().mockResolvedValueOnce(jsonResponse(500, {}))
         const events: Array<[string, unknown]> = []
 
@@ -78,6 +78,6 @@ describe('lomkit typed errors', () => {
 
         expect(error.status).toBe(500)
         expect(error.errors).toBeUndefined()
-        expect(events.find(([event]) => event === 'error')?.[1]).toEqual({ message: 'HTTP 500', status: 500, errors: {} })
+        expect(events.find(([event]) => event === 'error')?.[1]).toEqual({ message: 'HTTP 500', status: 500 })
     })
 })

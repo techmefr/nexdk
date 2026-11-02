@@ -1,6 +1,6 @@
 import { toErrorPayload } from 'nexdk'
 import type { AnyResource, SdkDriver, SdkEventHandler } from 'nexdk'
-import { createRequest, resolveHeaders } from '@nexdk/http'
+import { createRequest, encodeResource, resolveHeaders } from '@nexdk/http'
 import type { HeadersResolver, HttpRequest } from '@nexdk/http'
 import type {
     LomkitConfig,
@@ -29,7 +29,7 @@ export class LomkitDriver implements SdkDriver {
     constructor(config: LomkitConfig) {
         this.baseUrl = config.baseUrl.replace(/\/$/, '')
         this.headersConfig = config.headers
-        this.httpRequest = createRequest(config.fetch)
+        this.httpRequest = createRequest(config.fetch, { timeout: config.timeout, signal: config.signal })
     }
 
     bindResource(resourceName: string, resource: AnyResource): void {
@@ -51,7 +51,7 @@ export class LomkitDriver implements SdkDriver {
     ): Promise<LomkitGetResult<T>> {
         const resource = this.resources.get(resourceName)
         const name = resource?.name ?? resourceName
-        const urlName = encodeURIComponent(name)
+        const urlName = encodeResource(name)
 
         onEvent?.('request', { resource: name, payload })
 
@@ -69,23 +69,23 @@ export class LomkitDriver implements SdkDriver {
         return result
     }
 
-    async mutate<T>(
+    async mutate(
         resourceName: string,
         payload?: unknown,
         onEvent?: SdkEventHandler,
-    ): Promise<LomkitMutateResult<T>> {
+    ): Promise<LomkitMutateResult> {
         const resource = this.resources.get(resourceName)
         const name = resource?.name ?? resourceName
-        const urlName = encodeURIComponent(name)
+        const urlName = encodeResource(name)
 
         onEvent?.('request', { resource: name, payload })
 
-        let result: LomkitMutateResult<T>
+        let result: LomkitMutateResult
         try {
-            result = await this.httpRequest<LomkitMutateResult<T>>(`${this.baseUrl}/${urlName}/mutate`, {
+            result = await this.httpRequest<LomkitMutateResult>(`${this.baseUrl}/${urlName}/mutate`, {
                 method: 'POST',
                 headers: await this.buildHeaders(),
-                body: { mutate: [payload] },
+                body: { mutate: Array.isArray(payload) ? payload : [payload] },
             })
         } catch (error) {
             throw this.handleError(error, onEvent)
@@ -101,7 +101,7 @@ export class LomkitDriver implements SdkDriver {
     ): Promise<LomkitDeleteResult> {
         const resource = this.resources.get(resourceName)
         const name = resource?.name ?? resourceName
-        const urlName = encodeURIComponent(name)
+        const urlName = encodeResource(name)
 
         onEvent?.('request', { resource: name, payload })
 

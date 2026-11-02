@@ -2,7 +2,7 @@ import { createSdk, defineResource } from 'nexdk'
 import { describe, expectTypeOf, it } from 'vitest'
 import { z } from 'zod'
 import { LomkitDriver } from '../src/driver.ts'
-import type { LomkitMutatePayload } from '../src/types.ts'
+import type { LomkitMutatePayload, LomkitMutateResult } from '../src/types.ts'
 
 const userResource = defineResource({
     name: 'users',
@@ -42,6 +42,6 @@ describe('lomkit mutate payload types', () => {
     })
 
     it('still resolves the result type from the schema', () => {
-        expectTypeOf(sdk.lomkit.users.mutate).returns.resolves.toEqualTypeOf<{ data: User[] }>()
+        expectTypeOf(sdk.lomkit.users.mutate).returns.resolves.toEqualTypeOf<LomkitMutateResult>()
     })
 })

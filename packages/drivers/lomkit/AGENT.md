@@ -16,5 +16,10 @@ REST driver for Laravel + Lomkit REST API. `get` posts to `/{resource}/search`, 
 - `get` returns one page with `meta`. It never follows pages.
 - `headers` is a record or a resolver, evaluated per request.
 
+## Errors and options
+- `message` is the backend message when identifiable and `errors` is normalized (see `@nexdk/http`); the thrown error and the `error` event carry the same `status` and `errors`. `config.timeout` and `config.signal` go to `createRequest`. A resource name that is empty, `.` or `..` throws `Invalid resource name`.
+
+- Types follow the real responses: `get` returns the Laravel page (`data` plus root `current_page`, `last_page`, `per_page`, `total`, `from`, `to`, `meta`); `mutate` returns `{ created, updated }` and sends an array payload as the whole `mutate` list.
+
 ## Build/test
 `pnpm --filter @nexdk/driver-lomkit build` · `... test` (runs the type tests too). Tests inject `fetch` through `config.fetch` or stub the global one.

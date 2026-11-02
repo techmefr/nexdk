@@ -37,18 +37,18 @@ const sdk = createSdk({
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
-| `get(payload?, onEvent?)` | `POST /{resource}/search` | The payload is the body. Returns `{ data: T[], meta? }`. |
-| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`. Returns `{ data: T[] }`. `payload` is a `LomkitMutatePayload<T>`: `attributes` is typed `Partial<T>` from the resource schema. |
+| `get(payload?, onEvent?)` | `POST /{resource}/search` | The payload is the body. Returns the Laravel page: `{ data: T[], current_page, last_page, per_page, total, from, to, meta }`. |
+| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`, or `{ mutate: payload }` when `payload` is an array. Returns `{ created: key[], updated: key[] }`. `payload` is a `LomkitMutatePayload<T>`: `attributes` is typed `Partial<T>` from the resource schema. |
 | `delete({ resources }, onEvent?)` | `DELETE /{resource}` | Sends `{ resources: [...] }`. Returns `{ success: true }`. |
 
 The URL uses the `name` of the bound resource, URL-encoded, or the call key when no resource is bound.
 
 `LomkitMutatePayload<T>` is `{ operation?, key?, attributes?: Partial<T>, relations?, ...other keys }`: a wrong attribute name or type is a type error, other keys stay free.
 
-`get` returns one page and its `meta` (`current_page`, `last_page`, `per_page`, `total`). It does not follow pages: set `search.page` and `search.limit` yourself.
+`get` returns one page; the pagination fields (`current_page`, `last_page`, `per_page`, `total`) are at the root of the result. It does not follow pages: set `search.page` and `search.limit` yourself.
 
 ```ts
-const { data, meta } = await sdk.lomkit.users.get({
+const { data, total } = await sdk.lomkit.users.get({
   search: { filters: [{ field: 'name', operator: 'like', value: 'A%' }], limit: 20, page: 1 },
 })
 ```
