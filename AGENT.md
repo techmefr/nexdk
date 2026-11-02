@@ -1,30 +1,27 @@
 # AGENT.md — nexdk (the SDK)
 
 ## Role
-The core SDK. Exposes `createSdk`, `defineResource`, `defineDriver`,
-`resolveHeaders`, and all the SDK types (`SdkEvent`, `SdkEventHandler`,
-`SdkDriver`, `Resource`/`AnyResource`, `TypedSdk`, the `ResourceApiKinds`
-registry, `HeadersResolver`…). Runtime proxy: `sdk.[driver].[resource].[method]`.
+The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHeaders` and the types (`SdkEvent`, `SdkEventHandler`, `SdkDriver`, `Resource`, `AnyResource`, `TypedSdk`, `ResourceApiKinds`, `HeadersResolver`, `StandardSchemaV1`...). Runtime proxy: `sdk.[driver].[resource].[method](payload?, onEvent?, extra?)`.
 
-## Hard rule — nexdk depends on NOTHING
-- **No runtime or peer `dependencies` at all.** Never import `beepr`, `shamock`,
-  any driver, or `zod`.
-- The event contract (`SdkEvent`, `SdkEventHandler`) and `mergeEventHandlers`
-  are **native here** (`src/types.ts`, `src/merge.ts`) — do not re-add a beepr import.
-- `Resource`/`defineResource` are typed against `StandardSchemaV1`
-  (`src/standard-schema.ts`), a tiny interface copied locally per the spec's own
-  guidance — never add `zod` (or any validator) as a dependency to type them.
-  Any validator that implements Standard Schema (Zod 3.24+, Valibot, ArkType…)
-  works with `defineResource` as-is.
-- The event handler is structural (`(event, data) => void`): the SDK works with
-  no `notify` and no `mock` — bringing `beepr`/`shamock` must stay optional.
+## Hard rule: nexdk depends on NOTHING
+- No runtime or peer `dependencies`. Never import `beepr`, `shamock`, `dialectr`, a driver or `zod`.
+- The event contract (`src/types.ts`) and `mergeEventHandlers` (`src/merge.ts`) live here. Do not re-add a beepr import.
+- `Resource` and `defineResource` are typed against `StandardSchemaV1` (`src/standard-schema.ts`), a local copy of the spec interface. Keep it identical to shamock's copy. Never add a validator as a dependency.
+- The event handler is structural (`(event, data) => void`). The SDK works with no `notify`: beepr, shamock and dialectr stay optional and are combined in application code (see `docs/src/content/docs/guides/ecosystem.md`).
+
+## Behaviour to keep
+- `createSdk` proxy: an unknown method throws `Driver "x" has no method "y" for resource "z"`. Methods of `Object.prototype`, `name` and `bindResource` are never callable as resource methods.
+- `mergeEventHandlers` runs global then local, isolates each handler (a throw does not skip the other) and rethrows the first error after both ran.
+- `defineDriver` emits `request`, then `success` or `error`. `error` payload: `{ message, status, errors }` for an `HttpError`, `{ message }` otherwise. A method returning a function is reactive and returned as is.
 
 ## Layout
-`create-sdk.ts` (proxy + resource binding) · `define-resource.ts` ·
-`define-driver.ts` (the driver-authoring helper) · `typed-sdk.ts` (HKT registry
-for end-to-end types) · `types.ts` · `merge.ts` · `standard-schema.ts` (local
-Standard Schema contract — keep it byte-identical to shamock's copy).
+`create-sdk.ts` (proxy, resource binding) · `define-resource.ts` · `define-driver.ts` · `typed-sdk.ts` (type registry) · `types.ts` · `merge.ts` · `standard-schema.ts`.
+
+## Workspace
+`packages/http` (REST toolkit), `packages/hooks` (Vue forms), `packages/drivers/*` (lomkit, nhost, supabase, nest, symfony, pocketbase, strapi, firebase), `docs/` (Starlight site).
+
+## Docs rules
+English, short, no comments in code blocks. Examples must run against the built packages. Nothing is published to npm: link to GitHub, never to npmjs.
 
 ## Build/test
-`pnpm --filter nexdk build` · `pnpm --filter nexdk test` (must pass with beepr and
-shamock absent).
+`pnpm build` · `pnpm test` · `pnpm --filter "./packages/**" build` · `pnpm --filter docs build`.

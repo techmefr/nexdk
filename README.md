@@ -17,18 +17,17 @@
 <p align="center">
   <a href="https://techmefr.github.io/nexdk/"><b>Documentation</b></a> ·
   <a href="https://techmefr.github.io/nexdk/guides/writing-a-driver/">Write a driver</a> ·
-  <a href="#drivers">Drivers</a>
+  <a href="#drivers">Drivers</a> ·
+  <a href="#ecosystem">Ecosystem</a>
 </p>
 
 # neXdk
 
-Driver-based SDK. Talk to REST, GraphQL and WebSocket backends through **one
-resource grammar** — the calling code never knows which protocol is behind a
-resource.
+Driver-based SDK. Talk to REST, GraphQL and WebSocket backends through **one resource grammar**. The calling code never knows which protocol is behind a resource.
 
 > **Keywords** — `sdk` · `typescript` · `driver` · `rest` · `graphql` · `websocket` ·
 > `realtime` · `standard-schema` · `zod` · `laravel` · `lomkit` · `nestjs` · `symfony` ·
-> `supabase` · `nhost` · `hasura` · `vue` · `backend-agnostic` · `type-safe`
+> `supabase` · `nhost` · `hasura` · `pocketbase` · `strapi` · `firebase` · `vue` · `backend-agnostic` · `type-safe`
 
 ## Why nexdk
 
@@ -46,15 +45,21 @@ sdk.[driver].[resource].[method](payload?, onEvent?, extra?)
 
 ## Install
 
+nexdk is not published to npm yet. Clone the repository and build it:
+
 ```bash
-pnpm add nexdk zod
-# plus the driver(s) you need, e.g. @nexdk/driver-lomkit
+git clone https://github.com/techmefr/nexdk.git
+cd nexdk
+pnpm install
+pnpm build
+pnpm --filter "./packages/**" build
 ```
 
 ## Usage
 
 ```ts
 import { createSdk, defineResource } from 'nexdk'
+import { LomkitDriver } from '@nexdk/driver-lomkit'
 import { z } from 'zod'
 
 const product = defineResource({
@@ -63,42 +68,40 @@ const product = defineResource({
 })
 
 const sdk = createSdk({
-  drivers: { lomkit },                 // any object implementing SdkDriver
+  drivers: { lomkit: new LomkitDriver({ baseUrl: 'https://api.example.com' }) },
   resources: { lomkit: { products: product } },
 })
 
-// Fully typed: return type carries z.infer<product.schema>
-const { data } = await sdk.lomkit.products.get({})
+const { data } = await sdk.lomkit.products.get({
+  search: { filters: [{ field: 'price', operator: '<', value: 100 }] },
+})
 ```
 
-- **`defineResource({ name, schema, fragments?, relations? })`** — declare a
-  resource once. `schema` is any [Standard Schema](https://standardschema.dev)
-  validator (Zod, Valibot, ArkType…) — the single source of truth for the
-  resource's inferred type.
-- **`createSdk({ drivers, resources?, notify? })`** — binds resources to
-  drivers and returns a typed SDK. The event handler is structural, so an event
-  layer (e.g. [`beepr`](https://www.npmjs.com/package/beepr)) is optional.
-- **`extra`** (4th method arg) — opaque at the core level; a driver may give it
-  its own meaning (e.g. `@nexdk/driver-nhost` uses it for GraphQL fragment
-  selection). Mocking is not a core concept — pair with
-  [`shamock`](https://github.com/techmefr/shamock) in application code if you
-  want it.
+`data` is typed as `{ id: number; name: string; price: number }[]`.
+
+- **`defineResource({ name, schema, fragments?, relations? })`**: declares a resource. `schema` is any [Standard Schema](https://standardschema.dev) validator (Zod, Valibot, ArkType).
+- **`createSdk({ drivers, resources?, notify? })`**: binds resources to drivers and returns the typed SDK. `notify` runs on every call, together with the per-call `onEvent`. Each handler is isolated: if one throws, the other still runs.
+- **`defineDriver({ name, setup, methods })`**: authors a driver. It emits `request`, `success` and `error` for you.
+- **`extra`** (third argument): opaque to the core. nhost reads `{ fragment }` from it.
+
+Errors: a driver emits `error`, then throws. Drivers built on `@nexdk/http` emit `{ message, status, errors }`.
 
 ## Drivers
 
-Official drivers (`@nexdk/driver-*`) live in `packages/drivers/`, peer-depend
-on `nexdk` only, and ship independently on npm.
+Official drivers live in `packages/drivers/` and peer-depend on `nexdk` only.
 
-**Available:**
+- [`@nexdk/driver-lomkit`](packages/drivers/lomkit): Laravel + Lomkit REST API
+- [`@nexdk/driver-nhost`](packages/drivers/nhost): Hasura GraphQL and subscriptions
+- [`@nexdk/driver-supabase`](packages/drivers/supabase): Supabase queries and realtime
+- [`@nexdk/driver-nest`](packages/drivers/nest): conventional NestJS REST CRUD
+- [`@nexdk/driver-symfony`](packages/drivers/symfony): Symfony / API Platform (Hydra)
+- [`@nexdk/driver-pocketbase`](packages/drivers/pocketbase): PocketBase records API
+- [`@nexdk/driver-strapi`](packages/drivers/strapi): Strapi v5 REST
+- [`@nexdk/driver-firebase`](packages/drivers/firebase): Cloud Firestore REST
 
-- [`@nexdk/driver-lomkit`](packages/drivers/lomkit) — Laravel + Lomkit REST API
-- [`@nexdk/driver-nhost`](packages/drivers/nhost) — Hasura GraphQL + subscriptions
-- [`@nexdk/driver-supabase`](packages/drivers/supabase) — Supabase realtime
-- [`@nexdk/driver-nest`](packages/drivers/nest) — conventional NestJS REST CRUD
-- [`@nexdk/driver-symfony`](packages/drivers/symfony) — Symfony / API Platform (Hydra)
-- [`@nexdk/driver-pocketbase`](packages/drivers/pocketbase) — PocketBase records API
-- [`@nexdk/driver-strapi`](packages/drivers/strapi) — Strapi REST (v5)
-- [`@nexdk/driver-firebase`](packages/drivers/firebase) — Cloud Firestore REST
+Shared packages: [`@nexdk/http`](packages/http) (REST toolkit) and [`@nexdk/hooks`](packages/hooks) (Vue forms).
+
+The pocketbase, strapi and firebase drivers follow every page on `get`, unless you set the page size or the page yourself.
 
 **Roadmap**, in priority order:
 
@@ -112,18 +115,18 @@ on `nexdk` only, and ship independently on npm.
 8. WordPress REST API
 9. AdonisJS
 
-Community drivers use the `nexdk-driver-*` naming convention and live in their
-own repo — see [Writing a driver](https://techmefr.github.io/nexdk/guides/writing-a-driver/).
+Community drivers use the `nexdk-driver-*` naming convention. See [Writing a driver](https://techmefr.github.io/nexdk/guides/writing-a-driver/).
 
 ## Ecosystem
 
 | Project | Role | Documentation |
 |---|---|---|
 | [neXdk](https://github.com/techmefr/nexdk) | One resource grammar for REST, GraphQL and WebSocket backends. | [Docs](https://techmefr.github.io/nexdk/) |
-| [beepr](https://github.com/techmefr/beepr) | Typed events and notification adapters. | [Docs](https://techmefr.github.io/beepr/) |
-| [shamock](https://github.com/techmefr/shamock) | Schema-validated mock data, fixtures and offline fallback. | [Docs](https://techmefr.github.io/shamock/) |
+| [beepr](https://github.com/techmefr/beepr) | Typed notifications and debug output. | [Docs](https://techmefr.github.io/beepr/) |
+| [shamock](https://github.com/techmefr/shamock) | Mock `fetch` without any dependency. | [Docs](https://techmefr.github.io/shamock/) |
+| [dialectr](https://github.com/techmefr/dialectr) | Universal query builder (lomkit, PocketBase, Strapi adapters). | [Repository](https://github.com/techmefr/dialectr) |
 
-Use each library on its own, or compose them in application code. neXdk does not depend on beepr or shamock.
+Each project works alone. nexdk depends on none of them. None is published to npm yet. See [Ecosystem](https://techmefr.github.io/nexdk/guides/ecosystem/) to combine them, for example `toLomkit` from dialectr as the payload of the lomkit driver.
 
 ## License
 

@@ -3,39 +3,45 @@ title: '@nexdk/http'
 description: Shared REST toolkit for defineDriver-based drivers, built on ofetch.
 ---
 
-Shared REST toolkit for `defineDriver`-based drivers: a JSON `request` over [`ofetch`](https://github.com/unjs/ofetch), a headers resolver, and small query-string/id-splitting helpers. Extracted from the near-identical code that `@nexdk/driver-nest` and `@nexdk/driver-symfony` each hand-rolled.
+REST helpers shared by the `defineDriver`-based drivers: a JSON `request` over [ofetch](https://github.com/unjs/ofetch), `HttpError`, and small query-string and id helpers.
 
-This package is optional — a driver author who doesn't want `ofetch` simply doesn't depend on it and rolls their own `fetch`, the way `@nexdk/driver-lomkit` and `@nexdk/driver-supabase` still do.
+The package is optional. A driver that does not want `ofetch` can use `fetch` directly, as nhost and supabase do.
 
 ## Install
 
-```bash
-pnpm add nexdk @nexdk/http
-```
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/http`).
 
 ## API
 
 ```ts
-import { HttpError, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { HttpError, encodeId, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 ```
 
-- **`request<T>(url, init?)`** — JSON request over `ofetch`. `init` accepts `{ method?, headers?, body? }`. Throws `HttpError` on any non-2xx response or network failure. Explicitly disables `ofetch`'s default retry-once-on-5xx behaviour (`retry: 0`) — the unified driver contract emits one `request`/`success`/`error` per call, so a silent retry would break that.
-- **`HttpError`** — `{ status: number, data: unknown, message: string }`. `data` is the parsed response body, if any (a driver with a richer error shape, e.g. lomkit's 422 validation payload, reads it from here).
-- **`toQuery(payload)`** — serializes a plain object into a `?a=1&b=2` query string (`''` when empty/undefined).
-- **`splitId(payload)`** — splits `{ id, ...rest }` into `{ id, body: rest }`, for the id-in-URL REST shape (`PATCH /{resource}/{id}` with the rest as the body).
-- **`resolveHeaders`** / **`HeadersResolver`** — re-exported from `nexdk`, so a REST driver only needs one import.
+- **`request<T>(url, init?)`**: JSON request. `init` is `{ method?, headers?, body? }`. Throws `HttpError` on a non-2xx response or a network failure. Retries are disabled (`retry: 0`), so one call is one request.
+- **`HttpError`**: `{ status, data, message }`. `data` is the parsed response body. Network failures have `status` 0.
+- **`toQuery(payload)`**: object to `?a=1&b=2`. `undefined` and `null` values are skipped, arrays repeat the key, other objects are JSON-encoded. Returns `''` when empty.
+- **`splitId(payload)`**: `{ id, ...rest }` to `{ id, body: rest }`.
+- **`encodeId(id)`**: URL-encodes an id. Throws on an empty id, `.` or `..`.
+- **`resolveHeaders`**, **`HeadersResolver`**: re-exported from `nexdk`.
 
 ```ts
-const { id, body } = splitId({ id: 1, name: 'Alice' })
-// id: 1, body: { name: 'Alice' }
+import { HttpError, encodeId, request, splitId, toQuery } from '@nexdk/http'
 
-await request(`https://api.example.com/users${toQuery({ page: 1 })}`, {
+const { id, body } = splitId({ id: 1, name: 'Alice' })
+
+await request(`https://api.example.com/users/${encodeId(id)}${toQuery({ notify: true })}`, {
   method: 'PATCH',
-  headers: await resolveHeaders(config.headers),
+  headers: { 'Content-Type': 'application/json' },
   body,
 })
+
+try {
+  await request('https://api.example.com/missing')
+} catch (error) {
+  if (error instanceof HttpError) console.log(error.status, error.data)
+}
 ```
 
 ## Who uses it
 
-[`@nexdk/driver-nest`](/nexdk/drivers/nest/) and [`@nexdk/driver-symfony`](/nexdk/drivers/symfony/) use all of `request`/`toQuery`/`splitId`/`resolveHeaders`. [`@nexdk/driver-lomkit`](/nexdk/drivers/lomkit/) uses `request`/`resolveHeaders`/`HttpError` (catching `HttpError` itself to special-case its 422 validation body) but not `toQuery`/`splitId` — its `/search`/`/mutate` endpoints don't have the id-in-URL shape those two assume. `@nexdk/driver-nhost` and `@nexdk/driver-supabase` don't use it at all (GraphQL and the Supabase SDK have their own transports).
+nest, symfony, pocketbase, strapi and firebase use `request`, `encodeId`, `resolveHeaders` and, depending on the driver, `toQuery` and `splitId`. lomkit uses `request`, `HttpError` and `resolveHeaders`. nhost and supabase do not use it.

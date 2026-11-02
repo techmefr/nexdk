@@ -3,14 +3,37 @@ title: Events
 description: The unified event contract every driver follows.
 ---
 
-Every call emits a subset of `request · success · error · data · connected · disconnected` — async methods emit `request`/`success`/`error`; reactive (subscribe-style) methods emit `data`/`connected`/`disconnected` instead, with no `success` envelope around them.
+Every call emits a subset of `request`, `success`, `error`, `data`, `connected` and `disconnected`.
 
-A driver author never emits these by hand: `defineDriver`'s wrapper does it for every method, following one rule — **emit `'error'` then `throw`** on any failure (network, non-2xx HTTP, validation). This is the load-bearing contract every driver must respect.
+- Async methods emit `request`, then `success` or `error`.
+- Reactive methods (subscriptions) return an unsubscribe function and emit `data`, `connected` and `disconnected`.
+
+The rule for drivers: **emit `error`, then throw.** A failure is never swallowed.
 
 ```ts
-sdk.lomkit.users.get({ id: 1 }, (event, data) => {
-  // event: 'request' | 'success' | 'error' | ...
+sdk.lomkit.users.get({}, (event, data) => {
+  if (event === 'error') console.error(data)
 })
 ```
 
-A global `notify` (passed to `createSdk`) and a per-call `notify` both fire — `createSdk` merges them internally (both are invoked, in order; neither replaces the other). The event types (`SdkEvent`, `SdkEventHandler`) are exported straight from `nexdk` core — no extra dependency needed to type a handler. [`beepr`](https://www.npmjs.com/package/beepr) is a separate, standalone notify engine with a compatible shape, useful if you want the same event vocabulary outside an `nexdk` SDK.
+## Error payload
+
+Drivers built with `defineDriver` emit `error` with `{ message }`. When the failure is an `HttpError` from [`@nexdk/http`](/nexdk/packages/http/), the payload is `{ message, status, errors }`, where `errors` is the parsed response body.
+
+```ts
+await sdk.nest.users.find({ id: 9 }, (event, data) => {
+  if (event === 'error') {
+    console.error(data.status, data.errors)
+  }
+})
+```
+
+Hand-written drivers differ: lomkit emits `{ message, errors }` on a 422 and `{ message }` otherwise, and supabase emits the Postgrest error.
+
+## Global and per-call handlers
+
+A global `notify` (given to `createSdk`) and the per-call `onEvent` both run, global first. Each handler is isolated: if one throws, the other still runs, and the first error is rethrown after both have run.
+
+## Typing a handler
+
+`SdkEvent` and `SdkEventHandler` are exported from `nexdk`. [beepr](/nexdk/guides/ecosystem/) builds a compatible handler with `createNotify`.

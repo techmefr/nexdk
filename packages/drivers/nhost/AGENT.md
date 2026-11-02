@@ -1,26 +1,23 @@
 # AGENT.md — @nexdk/driver-nhost
 
 ## Role
-GraphQL + subscriptions driver for Hasura/Nhost. `query`/`mutation`/`upsert`/
-`updateById`/`updateWhere`/`deleteById`/`subscription`. Exposes `NhostDriver`.
+GraphQL + subscriptions driver for Hasura / Nhost: `query`, `mutation`, `upsert`, `updateById`, `updateWhere`, `deleteById`, `subscription`. Exposes `NhostDriver`. Built with `defineDriver`.
 
 ## Layout
-- `driver.ts` — GraphQL **document building** (values go through GraphQL
-  variables, never string-interpolated — keep it that way; injection-safe).
-- `connection-pool.ts` — the shared `graphql-transport-ws` WebSocket pool:
-  one connection per (endpoint+secret), refCount, pending-before-ack queue,
-  **reconnect with exponential backoff + resubscribe of active handlers**.
-  Intentional teardown (refCount→0) must never reconnect.
+- `driver.ts`: GraphQL document building. Values go through GraphQL variables, never string interpolation. Keep it injection-safe.
+- `document.ts`: field selection (`fragment` from `extra`, else `fragments.default`, else the schema `shape`, else `id`) and `enumIdentifier`.
+- `connection-pool.ts`: `graphql-transport-ws` pool with refCount, a pending-before-ack queue, reconnect with exponential backoff (500 ms to 15 s) and resubscribe. Intentional teardown (refCount 0) never reconnects.
+
+## Validation and safety
+- `enumIdentifier` (`[_A-Za-z][_0-9A-Za-z]*`) checks the resource name (also on `bindResource`), payload keys, `conflictConstraint` and `updateColumns`.
+- A WebSocket to an `http` endpoint is refused unless the host is `localhost`, `127.0.0.1` or `[::1]`.
+- The pool is shared only when `adminSecret` is set (key: url, secret, resolver identity). Without it, each subscription is isolated, so credentials are never shared.
 
 ## Dependency rule
-- `nexdk`: **peerDependency** (+ devDependency `workspace:*`) — type-only usage.
-- Event type from `nexdk`, never beepr. No other runtime dep.
+`nexdk`: `peerDependency` (+ devDependency `workspace:*`). No other runtime dependency. It uses `fetch` directly, not `@nexdk/http`.
 
 ## Contract
-Emit `'error'` then `throw` on failure. `headers` may be a resolver (applied per
-request and on every WS reconnect via `connection_init`). Subscription ids use
-`crypto.randomUUID()`.
+Emit `error`, then throw. A GraphQL `errors` array throws even with HTTP 200. The event is `{ message }` only. `headers` is a record or a resolver (per request and on every WS `connection_init`).
 
 ## Build/test
-`pnpm --filter @nexdk/driver-nhost build` · `... test`. Tests mock `fetch` and
-`WebSocket` (incl. reconnect/replay with fake timers).
+`pnpm --filter @nexdk/driver-nhost build` · `... test`. Tests mock `fetch` and `WebSocket` (reconnect and replay with fake timers).

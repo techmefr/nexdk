@@ -13,7 +13,7 @@ import serverIcon from 'lucide-static/icons/server.svg?raw';
 import radioIcon from 'lucide-static/icons/radio.svg?raw';
 import layoutGridIcon from 'lucide-static/icons/layout-grid.svg?raw';
 
-A driver translates the SDK's uniform call grammar into one backend's actual protocol. Official drivers ship as `@nexdk/driver-*`; anyone can publish their own as `nexdk-driver-*` — see [Writing a driver](/nexdk/guides/writing-a-driver/).
+A driver translates the call grammar into the protocol of one backend. Official drivers are named `@nexdk/driver-*`, community drivers `nexdk-driver-*`. See [Writing a driver](/nexdk/guides/writing-a-driver/). None is published to npm yet: build them from the [repository](https://github.com/techmefr/nexdk).
 
 <ModuleGrid>
 	<ModuleCard title="lomkit" pkg="@nexdk/driver-lomkit" link="/nexdk/drivers/lomkit/" icon={databaseIcon} tags={['REST', 'Laravel']}>
@@ -23,7 +23,7 @@ A driver translates the SDK's uniform call grammar into one backend's actual pro
 		Hasura/Nhost GraphQL queries and mutations, plus subscriptions over graphql-transport-ws.
 	</ModuleCard>
 	<ModuleCard title="supabase" pkg="@nexdk/driver-supabase" link="/nexdk/drivers/supabase/" icon={zapIcon} tags={['Realtime', 'Postgres']}>
-		Supabase Postgrest reads/writes plus postgres_changes realtime channels.
+		Supabase table reads and writes, plus postgres_changes realtime channels.
 	</ModuleCard>
 	<ModuleCard title="nest" pkg="@nexdk/driver-nest" link="/nexdk/drivers/nest/" icon={hexagonIcon} tags={['REST', 'CRUD', 'Reference']}>
 		Conventional REST CRUD over a common NestJS controller shape — the reference driver.

@@ -3,217 +3,161 @@ title: Writing a driver
 description: The runtime contract a driver must follow, and how to author one with defineDriver.
 ---
 
-A driver translates the uniform call grammar
-`sdk.[driver].[resource].[method](payload?, notify?, extra?)` into a concrete
-protocol (REST, GraphQL, WebSocket…). This guide covers the runtime contract,
-how to author a driver with `defineDriver` (recommended) or by hand, and how to
-add end-to-end typing.
+A driver translates the call grammar `sdk.[driver].[resource].[method](payload?, onEvent?, extra?)` into a protocol. This guide covers the contract, `defineDriver`, and typing.
 
 ## The runtime contract
 
-`createSdk` builds a proxy per driver. When you call
-`sdk.myDriver.users.get(payload, onEvent, extra)` it invokes, on the driver
-object:
+`createSdk` builds a proxy per driver. A call to `sdk.my.users.get(payload, onEvent, extra)` runs this on the driver object:
 
 ```ts
 driver.get('users', payload, mergedHandler, extra)
 ```
 
-So every method has the same **proxy signature**:
+Every method has the same signature:
 
 ```ts
 (resourceName: string, payload?: unknown, onEvent?: SdkEventHandler, extra?: unknown) => unknown
 ```
 
-The 4th slot, `extra`, is opaque at the core level — most drivers ignore it
-entirely; a driver may give it its own meaning (`@nexdk/driver-nhost` uses it
-for per-call GraphQL fragment-selection options). It is not a shared concept
-the SDK interprets for you.
-
-`mergedHandler` combines the global `notify` (passed to `createSdk`) with the
-per-call `onEvent`. A driver only implements two required members:
+`mergedHandler` combines the global `notify` and the per-call `onEvent`. A driver implements two members:
 
 ```ts
 interface SdkDriver {
-    readonly name: string
-    bindResource(resourceName: string, resource: AnyResource): void
+  readonly name: string
+  bindResource(resourceName: string, resource: AnyResource): void
 }
 ```
 
-`createSdk` calls `bindResource` for every resource declared under that
-driver's key, so a driver keeps its bound resources in a private `Map`.
+`createSdk` calls `bindResource` for every resource declared under the driver's key.
 
 ## The event vocabulary
 
-Methods emit through the handler. The full vocabulary is:
+| Event          | When                                          |
+|----------------|-----------------------------------------------|
+| `request`      | Before the call, with `{ resource, payload }` |
+| `success`      | On success, with the result                   |
+| `error`        | On failure                                    |
+| `data`         | A reactive push (subscription payload)        |
+| `connected`    | A reactive transport opened                   |
+| `disconnected` | A reactive transport closed                   |
 
-| Event          | When                                              |
-|----------------|---------------------------------------------------|
-| `request`      | Before the call, with `{ resource, payload }`     |
-| `success`      | On success, with the result                       |
-| `error`        | On failure, with `{ message }` (+ any detail)     |
-| `data`         | A reactive push (subscription payload)            |
-| `connected`    | A reactive transport opened                       |
-| `disconnected` | A reactive transport closed                       |
+**Emit `error`, then throw.** On any failure a method emits `error` once and throws. It never returns an empty value instead.
 
-**The emit-then-throw error rule.** On any failure — a non-OK HTTP response, a
-thrown exception, a validation error — a method must emit `'error'` **once** and
-then **throw**. It must never swallow the error and return an empty/false value.
-The `'error'` event carries at least `{ message }`; a driver may add fields
-(e.g. lomkit adds a Laravel `errors` map on a 422).
+## Authoring with defineDriver
 
-## Authoring with `defineDriver` (recommended)
-
-`defineDriver` (exported from `nexdk`) supplies the whole envelope — the
-resource `Map`, `bindResource`, and the `request`/`success`/`error` wrapping —
-so you write only the protocol translation.
+`defineDriver` supplies the resource map, `bindResource` and the `request`, `success` and `error` events. You write the protocol translation.
 
 ```ts
-import { defineDriver, resolveHeaders } from 'nexdk'
+import { createSdk, defineDriver, resolveHeaders } from 'nexdk'
+
+interface MyConfig {
+  baseUrl: string
+  headers?: Record<string, string>
+}
 
 const createMyDriver = defineDriver({
-    name: 'my',
-    // Build per-driver state from the config; it is spread into every ctx.
-    setup: (config: MyConfig) => ({
-        baseUrl: config.baseUrl.replace(/\/$/, ''),
-        buildHeaders: async () => ({
-            'Content-Type': 'application/json',
-            ...(await resolveHeaders(config.headers)),
-        }),
+  name: 'my',
+  setup: (config: MyConfig) => ({
+    baseUrl: config.baseUrl.replace(/\/$/, ''),
+    buildHeaders: async () => ({
+      'Content-Type': 'application/json',
+      ...(await resolveHeaders(config.headers)),
     }),
-    methods: {
-        // ctx = { resourceName, resource, emit } + whatever setup returned.
-        get: async (ctx, payload) => {
-            const res = await fetch(`${ctx.baseUrl}/${ctx.resourceName}`, {
-                headers: await ctx.buildHeaders(),
-            })
-            if (!res.ok) throw new Error(`HTTP ${res.status}`) // → emit('error') + rethrow
-            return res.json()
-        },
+  }),
+  methods: {
+    get: async (ctx) => {
+      const response = await fetch(`${ctx.baseUrl}/${ctx.resourceName}`, {
+        headers: await ctx.buildHeaders(),
+      })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return response.json()
     },
+  },
 })
 
-const driver = createMyDriver({ baseUrl: 'https://api.example.com' })
+const sdk = createSdk({
+  drivers: { my: createMyDriver({ baseUrl: 'https://api.example.com' }) },
+})
+
+const users = await sdk.my.users.get({}, (event) => console.log(event))
 ```
 
-The `ctx` every method receives carries:
+Every method receives a `ctx`, then the payload and `extra`:
 
-- `resourceName` — the SDK key used in the call (`"users"`);
-- `resource` — the bound `AnyResource | undefined` (use its `.name`, `.schema`);
-- `emit` — the merged event handler (call it for `data`/`connected`/… in
-  reactive methods; `request`/`success`/`error` are automatic);
-- plus every field returned by `setup(config)`.
+- `resourceName`: the name used in the call (`"users"`);
+- `resource`: the bound resource, or `undefined`;
+- `emit`: the merged handler, for `data`, `connected` and the like;
+- everything returned by `setup`.
 
-What the wrapper does automatically for each method:
+The wrapper does this for each method:
 
-1. `emit('request', { resource, payload })` before the body runs;
-2. if the body returns a **Promise**, it awaits it, then `emit('success', value)`
-   and returns the value;
-3. if the body **throws** (sync or async), it does `emit('error', { message })`
-   then rethrows — you only `throw`, never write the try/catch;
-4. if the body returns a **function**, it is treated as a reactive unsubscribe
-   handle and returned **as-is** — no success/error envelope. This keeps a
-   subscribe-style method's synchronous teardown intact.
+1. emits `request` with `{ resource, payload }`;
+2. if the body returns a Promise, awaits it, emits `success` and returns the value;
+3. if the body throws, emits `error` and rethrows. An `HttpError` gives `{ message, status, errors }`, anything else `{ message }`;
+4. if the body returns a function, returns it as is. It is the unsubscribe handle of a reactive method, with no `success` or `error` envelope.
 
-### The headers resolver convention
+### Headers
 
-Config `headers` is either a static record or a resolver called before every
-request (so a refreshed token is always picked up):
+`headers` is a record or a function called before every request, so a refreshed token is always used:
 
 ```ts
 type HeadersResolver =
-    | Record<string, string>
-    | (() => Record<string, string> | Promise<Record<string, string>>)
+  | Record<string, string>
+  | (() => Record<string, string> | Promise<Record<string, string>>)
 ```
 
-`resolveHeaders(headers)` (exported from `nexdk`, also re-exported from
-`@nexdk/http`) awaits the function form. Build your headers inside `setup` so
-every method reuses the same resolver.
+`resolveHeaders` is exported from `nexdk` and from `@nexdk/http`.
 
 ## Authoring by hand
 
-You can implement `SdkDriver` directly (see `@nexdk/driver-lomkit` or
-`@nexdk/driver-supabase`). You then own the resource `Map`, `bindResource`, and
-the full `request` → try/`success` → catch/`error`+throw boilerplate in every
-method. Use this only when a driver needs a shape `defineDriver` cannot
-express; otherwise prefer `defineDriver` — `@nexdk/driver-nest`,
-`@nexdk/driver-symfony` and `@nexdk/driver-nhost` are all built with it.
+You can implement `SdkDriver` yourself, as `@nexdk/driver-lomkit` and `@nexdk/driver-supabase` do. You then own the resource map and the event handling of every method. Prefer `defineDriver` unless you need a shape it cannot express. `@nexdk/driver-nest` is the reference.
 
 ## End-to-end typing
 
-Typing is opt-in via a higher-kinded-type registry in `nexdk`. Three steps:
+Typing is opt-in, through a registry in `nexdk`.
 
-**1. Declare a per-resource API interface**, parameterized by the resource's
-inferred record type `T`:
+Declare the per-resource API, with `T` the inferred record type:
 
 ```ts
 export interface MyResourceApi<T> {
-    get(query?: object, onEvent?: SdkEventHandler): Promise<T[]>
-    // …one method per driver method, matching the (payload, onEvent) shape…
+  get(query?: object, onEvent?: SdkEventHandler): Promise<T[]>
 }
 ```
 
-**2. Register it in the registry** via declaration merging, keyed by a string
-uri:
+Register it by declaration merging:
 
 ```ts
 declare module 'nexdk' {
-    interface ResourceApiKinds<T> {
-        my: MyResourceApi<T>
-    }
+  interface ResourceApiKinds<T> {
+    my: MyResourceApi<T>
+  }
 }
 ```
 
-**3. Advertise the uri on the driver** with a phantom `__apiUri`. `createSdk`
-reads it and looks `MyResourceApi<T>` up in the registry, so
-`sdk.my.<resource>.get()` is fully typed from the resource's schema (any Standard
-Schema validator — Zod, Valibot, ArkType…). By hand
-this is a `declare readonly __apiUri: 'my'` field; with `defineDriver` expose a
-factory whose return type intersects `{ __apiUri: 'my' }`:
+Advertise the key on the driver with `__apiUri`. With `defineDriver`, return the driver from a factory:
 
 ```ts
-export function createMyDriver(config: MyConfig): ReturnType<typeof myDriver> & { __apiUri: 'my' } {
-    return myDriver(config) as ReturnType<typeof myDriver> & { __apiUri: 'my' }
+export function createTypedDriver(config: MyConfig): ReturnType<typeof createMyDriver> & { __apiUri: 'my' } {
+  return createMyDriver(config) as ReturnType<typeof createMyDriver> & { __apiUri: 'my' }
 }
 ```
 
-When a driver declares no `__apiUri`, the SDK falls back to the permissive proxy
-shape (`sdk.driver.anything.method()` still works, just untyped).
+By hand, add `declare readonly __apiUri: 'my'` to the class. Without `__apiUri`, calls still work through the untyped proxy.
 
-## Publishing conventions
+## Conventions
 
-- Official drivers: `@nexdk/driver-*` (e.g. `@nexdk/driver-nest`).
-- Community drivers: `nexdk-driver-*`.
+- Official drivers: `@nexdk/driver-*`. Community drivers: `nexdk-driver-*`.
+- `nexdk` goes in `peerDependencies`, plus a `devDependency` so the package builds alone.
+- Import the event types from `nexdk`. Do not depend on another driver.
+- A library the driver needs at runtime goes in `dependencies` (for example `@nexdk/http`, or `@supabase/supabase-js`).
 
-Mirror the Tier-3 package metadata (description, `license: MIT`,
-`author: techmefr`, `repository` + `directory`, types-first `exports`, `files`,
-`publishConfig`, `sideEffects: false`).
-
-## Dependency rule (independence)
-
-A driver **peer-depends on `nexdk`, never depends on it** — the consumer already
-has the SDK; your driver must not bundle its own copy (the ESLint/Vite plugin
-model). In your `package.json`:
-
-```jsonc
+```json
 {
-  "peerDependencies": { "nexdk": "workspace:*" },     // or a version range once published
-  "devDependencies":  { "nexdk": "workspace:*" }       // so the package still builds/tests alone
+  "peerDependencies": { "nexdk": "workspace:*" },
+  "devDependencies": { "nexdk": "workspace:*" }
 }
 ```
 
-- Put `nexdk` in `peerDependencies` (+ a `devDependency` so it builds in isolation).
-- Do **not** depend on `beepr` (import the event types from `nexdk` itself) or
-  on any other driver.
-- A library your driver genuinely needs at runtime goes in `dependencies`
-  (e.g. the supabase driver's `@supabase/supabase-js`); a library the consumer
-  already has goes in `peerDependencies`.
+## Which drivers use what
 
-This is the repo-wide independence rule — see the workspace's `CONTRIBUTING.md`.
-
-## Follow-up
-
-`@nexdk/driver-lomkit` and `@nexdk/driver-supabase` predate `defineDriver` and
-are hand-written; `@nexdk/driver-nhost`, `@nexdk/driver-nest` and
-`@nexdk/driver-symfony` are built with it. `@nexdk/driver-nest` is the
-reference for the `defineDriver` authoring flow.
+`@nexdk/driver-lomkit` and `@nexdk/driver-supabase` are hand-written. `@nexdk/driver-nest`, `symfony`, `pocketbase`, `strapi`, `firebase` and `nhost` use `defineDriver`.

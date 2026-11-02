@@ -1,31 +1,19 @@
 # AGENT.md — @nexdk/http
 
 ## Role
-Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)`
-(JSON request over `ofetch`, throws `HttpError` on non-2xx), `HttpError`
-(`status`, `data`), `toQuery`/`splitId` (query-string and id/body splitting),
-plus `resolveHeaders`/`HeadersResolver` re-exported from `nexdk`. Extracted from
-the near-identical `request`/`toQuery`/`splitId` that `nest` and `symfony` each
-hand-rolled.
+Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (JSON request over `ofetch`), `HttpError` (`status`, `data`), `toQuery`, `splitId`, `encodeId`, plus `resolveHeaders` and `HeadersResolver` re-exported from `nexdk`.
 
 ## Dependency rule
-- `ofetch`: real **dependency** — this package genuinely owns it at runtime.
-- `nexdk`: **peerDependency** (+ devDependency `workspace:*`) — re-exports
-  `resolveHeaders`/`HeadersResolver` so REST drivers only need one import.
+- `ofetch`: real `dependency`.
+- `nexdk`: `peerDependency` (+ devDependency `workspace:*`).
 
 ## Behaviour notes
-- `request` sets `retry: 0` explicitly. ofetch retries idempotent methods once
-  by default on a 5xx/network failure — disabled here because the unified
-  driver contract emits one `request`/`success`/`error` per call; a silent
-  extra network attempt would break that assumption.
-- `HttpError.data` is the parsed response body (if any) — a driver with a
-  richer error shape (e.g. lomkit's 422 validation payload) reads it from
-  there rather than re-parsing the response itself.
-- Not every helper fits every driver. lomkit uses `request`/`resolveHeaders`/
-  `HttpError` (catching `HttpError` itself to special-case its 422 validation
-  body) but not `toQuery`/`splitId` — its `/search`/`/mutate` endpoints don't
-  have the id-in-URL REST shape those two were extracted for. Use what fits;
-  don't force a driver onto a helper it doesn't need.
+- `request` sets `retry: 0`: one driver call is one request and one `request`/`success`/`error` sequence.
+- A non-2xx response or a network failure throws `HttpError`. `data` is the parsed body, `status` is 0 for a network failure.
+- `toQuery` skips `undefined` and `null`, repeats the key for arrays, JSON-encodes other objects, returns `''` when empty.
+- `splitId` splits `{ id, ...rest }` into `{ id, body }`.
+- `encodeId` URL-encodes an id and throws on an empty id, `.` and `..`. Drivers also `encodeURIComponent` the resource name.
+- Used by nest, symfony, pocketbase, strapi, firebase (all), lomkit (`request`, `HttpError`, `resolveHeaders` only). nhost and supabase do not use it.
 
 ## Build/test
 `pnpm --filter @nexdk/http build` · `... test`. Tests mock `fetch`.

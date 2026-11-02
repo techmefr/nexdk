@@ -3,40 +3,81 @@ title: '@nexdk/driver-nhost'
 description: GraphQL + subscriptions driver for Hasura / Nhost.
 ---
 
-GraphQL driver for a Hasura/Nhost backend, plus realtime subscriptions over `graphql-transport-ws`. Built with `defineDriver`.
+GraphQL driver for a Hasura / Nhost backend, with subscriptions over `graphql-transport-ws`. Built with `defineDriver`.
 
 ## Install
 
-```bash
-pnpm add nexdk @nexdk/driver-nhost
-```
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/nhost`).
 
 ## Config
 
 ```ts
+import { createSdk, defineResource } from 'nexdk'
 import { NhostDriver } from '@nexdk/driver-nhost'
+import { z } from 'zod'
 
-const nhost = new NhostDriver({
-  endpoint: 'https://backend.nhost.run/v1/graphql',
-  adminSecret: '…',       // optional
-  headers: { Authorization: 'Bearer …' }, // or a resolver, re-evaluated on every request and WS (re)connect
+const product = defineResource({
+  name: 'products',
+  schema: z.object({ id: z.string(), name: z.string() }),
+})
+
+const sdk = createSdk({
+  drivers: {
+    nhost: new NhostDriver({
+      endpoint: 'https://backend.nhost.run/v1/graphql',
+      adminSecret: '…',
+      headers: async () => ({ Authorization: 'Bearer …' }),
+    }),
+  },
+  resources: { nhost: { products: product } },
 })
 ```
+
+`adminSecret` is optional. `headers` is a record or a resolver, evaluated on every request and on every WebSocket (re)connection.
 
 ## Methods
 
 | Method | GraphQL operation | Notes |
-|--------|--------------------|-------|
-| `query<TData>(payload?, onEvent?, options?)` | query | `TData` defaults to the resource's record type, but GraphQL list operations usually return a keyed wrapper (`{ products: Product[] }`) — override it explicitly. |
-| `mutation<TData>(payload?, onEvent?, options?)` | mutation | Returns `{ data: TData \| null }`. |
-| `upsert({ data, conflictConstraint, updateColumns }, onEvent?, options?)` | mutation (upsert) | Hasura `on_conflict` shape. |
-| `updateById({ id, data }, onEvent?, options?)` | mutation | |
-| `updateWhere({ where, data }, onEvent?)` | mutation | Returns `{ affectedRows: number }`. |
-| `deleteById({ id }, onEvent?)` | mutation | Returns `{ success: boolean }`. |
-| `subscription(payload?, onEvent?, options?)` | subscription (WS) | Returns an unsubscribe function; emits `connected`/`disconnected`/`data`. |
+|--------|-------------------|-------|
+| `query<TData>(payload?, onEvent?, options?)` | query | Returns `{ data, errors? }`. `data` is keyed by the resource name, so pass `TData` explicitly. |
+| `mutation<TData>(payload?, onEvent?, options?)` | `insert_{resource}_one` | Returns `{ data }`. |
+| `upsert({ data, conflictConstraint, updateColumns }, onEvent?, options?)` | insert with `on_conflict` | Returns `{ data }`. |
+| `updateById({ id, data }, onEvent?, options?)` | `update_{resource}_by_pk` | Returns `{ data }`. |
+| `updateWhere({ where, data }, onEvent?)` | `update_{resource}` | Returns `{ affectedRows }`. |
+| `deleteById({ id }, onEvent?)` | `delete_{resource}_by_pk` | Returns `{ success: true }`. |
+| `subscription(payload?, onEvent?, options?)` | subscription | Returns an unsubscribe function. Emits `connected`, `disconnected` and `data`. |
 
-`options?: { fragment?: string }` lets a call override the resource's default fragment.
+```ts
+const result = await sdk.nhost.products.query<{ products: { id: string; name: string }[] }>({
+  where: { name: { _eq: 'A' } },
+  limit: 5,
+})
+```
+
+The payload keys of `query` and `subscription` become GraphQL arguments (`where`, `order_by`, `limit`, `offset`, `distinct_on`). Values always travel as GraphQL variables.
+
+## Fields
+
+The fields of a query come from the fragment named in `options` (`{ fragment: 'light' }`, default name `default`). Without that fragment, the keys of the schema shape (Zod objects) are used, else `id`. Fragments are declared on the resource:
+
+```ts
+const lightProduct = defineResource({
+  name: 'products',
+  schema: z.object({ id: z.string(), name: z.string() }),
+  fragments: { light: ['id'] },
+})
+```
+
+## Validation
+
+Resource names, payload keys, `conflictConstraint` and `updateColumns` must match `[_A-Za-z][_0-9A-Za-z]*`, or the call throws before any request. Binding a resource with an invalid name throws too.
+
+## Subscriptions
+
+- Subscriptions of one driver instance share one WebSocket when an `adminSecret` is set. Without an `adminSecret`, each subscription gets its own connection, so credentials are never shared.
+- The connection reconnects with exponential backoff (500 ms up to 15 s) and subscribes again.
+- A WebSocket to a plain `http` endpoint is refused unless the host is `localhost`, `127.0.0.1` or `[::1]`. Use `https`.
 
 ## Errors
 
-An **application-level GraphQL error** (an `errors` array in the response body, even alongside HTTP 200) is treated the same as a transport failure: `'error'` is emitted, then the call throws. This is the fix that closed the original silent-failure bug in this driver — a GraphQL error never resolves as if it had succeeded.
+A GraphQL `errors` array (even with HTTP 200) emits `error`, then throws an `Error` with the messages joined by `; `. A non-2xx response throws `HTTP {status}`. The `error` event carries `{ message }`.

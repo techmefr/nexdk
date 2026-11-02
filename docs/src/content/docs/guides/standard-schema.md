@@ -3,16 +3,19 @@ title: Standard Schema (validators)
 description: How nexdk stays agnostic to the validator you choose.
 ---
 
-`nexdk` never hardcodes a validator. Instead it depends on [Standard Schema](https://standardschema.dev), a tiny interface that Zod 3.24+, Valibot and ArkType all implement — copied locally rather than added as a dependency, so `nexdk` keeps its zero-dependency core.
+`nexdk` never hardcodes a validator. It depends on [Standard Schema](https://standardschema.dev), a small interface that Zod 3.24+, Valibot and ArkType implement. The interface is copied into the package, so the core keeps zero dependencies.
 
 ```ts
 export interface StandardSchemaV1<Input = unknown, Output = Input> {
-	readonly '~standard': StandardSchemaV1.Props<Input, Output>
+  readonly '~standard': StandardSchemaV1.Props<Input, Output>
 }
 ```
 
-`defineResource({ name, schema })` accepts any object implementing this interface — so a resource declared with Zod, Valibot or ArkType works identically through `createSdk` and `defineDriver`. [`shamock`](https://www.npmjs.com/package/shamock), a separate standalone package, follows the same interface for schema-driven mock validation, if you want mocking alongside the SDK.
+`defineResource({ name, schema })` accepts any object implementing it. The inferred type of a resource is `InferSchema<typeof resource>`, and it types every driver call.
 
-## The one exception
+[shamock](https://github.com/techmefr/shamock) follows the same interface to validate mock data. See [Ecosystem](/nexdk/guides/ecosystem/).
 
-`@nexdk/hooks` is genuinely Zod-specific: its Vue form helper (`useResourceForm`) reads `ZodObject`/`ZodDefault` internals directly to build form defaults, so it peer-depends on `zod`. That is a deliberate, isolated exception — not a crack in the core's agnosticism.
+## The exceptions
+
+- `@nexdk/hooks` is Zod-specific: `useResourceForm` reads `ZodObject` and `ZodDefault` internals to build form defaults.
+- `@nexdk/driver-nhost` reads `schema.shape` (a Zod object shape) to list the fields of a query when the resource has no fragment. Without a shape it selects `id`.

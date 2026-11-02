@@ -3,33 +3,44 @@ title: '@nexdk/driver-symfony'
 description: REST driver for Symfony / API Platform (Hydra, merge-patch).
 ---
 
-API Platform (Symfony) REST driver over the Hydra / JSON-LD conventions. Built with `defineDriver`.
+API Platform (Symfony) REST driver over Hydra / JSON-LD. Built with `defineDriver`.
 
 ## Install
 
-```bash
-pnpm add nexdk @nexdk/driver-symfony
-```
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/symfony`).
 
 ## Config
 
 ```ts
+import { createSdk } from 'nexdk'
 import { createSymfonyDriver } from '@nexdk/driver-symfony'
 
-const symfony = createSymfonyDriver({
-  baseUrl: 'https://api.example.com',
-  headers: { Authorization: 'Bearer …' }, // or a resolver
+const sdk = createSdk({
+  drivers: {
+    symfony: createSymfonyDriver({
+      baseUrl: 'https://api.example.com',
+      headers: async () => ({ Authorization: 'Bearer …' }),
+    }),
+  },
 })
+
+const books = await sdk.symfony.books.get({ page: 1 })
 ```
 
 ## Methods
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
-| `get(query?, onEvent?)` | `GET /{resource}` | Unwraps `body['hydra:member']`, falling back to `body.member`, then the body itself. |
-| `find({ id }, onEvent?)` | `GET /{resource}/{id}` | Returns a single JSON-LD record. |
-| `create(body, onEvent?)` | `POST /{resource}` | Sends `Content-Type: application/ld+json`. |
-| `update({ id, ...fields }, onEvent?)` | `PATCH /{resource}/{id}` | Sends `Content-Type: application/merge-patch+json` — API Platform requires this. |
+| `get(query?, onEvent?)` | `GET /{resource}` | Returns `hydra:member`, else `member`, else the body. One request, no page following. |
+| `find({ id }, onEvent?)` | `GET /{resource}/{id}` | Returns one record. |
+| `create(body, onEvent?)` | `POST /{resource}` | `Content-Type: application/ld+json`. |
+| `update({ id, ...fields }, onEvent?)` | `PATCH /{resource}/{id}` | `Content-Type: application/merge-patch+json`, which API Platform requires. |
 | `remove({ id }, onEvent?)` | `DELETE /{resource}/{id}` | Returns `{ success: boolean }`. |
 
-This is the meaningful difference from [`@nexdk/driver-nest`](/nexdk/drivers/nest/), which uses plain `application/json`: API Platform's Hydra collection shape and merge-patch requirement are handled for you. Consumers can override any header via the `headers` resolver. Uses [`@nexdk/http`](/nexdk/packages/http/) for the shared REST plumbing; `unwrapCollection` (the Hydra unwrap) stays local since it's symfony-specific.
+Requests send `Accept: application/ld+json`. Any header can be overridden through `headers`. The resource name and the id are URL-encoded.
+
+Compared with [nest](/nexdk/drivers/nest/), the differences are the Hydra unwrap and the merge-patch content type.
+
+## Errors
+
+A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`.

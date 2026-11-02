@@ -1,21 +1,23 @@
 ---
 title: Anatomy of a call
-description: What payload, notify and the driver-opaque extra argument do on every SDK call.
+description: What payload, onEvent and the driver-opaque extra argument do on every SDK call.
 ---
 
 ```
-sdk.[driver].[resource].[method](payload?, notify?, extra?)
-                                    │        │       │
-                                  data    events   driver-opaque
-                                 / filter
+sdk.[driver].[resource].[method](payload?, onEvent?, extra?)
 ```
 
 | Parameter | Type | Role |
 |-----------|------|------|
-| `payload` | `object` | Search filter, object to create… |
-| `notify`  | `SdkEventHandler` | Event callback for this call, merged with any global `notify` passed to `createSdk` |
-| `extra`   | `unknown` | Opaque at the core level — most drivers ignore it; a few give it their own meaning (e.g. nhost narrows it to GraphQL fragment-selection options) |
+| `payload` | `object` | Filter, query, record to create. Its shape is defined by the driver. |
+| `onEvent` | `SdkEventHandler` | Event callback for this call, run together with the global `notify` of `createSdk`. |
+| `extra`   | `unknown` | Opaque to the core. Most drivers ignore it; nhost reads `{ fragment }` from it. |
 
-Events emitted: `request · success · error · data · connected · disconnected`.
+Rules of the proxy:
 
-A global `notify` (passed to `createSdk`) and a per-call `notify` both fire — they are merged, not replaced. See [Events](/nexdk/guides/events/) for the full contract.
+- `driver` is a key of `drivers`. `resource` is any name: it is passed to the driver as the resource name, and bound to the `resources` entry with the same key when there is one.
+- `method` must be a method of the driver. An unknown method throws `Driver "x" has no method "y" for resource "z"`.
+- Methods of `Object.prototype` (`toString`, `constructor`...) are not callable through a resource.
+- `name` and `bindResource` are reserved driver keys.
+
+Events: `request`, `success`, `error`, `data`, `connected`, `disconnected`. See [Events](/nexdk/guides/events/).

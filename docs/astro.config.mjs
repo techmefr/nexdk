@@ -78,6 +78,12 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Ecosystem',
+					items: [
+						{ label: 'beepr, shamock, dialectr', slug: 'guides/ecosystem', attrs: { class: 'sidebar-icon icon-puzzle' } },
+					],
+				},
+				{
 					label: 'Reference',
 					items: [
 						{ label: 'nexdk API', slug: 'reference/nexdk', attrs: { class: 'sidebar-icon icon-file-code' } },

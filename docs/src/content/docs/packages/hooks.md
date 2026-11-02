@@ -3,34 +3,41 @@ title: '@nexdk/hooks'
 description: Vue composables for nexdk resources — forms with Zod validation.
 ---
 
-Vue composables for `nexdk` resources. `useResourceForm` builds form state, dirty-tracking and server-error mapping straight from a resource's Zod schema — no separate form schema to maintain.
+`useResourceForm` builds form state, dirty tracking and server-error mapping from the Zod schema of a resource. There is no second form schema to maintain.
 
 ## Install
 
-```bash
-pnpm add nexdk @nexdk/hooks vue zod
-```
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/hooks`). It peer-depends on `nexdk`, `vue` and `zod`.
 
 ## Usage
 
 ```ts
+import { defineResource } from 'nexdk'
 import { useResourceForm } from '@nexdk/hooks'
+import { z } from 'zod'
+
+const product = defineResource({
+  name: 'products',
+  schema: z.object({ name: z.string().min(1), price: z.number().default(0) }),
+})
 
 const { values, errors, isDirty, handleSubmit, setServerErrors, fill, reset } = useResourceForm(product)
 
 const onSubmit = handleSubmit(async (data) => {
-  await sdk.lomkit.products.mutate(data)
+  await sdk.lomkit.products.mutate({ operation: 'create', attributes: data })
 })
 ```
 
-- **`values`** — a `Ref` of the form's current values, seeded from the schema's field defaults (`null` for fields with none).
-- **`errors`** — a `Ref` of field → message[] validation errors, populated by `handleSubmit` on a failed `safeParse`.
-- **`isDirty`** — a `ComputedRef<boolean>`, true when any field differs from its baseline (the initial values, or whatever `fill` last set).
-- **`handleSubmit(onValid)`** — returns a submit handler: validates against the resource's schema, populates `errors` and returns early on failure, otherwise calls `onValid(data)` with the parsed, typed data.
-- **`setServerErrors(serverErrors)`** — merge backend validation errors (e.g. a lomkit 422's `errors` map) into the same `errors` ref the form template already reads.
-- **`fill(data)`** — patch `values` with partial data (e.g. loading an existing record to edit) and reset the dirty baseline to match.
-- **`reset()`** — restore `values` to the schema's initial defaults and clear `errors`.
+The resource schema must be a `z.object`.
+
+- **`values`**: a `Ref` of the current values. Fields start at their Zod default, or `null`.
+- **`errors`**: a `Ref` of field to messages, filled by `handleSubmit` when validation fails.
+- **`isDirty`**: a `ComputedRef<boolean>`, true when a field differs from the baseline (the initial values, or what `fill` last set).
+- **`handleSubmit(onValid)`**: returns a submit handler. It validates, sets `errors` and stops on failure, otherwise calls `onValid` with the parsed data.
+- **`setServerErrors(serverErrors)`**: replaces `errors` with backend errors, for example the `errors` map of a lomkit 422.
+- **`fill(data)`**: patches `values` and resets the dirty baseline.
+- **`reset()`**: restores the initial values and clears `errors`.
 
 ## The one Zod-specific package
 
-`useResourceForm` reads `ZodObject`/`ZodDefault` internals directly to build initial values from the schema's own defaults, so `@nexdk/hooks` peer-depends on `zod` — see [Standard Schema § The one exception](/nexdk/guides/standard-schema/#the-one-exception). Every other `nexdk` package stays validator-agnostic.
+`useResourceForm` reads `ZodObject` and `ZodDefault` internals to build the initial values, so `@nexdk/hooks` peer-depends on `zod`. See [Standard Schema](/nexdk/guides/standard-schema/#the-exceptions).

@@ -3,45 +3,57 @@ title: '@nexdk/driver-supabase'
 description: Realtime driver for Supabase (postgres_changes).
 ---
 
-Realtime driver over Supabase's Postgrest + `postgres_changes` realtime channel. Hand-written (predates `defineDriver`).
+Driver over the Supabase client: table reads and writes, and `postgres_changes` realtime channels. Hand-written (it does not use `defineDriver`).
 
 ## Install
 
-```bash
-pnpm add nexdk @nexdk/driver-supabase @supabase/supabase-js
-```
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/supabase`). It depends on `@supabase/supabase-js`.
 
 ## Config
 
 ```ts
+import { createSdk } from 'nexdk'
 import { SupabaseDriver } from '@nexdk/driver-supabase'
 
-const supabase = new SupabaseDriver({
-  url: 'https://xyz.supabase.co',
-  key: '…', // anon or service key
+const sdk = createSdk({
+  drivers: { supabase: new SupabaseDriver({ url: 'https://xyz.supabase.co', key: '…' }) },
 })
 ```
 
+`key` is the anon or the service key.
+
 ## Methods
+
+The resource name is the table name.
 
 | Method | Notes |
 |--------|-------|
-| `get(payload?, onEvent?)` | Returns `{ data: T[] }`. |
-| `insert(payload?, onEvent?)` | Returns `{ data: T[] }`. |
-| `update(payload?, onEvent?)` | Returns `{ data: T[] }`. |
-| `remove(payload?, onEvent?)` | Returns `{ success: boolean }`. |
-| `subscribe(payload?, onEvent?)` | Subscribes to `postgres_changes` on the resource's table; returns an unsubscribe function. |
+| `get(payload?, onEvent?)` | `select *`. Every `payload` key becomes an equality filter. Returns `{ data: T[] }`. |
+| `insert(payload?, onEvent?)` | Inserts the payload. Returns `{ data: T[] }`. |
+| `update({ id, ...fields }, onEvent?)` | Updates the row with that `id`. Returns `{ data: T[] }`. |
+| `remove({ id }, onEvent?)` | Deletes the row with that `id`. Returns `{ success: true }`. |
+| `subscribe(payload?, onEvent?)` | Listens to `postgres_changes` on the table. Returns an unsubscribe function. |
+
+`subscribe` accepts `{ room_id }` to filter on `room_id`. It must match `[\w-]+`, or the call throws. It emits `connected`, `disconnected` and `data`.
+
+```ts
+const unsubscribe = sdk.supabase.messages.subscribe({ room_id: 'general' }, (event, data) => {
+  if (event === 'data') console.log(data)
+})
+
+unsubscribe()
+```
 
 ## Errors
 
-Any Postgrest error emits `'error'` with the full detail (`{ message, code?, details?, hint? }`), then throws a `SupabaseQueryError` carrying `code`/`details`/`hint` as properties — so a caller can branch on `error.code` without re-parsing the message.
+A Postgrest error emits `error` with `{ message, code?, details?, hint? }`, then throws a `SupabaseQueryError` that exposes `code`, `details` and `hint`.
 
 ```ts
 import { SupabaseQueryError } from '@nexdk/driver-supabase'
 
 try {
   await sdk.supabase.messages.insert({ text: 'hi' })
-} catch (err) {
-  if (err instanceof SupabaseQueryError) console.log(err.code, err.hint)
+} catch (error) {
+  if (error instanceof SupabaseQueryError) console.log(error.code, error.hint)
 }
 ```

@@ -1,8 +1,8 @@
 # nexdk docs
 
-Documentation site for [`nexdk`](..) — built with [Astro](https://astro.build) + [Starlight](https://starlight.astro.build).
+Documentation site for [`nexdk`](..), built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build).
 
-Covers the core concepts (call grammar, driver contract, Standard Schema), one page per in-repo package (`@nexdk/http`, `@nexdk/hooks`), one page per official driver (`lomkit`, `nhost`, `supabase`, `nest`, `symfony`), a guide to writing your own driver, and the `nexdk` API reference. `beepr` and `shamock` are separate repos with their own docs — see [Packages overview](src/content/docs/guides/packages.md).
+It covers the core concepts (call grammar, events, Standard Schema), the two in-repo packages (`@nexdk/http`, `@nexdk/hooks`), one page per official driver (`lomkit`, `nhost`, `supabase`, `nest`, `symfony`, `pocketbase`, `strapi`, `firebase`), a guide to writing a driver, the `nexdk` API reference, and an [Ecosystem](src/content/docs/guides/ecosystem.md) page (beepr, shamock, dialectr).
 
 ## Develop
 
@@ -10,7 +10,7 @@ Covers the core concepts (call grammar, driver contract, Standard Schema), one p
 pnpm --filter docs dev
 ```
 
-Site runs at `http://localhost:4321`.
+The site runs at `http://localhost:4321`.
 
 ## Build
 
@@ -18,8 +18,8 @@ Site runs at `http://localhost:4321`.
 pnpm --filter docs build
 ```
 
-Static output goes to `docs/dist`.
+The static output goes to `docs/dist`.
 
 ## Deploy
 
-Pushes to `main` that touch `docs/**` are built and deployed to GitHub Pages automatically by [`.github/workflows/docs.yml`](../.github/workflows/docs.yml). Live at `https://techmefr.github.io/nexdk/` (base path `/nexdk`, set in `astro.config.mjs`).
+Pushes to `main` that touch `docs/**` are built and deployed to GitHub Pages by [`.github/workflows/docs.yml`](../.github/workflows/docs.yml). The site is live at `https://techmefr.github.io/nexdk/` (base path `/nexdk`, set in `astro.config.mjs`).

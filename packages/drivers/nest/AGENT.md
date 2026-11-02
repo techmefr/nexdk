@@ -1,23 +1,19 @@
 # AGENT.md — @nexdk/driver-nest (reference driver)
 
 ## Role
-Conventional REST CRUD driver (common NestJS controller shape):
-`get`/`find`/`create`/`update`/`remove` → GET/POST/PATCH/DELETE on
-`/{resource}` and `/{resource}/{id}`. Exposes `createNestDriver(config)`,
-`NestResourceApi<T>`, `NestConfig`.
+Conventional REST CRUD driver (common NestJS controller shape): `get`, `find`, `create`, `update`, `remove` map to GET, GET, POST, PATCH, DELETE on `/{resource}` and `/{resource}/{id}`. Exposes `createNestDriver(config)` and `nestDriver`.
 
-**This is the reference driver** — it's the worked example for
-[docs/src/content/docs/guides/writing-a-driver.md](../../../docs/src/content/docs/guides/writing-a-driver.md). Built WITH
-`defineDriver` from `nexdk`, so it demonstrates the recommended authoring path
-and the unified event contract. Keep it exemplary.
+It is the reference driver and the worked example of `docs/src/content/docs/guides/writing-a-driver.md`. Keep it exemplary.
 
 ## Dependency rule
-- `nexdk` is a **peerDependency** (+ devDependency `workspace:*`), never a
-  `dependency`. It uses `defineDriver` (runtime) and types.
-- `@nexdk/http` is a real **dependency** — `request`/`toQuery`/`splitId` and
-  `resolveHeaders` (re-exported from nexdk). This is where the shared REST
-  mechanics live; don't hand-roll `fetch` here again.
-- Declares its typing via `declare module 'nexdk'` + `__apiUri: 'nest'`.
+- `nexdk`: `peerDependency` (+ devDependency `workspace:*`). Uses `defineDriver`.
+- `@nexdk/http`: real `dependency` (`request`, `toQuery`, `splitId`, `encodeId`, `resolveHeaders`). Do not hand-roll `fetch` here.
+- Typing: `declare module 'nexdk'` + `__apiUri: 'nest'`.
+
+## Contract
+- The resource name and the id are URL-encoded (`encodeURIComponent`, `encodeId`).
+- `get` is one request. No page following.
+- Errors: `error` with `{ message, status, errors }`, then an `HttpError` is thrown.
 
 ## Build/test
 `pnpm --filter @nexdk/driver-nest build` · `... test`. Tests mock `fetch`.

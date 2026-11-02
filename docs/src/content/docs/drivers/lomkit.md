@@ -3,44 +3,65 @@ title: '@nexdk/driver-lomkit'
 description: REST driver for Laravel + Lomkit REST API.
 ---
 
-REST driver for a Laravel backend using [Lomkit](https://github.com/lomkit/laravel-rest-api)'s search/mutate/delete conventions. Hand-written (predates `defineDriver`).
+REST driver for a Laravel backend using the [Lomkit](https://github.com/lomkit/laravel-rest-api) search, mutate and delete conventions. Hand-written (it does not use `defineDriver`).
 
 ## Install
 
-```bash
-pnpm add nexdk @nexdk/driver-lomkit
-```
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/lomkit`).
 
 ## Config
 
 ```ts
+import { createSdk, defineResource } from 'nexdk'
 import { LomkitDriver } from '@nexdk/driver-lomkit'
+import { z } from 'zod'
 
-const lomkit = new LomkitDriver({
-  baseUrl: 'https://api.example.com',
-  headers: { Authorization: 'Bearer …' }, // or a resolver: () => ({ Authorization: … })
+const user = defineResource({ name: 'users', schema: z.object({ id: z.number(), name: z.string() }) })
+
+const sdk = createSdk({
+  drivers: {
+    lomkit: new LomkitDriver({
+      baseUrl: 'https://api.example.com',
+      headers: async () => ({ Authorization: 'Bearer …' }),
+    }),
+  },
+  resources: { lomkit: { users: user } },
 })
 ```
+
+`headers` is a record or a resolver, evaluated before every request.
 
 ## Methods
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
-| `get(payload?, onEvent?)` | `POST /{resource}/search` | Returns `{ data: T[], meta? }` (pagination). |
-| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Returns `{ data: T[] }`. |
-| `delete({ resources }, onEvent?)` | `DELETE /{resource}` with `{ resources: [...] }` | Returns `{ success: boolean }`. |
+| `get(payload?, onEvent?)` | `POST /{resource}/search` | The payload is the body. Returns `{ data: T[], meta? }`. |
+| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`. Returns `{ data: T[] }`. |
+| `delete({ resources }, onEvent?)` | `DELETE /{resource}` | Sends `{ resources: [...] }`. Returns `{ success: true }`. |
+
+The URL uses the `name` of the bound resource, URL-encoded, or the call key when no resource is bound.
+
+`get` returns one page and its `meta` (`current_page`, `last_page`, `per_page`, `total`). It does not follow pages: set `search.page` and `search.limit` yourself.
+
+```ts
+const { data, meta } = await sdk.lomkit.users.get({
+  search: { filters: [{ field: 'name', operator: 'like', value: 'A%' }], limit: 20, page: 1 },
+})
+```
+
+[dialectr](/nexdk/guides/ecosystem/#dialectr) can build this payload with `toLomkit`.
 
 ## Errors
 
-- A non-2xx HTTP response, a network failure, or a 422 validation body all emit `'error'` then throw a plain `Error` — on a 422, the `'error'` event itself carries the full `{ message, errors }` (per-field messages) read from `HttpError.data` (from [`@nexdk/http`](/nexdk/packages/http/)).
-- `headers` may be a static object or an async resolver, re-evaluated before every request (useful for a refreshed bearer token).
+A failure emits `error`, then throws a plain `Error`.
+
+- On a 422, the `error` event carries `{ message, errors }`, the Laravel validation payload.
+- On any other failure, the event carries `{ message }` (for example `HTTP 500`). There is no `status`.
 
 ```ts
-await sdk.lomkit.users.mutate({ name: 'Alice' }, (event, data) => {
-  if (event === 'error') {
-    // on a 422: data = { message, errors: { email: ['required'] } }
-  }
+await sdk.lomkit.users.mutate({ operation: 'create', attributes: {} }, (event, data) => {
+  if (event === 'error') console.error(data)
 })
-// still throws afterward — the thrown Error only carries `message`,
-// read the field-level detail from the 'error' event above.
 ```
+
+The thrown error only has the message. Read field errors from the event.
