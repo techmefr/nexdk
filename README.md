@@ -84,7 +84,7 @@ const { data } = await sdk.lomkit.products.get({
 - **`defineDriver({ name, setup, methods })`**: authors a driver. It emits `request`, `success` and `error` for you.
 - **`extra`** (third argument): opaque to the core. nhost reads `{ fragment }` from it.
 
-Errors: a driver emits `error`, then throws. Drivers built on `@nexdk/http` emit `{ message, status, errors }`.
+Errors: a driver emits `error` with `{ message, status?, errors? }`, then throws a typed `SdkError` (`status`, `errors`, `data`). REST drivers take an optional `fetch` in their config to inject a mock or a custom transport. `createSdk` refuses a resource key that collides with a member of its driver (`resources`, `name`, `get`...).
 
 ## Drivers
 
