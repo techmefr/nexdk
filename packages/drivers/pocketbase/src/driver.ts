@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { createRequest, encodeId, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { HttpError, createRequest, encodeId, resolveHeaders, splitId, toQuery } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import type { PocketbaseConfig, PocketbaseIdPayload, PocketbaseResourceApi } from './types.ts'
 
@@ -18,6 +18,22 @@ interface PocketbaseState {
 interface PocketbaseList {
     items: unknown[]
     totalPages?: number
+    perPage?: number
+}
+
+const REJECTED_PREFIX = 'PocketBase rejected the request: '
+
+function explainRejections(request: HttpRequest): HttpRequest {
+    return async (url, init) => {
+        try {
+            return await request(url, init)
+        } catch (error) {
+            if (error instanceof HttpError && error.status === 400 && error.errors === undefined) {
+                throw new HttpError(400, error.data, `${REJECTED_PREFIX}${error.message}`)
+            }
+            throw error
+        }
+    }
 }
 
 type Ctx = PocketbaseState & { resourceName: string }
@@ -35,7 +51,7 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
     name: 'pocketbase',
     setup: config => ({
         baseUrl: config.baseUrl.replace(/\/$/, ''),
-        request: createRequest(config.fetch),
+        request: explainRejections(createRequest(config.fetch)),
         buildHeaders: async () => ({
             'Content-Type': 'application/json',
             Accept: 'application/json',
@@ -58,8 +74,18 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
 
             const first = await fetchPage({})
             const items: unknown[] = [...first.items]
-            for (let page = 2; page <= (first.totalPages ?? 1); page++) {
-                items.push(...(await fetchPage({ page })).items)
+            const perPage = first.perPage ?? first.items.length
+            const totalPages = first.totalPages ?? 1
+            if (totalPages > 0) {
+                for (let page = 2; page <= totalPages; page++) {
+                    items.push(...(await fetchPage({ page })).items)
+                }
+                return items
+            }
+            let last = first.items
+            for (let page = 2; perPage > 0 && last.length >= perPage; page++) {
+                last = (await fetchPage({ page })).items
+                items.push(...last)
             }
             return items
         },

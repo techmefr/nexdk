@@ -21,6 +21,7 @@ export interface PocketbaseListQuery {
     filter?: string
     expand?: string
     fields?: string
+    skipTotal?: boolean | 1
 }
 
 export interface PocketbaseRemoveResult {

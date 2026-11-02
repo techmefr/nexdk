@@ -7,7 +7,7 @@ REST driver for the [PocketBase](https://pocketbase.io) records API (`/api/colle
 
 ## Install
 
-Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/pocketbase`).
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/pocketbase`). It peer-depends on `nexdk` and `@nexdk/http`.
 
 ## Config
 
@@ -43,10 +43,16 @@ The resource name is the collection name.
 
 ## Pagination
 
-`get` follows every page (`totalPages`) and returns all the items. If you set `page` or `perPage`, it makes one request and returns that page only.
+`get` follows every page and returns all the items. If you set `page` or `perPage`, it makes one request and returns that page only. `get({ page: 2 })` without `perPage` is therefore one page of the PocketBase default size (30), not the rest of the records: you fixed the page, so nexdk does not go on.
 
 ```ts
 const second = await sdk.pocketbase.posts.get({ page: 2, perPage: 20 })
+```
+
+With `skipTotal`, PocketBase answers `totalPages: -1`. `get` then asks for the next page as long as the previous one was full (`perPage` of the response) and stops on a short or empty page, so no record is dropped.
+
+```ts
+const all = await sdk.pocketbase.posts.get({ skipTotal: true })
 ```
 
 [dialectr](/nexdk/guides/ecosystem/#dialectr) can build the query with `toPocketbase`. It sets `perPage` when you call `limit()`.
@@ -54,3 +60,21 @@ const second = await sdk.pocketbase.posts.get({ page: 2, perPage: 20 })
 ## Errors
 
 The collection name and the id are URL-encoded. A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`.
+
+A validation failure answers `{ status, message, data: { field: { code, message } } }`. nexdk maps it to `errors: { field: [message] }`, on the thrown error and in the `error` event; the raw body stays in `error.data`.
+
+```ts
+import { SdkError } from 'nexdk'
+
+try {
+  await sdk.pocketbase.users.create({ email: 'a@b.test' })
+} catch (error) {
+  if (error instanceof SdkError) console.log(error.errors)
+}
+```
+
+An invalid query (unknown filter field, unknown sort field, malformed filter) is answered by PocketBase with a generic 400 that names no clause. nexdk reports it as `PocketBase rejected the request: <server message>` with `status` 400, and adds nothing else.
+
+## Collection names
+
+A fresh PocketBase ships an auth collection named `users`. A resource named `users` talks to that collection: delete or rename it, or use another resource name, if you want your own base collection.
