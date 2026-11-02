@@ -24,4 +24,6 @@ The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHea
 English, short, no comments in code blocks. Examples must run against the built packages. Nothing is published to npm: link to GitHub, never to npmjs.
 
 ## Build/test
-`pnpm build` · `pnpm test` · `pnpm --filter "./packages/**" build` · `pnpm --filter docs build`.
+`pnpm build` builds the core first, then every package in `packages/**` in dependency order (not `docs`). `pnpm typecheck` · `pnpm test` runs the core tests, then the tests of every package. `pnpm --filter docs build` builds the site. On a fresh clone: `pnpm install --frozen-lockfile && pnpm build && pnpm typecheck && pnpm test`.
+
+Publishable packages declare `nexdk` (and `@nexdk/http` for REST drivers) as `peerDependencies` with the range `>=0.0.1 <1` (0.x aware), plus a `workspace:*` devDependency. `docs` is `private`.

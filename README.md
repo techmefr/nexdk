@@ -52,7 +52,6 @@ git clone https://github.com/techmefr/nexdk.git
 cd nexdk
 pnpm install
 pnpm build
-pnpm --filter "./packages/**" build
 ```
 
 ## Usage

@@ -17,7 +17,6 @@ nexdk is not published to npm yet. Clone [the repository](https://github.com/tec
 ```bash
 pnpm install
 pnpm build
-pnpm --filter "./packages/**" build
 ```
 
 ## A minimal example

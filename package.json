@@ -6,11 +6,13 @@
     "license": "MIT",
     "author": "techmefr",
     "homepage": "https://github.com/techmefr/nexdk#readme",
+    "bugs": {
+        "url": "https://github.com/techmefr/nexdk/issues"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/techmefr/nexdk.git"
     },
-    "packageManager": "pnpm@11.9.0",
     "keywords": [
         "sdk",
         "rest",
@@ -26,6 +28,10 @@
         "valibot",
         "arktype"
     ],
+    "engines": {
+        "node": ">=22"
+    },
+    "packageManager": "pnpm@11.9.0",
     "sideEffects": false,
     "exports": {
         ".": {
@@ -43,8 +49,8 @@
         "access": "public"
     },
     "scripts": {
-        "build": "unbuild",
-        "test": "vitest run",
+        "build": "unbuild && pnpm --filter \"./packages/**\" build",
+        "test": "vitest run && pnpm --filter \"./packages/**\" test",
         "typecheck": "tsc --noEmit && pnpm --filter './packages/**' exec tsc --noEmit",
         "dev": "unbuild --stub"
     },

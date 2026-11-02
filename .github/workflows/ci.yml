@@ -21,17 +21,11 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Build nexdk core
+      - name: Build
         run: pnpm build
-
-      - name: Build packages
-        run: pnpm --filter "./packages/**" build
 
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test nexdk core
+      - name: Test
         run: pnpm test
-
-      - name: Test packages
-        run: pnpm --filter "./packages/**" test
