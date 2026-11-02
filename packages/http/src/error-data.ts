@@ -49,6 +49,22 @@ function fromStrapi(error: unknown): Record<string, string[]> | undefined {
     return Object.keys(fields).length > 0 ? fields : undefined
 }
 
+const PROPERTY = '[a-z_$][\\w$]*(?:\\.[\\w$]+)*'
+const PROPERTY_FIRST = new RegExp(`^(${PROPERTY}) (?:must|should|has|is|contains|cannot|does)\\b`)
+const EACH_VALUE = new RegExp(`^each value in (${PROPERTY}) `)
+const UNKNOWN_PROPERTY = new RegExp(`^property (${PROPERTY}) should not exist$`)
+
+function nestField(message: string): string {
+    return (UNKNOWN_PROPERTY.exec(message) ?? EACH_VALUE.exec(message) ?? PROPERTY_FIRST.exec(message))?.[1] ?? ''
+}
+
+function fromNest(data: Record<string, unknown>): Record<string, string[]> | undefined {
+    if (typeof data.statusCode !== 'number' || typeof data.error !== 'string' || !Array.isArray(data.message)) return undefined
+    const fields: Record<string, string[]> = {}
+    for (const message of data.message) if (typeof message === 'string' && message !== '') addIssue(fields, nestField(message), message)
+    return Object.keys(fields).length > 0 ? fields : undefined
+}
+
 function fromFieldMap(map: unknown): Record<string, string[]> | undefined {
     if (!isRecord(map)) return undefined
     const entries = Object.entries(map)
@@ -71,5 +87,5 @@ function normalized(errors: unknown): unknown {
 export function errorsFromData(data: unknown): unknown {
     if (!isRecord(data)) return undefined
     if (data.errors !== undefined) return normalized(data.errors)
-    return fromViolations(data.violations) ?? fromStrapi(data.error) ?? fromFieldMap(data.data)
+    return fromViolations(data.violations) ?? fromStrapi(data.error) ?? fromNest(data) ?? fromFieldMap(data.data)
 }

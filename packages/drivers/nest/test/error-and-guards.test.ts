@@ -28,7 +28,12 @@ describe('nest error message', () => {
 
         expect(error.message).toBe('email must be an email, name must be a string')
         expect(error.status).toBe(400)
-        expect(events.find(([event]) => event === 'error')?.[1]).toEqual({ message: error.message, status: 400 })
+        expect(error.errors).toEqual({ email: ['email must be an email'], name: ['name must be a string'] })
+        expect(events.find(([event]) => event === 'error')?.[1]).toEqual({
+            message: error.message,
+            status: 400,
+            errors: { email: ['email must be an email'], name: ['name must be a string'] },
+        })
     })
 })
 

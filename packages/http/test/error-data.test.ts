@@ -132,3 +132,51 @@ describe('timeout and signal', () => {
         expect((injected.mock.calls[0][1] as RequestInit).signal).toBeDefined()
     })
 })
+
+describe('HttpError Nest validation errors', () => {
+    const nest = (message: unknown, error = 'Bad Request') => new HttpError(400, { statusCode: 400, message, error })
+
+    it('keys class-validator messages by their property', () => {
+        expect(nest(['email must be an email', 'name should not be empty', 'age must not be less than 18']).errors).toEqual({
+            email: ['email must be an email'],
+            name: ['name should not be empty'],
+            age: ['age must not be less than 18'],
+        })
+    })
+
+    it('groups several messages of one property', () => {
+        expect(nest(['password must be longer than or equal to 8 characters', 'password must contain a digit']).errors).toEqual({
+            password: ['password must be longer than or equal to 8 characters', 'password must contain a digit'],
+        })
+    })
+
+    it('handles nested paths, each-value and whitelist messages', () => {
+        expect(
+            nest(['address.city must be a string', 'each value in tags must be a string', 'property admin should not exist']).errors,
+        ).toEqual({
+            'address.city': ['address.city must be a string'],
+            tags: ['each value in tags must be a string'],
+            admin: ['property admin should not exist'],
+        })
+    })
+
+    it('puts free text messages under _', () => {
+        expect(nest(['Email already used', 'name must be a string']).errors).toEqual({
+            _: ['Email already used'],
+            name: ['name must be a string'],
+        })
+    })
+
+    it('leaves errors undefined for a plain Nest error', () => {
+        expect(nest('Not Found', 'Not Found').errors).toBeUndefined()
+        expect(nest([]).errors).toBeUndefined()
+        expect(new HttpError(400, { message: ['a must be b'], error: 'Bad Request' }).errors).toBeUndefined()
+    })
+
+    it('keeps the message list in data and the joined message', () => {
+        const error = nest(['a must be b', 'c must be d'])
+
+        expect(error.message).toBe('a must be b, c must be d')
+        expect(error.data).toEqual({ statusCode: 400, message: ['a must be b', 'c must be d'], error: 'Bad Request' })
+    })
+})

@@ -23,3 +23,7 @@ Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (
 
 ## Build/test
 `pnpm --filter @nexdk/http build` · `... test`. Tests stub the global `fetch` and inject one through `init.fetch`.
+
+## FetchLike and Nest validation
+- `FetchLike` (`(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>`) is defined in `nexdk` and re-exported. `HttpRequestInit.fetch` and `createRequest` take it; the one cast to `typeof fetch` is inside `request` (ofetch types). Do not widen driver options back to `typeof fetch`: bun-types' `fetch` has `preconnect`, shamock's `mock.fetch` has not. `test/fetch-like.test-d.ts` guards it.
+- `errorsFromData` maps a Nest `ValidationPipe` body (`statusCode` number, `error` string, `message` string array) to `errors`: `<property> must|should|has|is|contains|cannot|does ...` keyed by the property (lowercase start, dotted allowed), `each value in <p> ...` and `property <p> should not exist` too, anything else under `_`. Tested in `test/error-data.test.ts`.

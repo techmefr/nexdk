@@ -20,3 +20,6 @@ It is the reference driver and the worked example of `docs/src/content/docs/guid
 
 ## Build/test
 `pnpm --filter @nexdk/driver-nest build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).
+
+## Validation errors
+A Nest `ValidationPipe` body (`statusCode` number, `error` string, `message` array) is mapped to `errors` by `@nexdk/http` (`errorsFromData`): `<property> must ...` keyed by the property, `each value in <p> ...` and `property <p> should not exist` too, anything else under `_`. `config.fetch` is a `FetchLike` (from `nexdk`).
