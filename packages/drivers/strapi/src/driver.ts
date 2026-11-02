@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { createRequest, encodeId, resolveHeaders, splitId } from '@nexdk/http'
+import { createRequest, encodeId, encodeResource, resolveHeaders, splitId } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import { toStrapiQuery } from './query.ts'
 import type { StrapiConfig, StrapiIdPayload, StrapiResourceApi } from './types.ts'
@@ -31,7 +31,7 @@ function hasExplicitPagination(query: Record<string, unknown>): boolean {
 
 type Ctx = StrapiState & { resourceName: string }
 
-const collectionUrl = (ctx: Ctx): string => `${ctx.baseUrl}/api/${encodeURIComponent(ctx.resourceName)}`
+const collectionUrl = (ctx: Ctx): string => `${ctx.baseUrl}/api/${encodeResource(ctx.resourceName)}`
 
 export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
     get: (ctx: Ctx, payload: unknown) => Promise<unknown>
@@ -43,7 +43,7 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
     name: 'strapi',
     setup: config => ({
         baseUrl: config.baseUrl.replace(/\/$/, ''),
-        request: createRequest(config.fetch),
+        request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal }),
         buildHeaders: async () => ({
             'Content-Type': 'application/json',
             Accept: 'application/json',

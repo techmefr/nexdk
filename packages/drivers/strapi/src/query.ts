@@ -1,3 +1,4 @@
+const EMPTY_LIST_OPERATOR = /^filters.*\[\$(in|notIn)\]$/
 const MAX_DEPTH = 16
 
 function flatten(
@@ -16,6 +17,7 @@ function flatten(
     if (ancestors.has(value)) throw new Error('Strapi query contains a circular reference')
     ancestors.add(value)
     if (Array.isArray(value)) {
+        if (value.length === 0 && EMPTY_LIST_OPERATOR.test(prefix)) out.push([prefix, ''])
         value.forEach((item, index) => flatten(`${prefix}[${index}]`, item, out, ancestors, depth + 1))
     } else {
         for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {

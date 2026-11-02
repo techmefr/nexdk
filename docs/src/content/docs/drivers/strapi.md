@@ -44,7 +44,7 @@ const articles = await sdk.strapi.articles.get({
 
 ## Pagination
 
-`get` follows every page (`meta.pagination.pageCount`). If `pagination` sets `page`, `pageSize`, `start` or `limit`, it makes one request and returns that page only.
+`get` follows every page (`meta.pagination.pageCount`). If `pagination` sets `page`, `pageSize`, `start` or `limit`, it makes one request and returns that page only. Strapi caps `pagination.pageSize` and `pagination.limit` at 100: a larger value is silently reduced by the server. An empty `$in` or `$notIn` list is sent as `filters[field][$in]=`, which Strapi reads as an empty list.
 
 ## Query serialization
 
@@ -54,4 +54,4 @@ const articles = await sdk.strapi.articles.get({
 
 ## Errors
 
-The resource name and the id are URL-encoded. A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`.
+The resource name and the id are URL-encoded. A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`. The `message` is the backend message when there is one and `errors` is normalized to `{ field: [message] }` when possible (see [`@nexdk/http`](/nexdk/packages/http/)); `data` keeps the raw body. The thrown error and the event carry the same `status` and `errors`. The `timeout` (milliseconds) and `signal` (`AbortSignal`) config options abort a request with a status 0 error; neither is set by default. A resource name that is empty, `.` or `..` is refused like an id.
