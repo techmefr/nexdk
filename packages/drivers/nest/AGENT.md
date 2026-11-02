@@ -7,13 +7,13 @@ It is the reference driver and the worked example of `docs/src/content/docs/guid
 
 ## Dependency rule
 - `nexdk`: `peerDependency` (+ devDependency `workspace:*`). Uses `defineDriver`.
-- `@nexdk/http`: real `dependency` (`request`, `toQuery`, `splitId`, `encodeId`, `resolveHeaders`). Do not hand-roll `fetch` here.
+- `@nexdk/http`: real `dependency` (`createRequest`, `toQuery`, `splitId`, `encodeId`, `resolveHeaders`). Do not hand-roll `fetch` here.
 - Typing: `declare module 'nexdk'` + `__apiUri: 'nest'`.
 
 ## Contract
 - The resource name and the id are URL-encoded (`encodeURIComponent`, `encodeId`).
 - `get` is one request. No page following.
-- Errors: `error` with `{ message, status, errors }`, then an `HttpError` is thrown.
+- Errors: `error` with `{ message, status, errors }`, then an `HttpError` (an `SdkError` with `status`, `errors`, `data`) is thrown. `config.fetch` (optional) is given to `createRequest` and kept in the driver state as `ctx.request`: always call `ctx.request`, never the global `request`.
 
 ## Build/test
-`pnpm --filter @nexdk/driver-nest build` · `... test`. Tests mock `fetch`.
+`pnpm --filter @nexdk/driver-nest build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).

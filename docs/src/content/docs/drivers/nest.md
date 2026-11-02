@@ -29,6 +29,8 @@ const users = await sdk.nest.users.get({ page: 1 })
 
 `headers` is a record or a resolver, evaluated before every request.
 
+`fetch` is optional: pass any `fetch` implementation and every HTTP request goes through it instead of `globalThis.fetch`, for example a mock or a custom transport.
+
 ## Methods
 
 | Method | Maps to | Notes |
@@ -43,4 +45,4 @@ The resource name and the id are URL-encoded. An empty id, `.` and `..` are refu
 
 ## Errors
 
-A failure emits `error` with `{ message, status, errors }` (`errors` is the response body), then throws an `HttpError` from [`@nexdk/http`](/nexdk/packages/http/).
+A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError` from [`@nexdk/http`](/nexdk/packages/http/), a typed `SdkError` with `status`, `errors` and `data`. `errors` is the `errors` key of the response body when there is one, else the raw body. See [Events](/nexdk/guides/events/#error-payload).

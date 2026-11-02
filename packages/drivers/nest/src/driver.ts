@@ -1,5 +1,6 @@
 import { defineDriver } from 'nexdk'
-import { encodeId, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { createRequest, encodeId, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import type { HttpRequest } from '@nexdk/http'
 import type { NestConfig, NestIdPayload, NestResourceApi } from './types.ts'
 
 declare module 'nexdk' {
@@ -11,6 +12,7 @@ declare module 'nexdk' {
 interface NestState {
     baseUrl: string
     buildHeaders: () => Promise<Record<string, string>>
+    request: HttpRequest
 }
 
 export const nestDriver = defineDriver<NestConfig, NestState, {
@@ -25,6 +27,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         const baseUrl = config.baseUrl.replace(/\/$/, '')
         return {
             baseUrl,
+            request: createRequest(config.fetch),
             buildHeaders: async () => ({
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
@@ -35,16 +38,16 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
     methods: {
         get: async (ctx, payload) => {
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}${toQuery(payload)}`
-            return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
+            return ctx.request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         find: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
-            return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
+            return ctx.request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         create: async (ctx, payload) => {
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}`
-            return request(url, {
+            return ctx.request(url, {
                 method: 'POST',
                 headers: await ctx.buildHeaders(),
                 body: payload ?? {},
@@ -53,7 +56,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
-            return request(url, {
+            return ctx.request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders(),
                 body,
@@ -62,7 +65,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         remove: async (ctx, payload) => {
             const { id } = payload as NestIdPayload
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
-            await request(url, { method: 'DELETE', headers: await ctx.buildHeaders() })
+            await ctx.request(url, { method: 'DELETE', headers: await ctx.buildHeaders() })
             return { success: true }
         },
     },
