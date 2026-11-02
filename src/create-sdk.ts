@@ -27,7 +27,7 @@ export function createSdk<
 
     for (const key in config.drivers) {
         const driver = config.drivers[key]
-        bindDriverResources(driver, config.resources?.[key])
+        bindDriverResources(key, driver, config.resources?.[key])
         sdk[key] = createDriverProxy(driver, globalHandler)
     }
 
@@ -35,11 +35,17 @@ export function createSdk<
 }
 
 function bindDriverResources(
+    driverKey: string,
     driver: SdkDriver,
     resources: ResourcesByDriver<Record<string, SdkDriver>>[string] | undefined,
 ): void {
     if (resources === undefined) return
     for (const resourceName in resources) {
+        if (resourceName in driver) {
+            throw new Error(
+                `Resource "${resourceName}" collides with a member of driver "${driverKey}" (${driver.name}): rename the resource key`,
+            )
+        }
         const resource = resources[resourceName]
         if (resource !== undefined) {
             driver.bindResource(resourceName, resource)

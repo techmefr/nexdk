@@ -150,4 +150,39 @@ describe('createSdk prototype safety', () => {
         const sdk = createSdk({ drivers: { mock: new MockDriver('mock') } })
         await expect(sdk.mock.users.get({ id: 1 })).resolves.toEqual({ id: 1, fromDriver: 'mock' })
     })
+
+    describe('resource name collisions', () => {
+        class FieldDriver extends MockDriver {
+            readonly resources = new Map<string, AnyResource>()
+            private readonly baseUrl = 'http://api.test'
+        }
+
+        const resource = { name: 'x', schema: {}, fragments: {}, relations: {} } as unknown as AnyResource
+
+        it.each(['resources', 'name', 'get', 'bindResource', 'baseUrl', 'constructor', 'toString'])(
+            'refuses a resource keyed "%s"',
+            key => {
+                expect(() =>
+                    createSdk({
+                        drivers: { mock: new FieldDriver('mock') },
+                        resources: { mock: { [key]: resource } },
+                    }),
+                ).toThrow(`Resource "${key}" collides with a member of driver "mock"`)
+            },
+        )
+
+        it('does not bind anything from a colliding map before throwing for that key', () => {
+            const driver = new FieldDriver('mock')
+            expect(() =>
+                createSdk({ drivers: { mock: driver }, resources: { mock: { resources: resource } } }),
+            ).toThrow()
+            expect(driver.boundResources).toEqual([])
+        })
+
+        it('accepts a regular resource key', () => {
+            const driver = new FieldDriver('mock')
+            createSdk({ drivers: { mock: driver }, resources: { mock: { users: resource } } })
+            expect(driver.boundResources).toEqual(['users'])
+        })
+    })
 })
