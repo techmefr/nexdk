@@ -1,5 +1,5 @@
 export { resolveHeaders } from 'nexdk'
 export type { HeadersResolver } from 'nexdk'
-export { HttpError, request } from './request.ts'
-export type { HttpRequestInit } from './request.ts'
+export { HttpError, createRequest, request } from './request.ts'
+export type { HttpRequest, HttpRequestInit } from './request.ts'
 export { encodeId, splitId, toQuery } from './query.ts'

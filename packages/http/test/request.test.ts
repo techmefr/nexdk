@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { HttpError, request } from '../src/request.ts'
+import { SdkError } from 'nexdk'
+import { HttpError, createRequest, request } from '../src/request.ts'
 
 const mockFetch = vi.fn()
 
@@ -67,5 +68,89 @@ describe('request', () => {
 
         expect(error).toBeInstanceOf(HttpError)
         expect(error.status).toBe(0)
+    })
+})
+
+describe('request with an injected fetch', () => {
+    it('uses the injected fetch instead of the global one', async () => {
+        const injected = vi.fn().mockResolvedValueOnce(jsonResponse(200, { ok: true }))
+
+        const result = await request('http://api.test/users', { fetch: injected as unknown as typeof fetch })
+
+        expect(result).toEqual({ ok: true })
+        expect(injected).toHaveBeenCalledTimes(1)
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('forwards method, headers and body to the injected fetch', async () => {
+        const injected = vi.fn().mockResolvedValueOnce(jsonResponse(200, {}))
+
+        await request('http://api.test/users', {
+            method: 'POST',
+            headers: { 'X-Test': '1' },
+            body: { a: 1 },
+            fetch: injected as unknown as typeof fetch,
+        })
+
+        const [url, init] = injected.mock.calls[0] as [string, RequestInit]
+        expect(url).toBe('http://api.test/users')
+        expect(init.method).toBe('POST')
+        expect(new Headers(init.headers).get('X-Test')).toBe('1')
+        expect(init.body).toBe(JSON.stringify({ a: 1 }))
+    })
+
+    it('throws an HttpError when the injected fetch answers an error status', async () => {
+        const injected = vi.fn().mockResolvedValueOnce(jsonResponse(404, { message: 'nope' }))
+
+        const error = await request('http://api.test/x', { fetch: injected as unknown as typeof fetch }).catch(
+            e => e as HttpError,
+        )
+
+        expect(error).toBeInstanceOf(HttpError)
+        expect(error.status).toBe(404)
+    })
+
+    it('createRequest binds the fetch to every call', async () => {
+        const injected = vi.fn().mockImplementation(async () => jsonResponse(200, { n: 1 }))
+        const bound = createRequest(injected as unknown as typeof fetch)
+
+        await bound('http://api.test/a')
+        await bound('http://api.test/b', { method: 'DELETE' })
+
+        expect(injected).toHaveBeenCalledTimes(2)
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('createRequest without a fetch falls back to the global one', async () => {
+        mockFetch.mockResolvedValueOnce(jsonResponse(200, { n: 1 }))
+
+        await createRequest()('http://api.test/a')
+
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+})
+
+describe('HttpError details', () => {
+    it('is an SdkError carrying status, data and Laravel field errors', async () => {
+        mockFetch.mockResolvedValueOnce(
+            jsonResponse(422, { message: 'The email field is required.', errors: { email: ['required'] } }),
+        )
+
+        const error = await request('http://api.test/users').catch(e => e as HttpError)
+
+        expect(error).toBeInstanceOf(SdkError)
+        expect(error.status).toBe(422)
+        expect(error.message).toBe('The email field is required.')
+        expect(error.errors).toEqual({ email: ['required'] })
+        expect(error.data).toEqual({ message: 'The email field is required.', errors: { email: ['required'] } })
+    })
+
+    it('leaves errors undefined when the body has none', async () => {
+        mockFetch.mockResolvedValueOnce(jsonResponse(500, 'oops'))
+
+        const error = await request('http://api.test/users').catch(e => e as HttpError)
+
+        expect(error.errors).toBeUndefined()
+        expect(error.message).toBe('HTTP 500')
     })
 })

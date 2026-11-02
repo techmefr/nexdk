@@ -18,17 +18,23 @@ sdk.lomkit.users.get({}, (event, data) => {
 
 ## Error payload
 
-Drivers built with `defineDriver` emit `error` with `{ message }`. When the failure is an `HttpError` from [`@nexdk/http`](/nexdk/packages/http/), the payload is `{ message, status, errors }`, where `errors` is the parsed response body.
+Every driver emits `error` with `{ message, status?, errors? }` and throws a typed `SdkError` (exported from `nexdk`) carrying `status`, `errors` and `data`.
+
+- `status` is the HTTP status, set when the error has one (0 for a network failure).
+- `errors` is the field-error map of the response body when it has an `errors` key (Laravel 422: `{ email: ['…'] }`), else the raw response body.
+- `data` (on the thrown error only) is the parsed response body.
+
+`@nexdk/http` throws `HttpError`, a subclass of `SdkError`. lomkit, nest, symfony, pocketbase, strapi and firebase use it. nhost throws an `SdkError` (HTTP failures carry `status`, GraphQL errors carry `errors`). supabase throws `SupabaseQueryError`, an `SdkError` whose `errors` is `{ code, details, hint }`.
 
 ```ts
-await sdk.nest.users.find({ id: 9 }, (event, data) => {
+await sdk.lomkit.users.mutate({ operation: 'create', attributes: {} }, (event, data) => {
   if (event === 'error') {
     console.error(data.status, data.errors)
   }
 })
 ```
 
-Hand-written drivers differ: lomkit emits `{ message, errors }` on a 422 and `{ message }` otherwise, and supabase emits the Postgrest error.
+supabase also keeps `code`, `details` and `hint` at the top level of the event, for compatibility.
 
 ## Global and per-call handlers
 

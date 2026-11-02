@@ -93,7 +93,7 @@ The wrapper does this for each method:
 
 1. emits `request` with `{ resource, payload }`;
 2. if the body returns a Promise, awaits it, emits `success` and returns the value;
-3. if the body throws, emits `error` and rethrows. An `HttpError` gives `{ message, status, errors }`, anything else `{ message }`;
+3. if the body throws, emits `error` and rethrows. An error with a numeric `status` (an `SdkError`, such as the `HttpError` of `@nexdk/http`) gives `{ message, status, errors }`, anything else `{ message }`;
 4. if the body returns a function, returns it as is. It is the unsubscribe handle of a reactive method, with no `success` or `error` envelope.
 
 ### Headers
