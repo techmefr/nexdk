@@ -1,5 +1,6 @@
 import { defineDriver } from 'nexdk'
-import { encodeId, request, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { createRequest, encodeId, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import type { HttpRequest } from '@nexdk/http'
 import type { SymfonyConfig, SymfonyIdPayload, SymfonyResourceApi } from './types.ts'
 
 declare module 'nexdk' {
@@ -11,6 +12,7 @@ declare module 'nexdk' {
 interface SymfonyState {
     baseUrl: string
     buildHeaders: (contentType: string) => Promise<Record<string, string>>
+    request: HttpRequest
 }
 
 function unwrapCollection(body: unknown): unknown {
@@ -34,6 +36,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         const baseUrl = config.baseUrl.replace(/\/$/, '')
         return {
             baseUrl,
+            request: createRequest(config.fetch),
             buildHeaders: async contentType => ({
                 'Content-Type': contentType,
                 Accept: 'application/ld+json',
@@ -44,7 +47,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
     methods: {
         get: async (ctx, payload) => {
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}${toQuery(payload)}`
-            const body = await request(url, {
+            const body = await ctx.request(url, {
                 method: 'GET',
                 headers: await ctx.buildHeaders('application/ld+json'),
             })
@@ -53,14 +56,14 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         find: async (ctx, payload) => {
             const { id } = payload as SymfonyIdPayload
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
-            return request(url, {
+            return ctx.request(url, {
                 method: 'GET',
                 headers: await ctx.buildHeaders('application/ld+json'),
             })
         },
         create: async (ctx, payload) => {
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}`
-            return request(url, {
+            return ctx.request(url, {
                 method: 'POST',
                 headers: await ctx.buildHeaders('application/ld+json'),
                 body: payload ?? {},
@@ -69,7 +72,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         update: async (ctx, payload) => {
             const { id, body } = splitId(payload)
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
-            return request(url, {
+            return ctx.request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders('application/merge-patch+json'),
                 body,
@@ -78,7 +81,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         remove: async (ctx, payload) => {
             const { id } = payload as SymfonyIdPayload
             const url = `${ctx.baseUrl}/${encodeURIComponent(ctx.resourceName)}/${encodeId(id)}`
-            await request(url, {
+            await ctx.request(url, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders('application/ld+json'),
             })

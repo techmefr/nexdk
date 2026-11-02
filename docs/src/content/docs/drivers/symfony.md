@@ -39,6 +39,8 @@ const books = await sdk.symfony.books.get({ page: 1 })
 
 Requests send `Accept: application/ld+json`. Any header can be overridden through `headers`. The resource name and the id are URL-encoded.
 
+`fetch` is optional: pass any `fetch` implementation and every HTTP request goes through it instead of `globalThis.fetch`, for example a mock or a custom transport.
+
 Compared with [nest](/nexdk/drivers/nest/), the differences are the Hydra unwrap and the merge-patch content type.
 
 ## Errors

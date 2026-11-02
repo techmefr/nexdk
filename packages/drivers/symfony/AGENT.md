@@ -14,7 +14,7 @@ API Platform (Symfony) driver over Hydra / JSON-LD: `get`, `find`, `create`, `up
 - Typing: `declare module 'nexdk'` + `__apiUri: 'symfony'`.
 
 ## Contract
-Errors: `error` with `{ message, status, errors }`, then an `HttpError` is thrown.
+Errors: `error` with `{ message, status, errors }`, then an `HttpError` (an `SdkError` with `status`, `errors`, `data`) is thrown. `config.fetch` (optional) is given to `createRequest` and kept in the driver state as `ctx.request`: always call `ctx.request`, never the global `request`.
 
 ## Build/test
-`pnpm --filter @nexdk/driver-symfony build` · `... test`. Tests mock `fetch`.
+`pnpm --filter @nexdk/driver-symfony build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).
