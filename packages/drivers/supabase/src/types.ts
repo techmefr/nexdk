@@ -1,9 +1,9 @@
-import type { SdkEventHandler } from 'nexdk'
+import type { FetchLike, SdkEventHandler } from 'nexdk'
 
 export interface SupabaseConfig {
     url: string
     key: string
-    fetch?: typeof fetch
+    fetch?: FetchLike
 }
 
 export interface SupabaseResult<T> {

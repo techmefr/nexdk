@@ -35,7 +35,7 @@ const sdk = createSdk({
 
 `adminSecret` is optional. `headers` is a record or a resolver, evaluated on every request and on every WebSocket (re)connection.
 
-`fetch` is optional: pass any `fetch` implementation and every HTTP query and mutation goes through it instead of `globalThis.fetch`. WebSocket subscriptions are not affected.
+`fetch` is optional: pass any function `(input, init?) => Promise<Response>` (the `FetchLike` type) and every HTTP query and mutation goes through it instead of `globalThis.fetch`. WebSocket subscriptions are not affected.
 
 ## Methods
 

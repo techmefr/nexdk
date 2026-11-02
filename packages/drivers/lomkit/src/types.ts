@@ -1,10 +1,10 @@
 import type { SdkEventHandler } from 'nexdk'
-import type { HeadersResolver } from '@nexdk/http'
+import type { FetchLike, HeadersResolver } from '@nexdk/http'
 
 export interface LomkitConfig {
     baseUrl: string
     headers?: HeadersResolver
-    fetch?: typeof fetch
+    fetch?: FetchLike
     timeout?: number
     signal?: AbortSignal
 }

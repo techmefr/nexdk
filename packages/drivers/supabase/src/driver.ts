@@ -40,7 +40,7 @@ export class SupabaseDriver implements SdkDriver {
         this.client = createClient(
             config.url,
             config.key,
-            config.fetch ? { global: { fetch: config.fetch } } : undefined,
+            config.fetch ? { global: { fetch: config.fetch as typeof fetch } } : undefined,
         )
     }
 

@@ -1,4 +1,4 @@
-import type { HeadersResolver, SdkEventHandler } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -7,7 +7,7 @@ export interface FirebaseConfig {
     databaseId?: string
     baseUrl?: string
     headers?: HeadersResolver
-    fetch?: typeof fetch
+    fetch?: FetchLike
     timeout?: number
     signal?: AbortSignal
 }

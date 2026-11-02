@@ -1,5 +1,6 @@
 import { FetchError, createFetch, ofetch } from 'ofetch'
 import { SdkError } from 'nexdk'
+import type { FetchLike } from 'nexdk'
 import { errorsFromData, messageFromData } from './error-data.ts'
 
 export interface HttpRequestOptions {
@@ -11,7 +12,7 @@ export interface HttpRequestInit extends HttpRequestOptions {
     method?: string
     headers?: Record<string, string>
     body?: unknown
-    fetch?: typeof fetch
+    fetch?: FetchLike
 }
 
 export type HttpRequest = <T>(url: string, init?: HttpRequestInit) => Promise<T>
@@ -30,7 +31,7 @@ export class HttpError extends SdkError {
 }
 
 export async function request<T>(url: string, init?: HttpRequestInit): Promise<T> {
-    const client = init?.fetch ? createFetch({ fetch: init.fetch }) : ofetch
+    const client = init?.fetch ? createFetch({ fetch: init.fetch as typeof fetch }) : ofetch
     try {
         return await client<T>(url, {
             method: init?.method,
@@ -49,7 +50,7 @@ export async function request<T>(url: string, init?: HttpRequestInit): Promise<T
     }
 }
 
-export function createRequest(fetchImpl?: typeof fetch, options?: HttpRequestOptions): HttpRequest {
+export function createRequest(fetchImpl?: FetchLike, options?: HttpRequestOptions): HttpRequest {
     if (fetchImpl === undefined && options === undefined) return request
     return (url, init) => request(url, { ...options, ...init, fetch: fetchImpl })
 }

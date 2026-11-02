@@ -1,11 +1,11 @@
-import type { SdkEventHandler } from 'nexdk'
+import type { FetchLike, SdkEventHandler } from 'nexdk'
 
 export type HeadersResolver = Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
 
 export interface NhostConfig {
     endpoint: string
     adminSecret?: string
-    fetch?: typeof fetch
+    fetch?: FetchLike
     headers?: HeadersResolver
 }
 

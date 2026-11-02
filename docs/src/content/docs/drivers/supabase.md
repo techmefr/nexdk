@@ -22,7 +22,7 @@ const sdk = createSdk({
 
 `key` is the anon or the service key.
 
-`fetch` is optional and is forwarded to supabase-js as `global.fetch`, so every request of the client goes through it.
+`fetch` is optional (type `FetchLike`, any function `(input, init?) => Promise<Response>`) and is forwarded to supabase-js as `global.fetch`, so every request of the client goes through it.
 
 ## Methods
 
