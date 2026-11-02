@@ -5,11 +5,11 @@ Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (
 
 ## Dependency rule
 - `ofetch`: real `dependency`.
-- `nexdk`: `peerDependency` (+ devDependency `workspace:*`).
+- `nexdk`: `peerDependency` (`>=0.0.1 <1`) + devDependency `workspace:*`.
 
 ## Behaviour notes
 - `request` sets `retry: 0`: one driver call is one request and one `request`/`success`/`error` sequence.
-- A non-2xx response or a network failure throws `HttpError`, a subclass of `SdkError` from `nexdk`. `data` is the parsed body, `errors` is `data.errors` when `data` is an object, `message` is `data.message` when it is a non-empty string else `HTTP {status}`, `status` is 0 for a network failure.
+- A non-2xx response or a network failure throws `HttpError`, a subclass of `SdkError` from `nexdk`. `data` is the parsed body, `errors` is `data.errors` when `data` is an object that has it, else the PocketBase `data.data` map flattened to `{ field: [message] }` (only when it is non-empty and every entry has a string `message`), `message` is `data.message` when it is a non-empty string else `HTTP {status}`, `status` is 0 for a network failure.
 - `request` honours `init.fetch` by building an ofetch client with `createFetch({ fetch })` (ofetch ignores a per-call `fetch` option). `createRequest(fetch)` returns a `request` bound to that `fetch`; without a `fetch` it returns `request` (global fetch, resolved at call time).
 - `toQuery` skips `undefined` and `null`, repeats the key for arrays, JSON-encodes other objects, returns `''` when empty.
 - `splitId` splits `{ id, ...rest }` into `{ id, body }`.

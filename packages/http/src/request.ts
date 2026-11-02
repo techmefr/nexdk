@@ -18,6 +18,20 @@ function messageFromData(data: unknown): string | undefined {
     return isRecord(data) && typeof data.message === 'string' && data.message !== '' ? data.message : undefined
 }
 
+function isFieldIssue(value: unknown): value is { message: string } {
+    return isRecord(value) && typeof value.message === 'string'
+}
+
+function fieldErrorsFromData(data: unknown): unknown {
+    if (!isRecord(data)) return undefined
+    if (data.errors !== undefined) return data.errors
+    const fields = data.data
+    if (!isRecord(fields)) return undefined
+    const entries = Object.entries(fields)
+    if (entries.length === 0 || !entries.every(([, issue]) => isFieldIssue(issue))) return undefined
+    return Object.fromEntries(entries.map(([field, issue]) => [field, [(issue as { message: string }).message]]))
+}
+
 export class HttpError extends SdkError {
     declare readonly status: number
 
@@ -25,7 +39,7 @@ export class HttpError extends SdkError {
         super(message ?? messageFromData(data) ?? `HTTP ${status}`, {
             status,
             data,
-            errors: isRecord(data) ? data.errors : undefined,
+            errors: fieldErrorsFromData(data),
         })
         this.name = 'HttpError'
     }

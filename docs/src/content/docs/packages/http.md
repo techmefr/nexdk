@@ -19,7 +19,7 @@ import { HttpError, createRequest, encodeId, request, resolveHeaders, splitId, t
 
 - **`request<T>(url, init?)`**: JSON request. `init` is `{ method?, headers?, body?, fetch? }`. `fetch` replaces `globalThis.fetch` for that call. Throws `HttpError` on a non-2xx response or a network failure. Retries are disabled (`retry: 0`), so one call is one request.
 - **`createRequest(fetch?)`**: returns a `request` bound to the given `fetch`. Without an argument it returns `request`. The REST drivers call it with their `fetch` config option.
-- **`HttpError`**: a subclass of `SdkError` from `nexdk`: `{ status, data, errors, message }`. `data` is the parsed response body. `errors` is its `errors` key, when it is an object that has one (Laravel validation). `message` is the body `message` when it is a non-empty string, else `HTTP {status}`. Network failures have `status` 0 and the network error message.
+- **`HttpError`**: a subclass of `SdkError` from `nexdk`: `{ status, data, errors, message }`. `data` is the parsed response body. `errors` is its `errors` key when present (Laravel validation); otherwise, for a PocketBase body `{ status, message, data: { field: { code, message } } }`, it is `{ field: [message] }`. The raw body stays in `data`. `message` is the body `message` when it is a non-empty string, else `HTTP {status}`. Network failures have `status` 0 and the network error message.
 - **`toQuery(payload)`**: object to `?a=1&b=2`. `undefined` and `null` values are skipped, arrays repeat the key, other objects are JSON-encoded. Returns `''` when empty.
 - **`splitId(payload)`**: `{ id, ...rest }` to `{ id, body: rest }`.
 - **`encodeId(id)`**: URL-encodes an id. Throws on an empty id, `.` or `..`.
