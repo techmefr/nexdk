@@ -19,5 +19,7 @@ GraphQL + subscriptions driver for Hasura / Nhost: `query`, `mutation`, `upsert`
 ## Contract
 Emit `error`, then throw an `SdkError`. A GraphQL `errors` array throws even with HTTP 200 (`errors` = the GraphQL array); a non-2xx response throws `HTTP {status}` with `status`, `data` (parsed body) and `errors` (body `errors` key). The event is `{ message, status?, errors? }`. `config.fetch` (optional) replaces `globalThis.fetch` for HTTP calls, not for the WebSocket. `headers` is a record or a resolver (per request and on every WS `connection_init`).
 
+- Pool: `pending` is gone, subscriptions live in `handlers`. `connected`, `disconnected`, `complete` and `error` are emitted per subscription. A close code 4400-4499 emits `error` and stops reconnecting. The pool key uses the identity of `config.headers` (or the driver instance when unset); `removeSubscription` drops the pool entry at once and only deletes its own key.
+
 ## Build/test
 `pnpm --filter @nexdk/driver-nhost build` · `... test`. Tests mock `fetch` and `WebSocket` (reconnect and replay with fake timers).

@@ -3,10 +3,10 @@ title: Events
 description: The unified event contract every driver follows.
 ---
 
-Every call emits a subset of `request`, `success`, `error`, `data`, `connected` and `disconnected`.
+Every call emits a subset of `request`, `success`, `error`, `data`, `complete`, `connected` and `disconnected`.
 
 - Async methods emit `request`, then `success` or `error`.
-- Reactive methods (subscriptions) return an unsubscribe function and emit `data`, `connected` and `disconnected`.
+- Reactive methods (subscriptions) return an unsubscribe function and emit `data`, `connected`, `disconnected` and, for a subscription ended by the server, `complete`.
 
 The rule for drivers: **emit `error`, then throw.** A failure is never swallowed.
 

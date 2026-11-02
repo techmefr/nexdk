@@ -47,7 +47,7 @@ const sdk = createSdk({
 | `updateById({ id, data }, onEvent?, options?)` | `update_{resource}_by_pk` | Returns `{ data }`. |
 | `updateWhere({ where, data }, onEvent?)` | `update_{resource}` | Returns `{ affectedRows }`. |
 | `deleteById({ id }, onEvent?)` | `delete_{resource}_by_pk` | Returns `{ success: true }`. |
-| `subscription(payload?, onEvent?, options?)` | subscription | Returns an unsubscribe function. Emits `connected`, `disconnected` and `data`. |
+| `subscription(payload?, onEvent?, options?)` | subscription | Returns an unsubscribe function. Emits `connected`, `disconnected`, `data`, `complete` and `error`. |
 
 ```ts
 const result = await sdk.nhost.products.query<{ products: { id: string; name: string }[] }>({
@@ -76,7 +76,9 @@ Resource names, payload keys, `conflictConstraint` and `updateColumns` must matc
 
 ## Subscriptions
 
-- Subscriptions of one driver instance share one WebSocket when an `adminSecret` is set. Without an `adminSecret`, each subscription gets its own connection, so credentials are never shared.
+- Subscriptions share one WebSocket when an `adminSecret` is set and they use the same `headers` value (the same function or object, even across driver instances; without `headers`, the same driver instance). Without an `adminSecret`, each subscription gets its own connection, so credentials are never shared.
+- `connected` is emitted when the connection is acknowledged (and again after a reconnection), `disconnected` when it drops or when the last subscription stops. A subscription that the server ends emits `complete`; a subscription that the server rejects emits `error` with `{ message, errors }` (the GraphQL errors).
+- A close code between 4400 and 4499 (for example a rejected admin secret) emits `error` with `{ message, code, reason }` and does not reconnect.
 - The connection reconnects with exponential backoff (500 ms up to 15 s) and subscribes again.
 - A WebSocket to a plain `http` endpoint is refused unless the host is `localhost`, `127.0.0.1` or `[::1]`. Use `https`.
 

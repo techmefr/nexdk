@@ -3,6 +3,7 @@ import type { AnyResource, SdkEventHandler } from 'nexdk'
 import type {
     DeleteByIdPayload,
     GraphQLOptions,
+    HeadersResolver,
     NhostConfig,
     NhostQueryResult,
     NhostResourceApi,
@@ -10,7 +11,7 @@ import type {
     UpdateWherePayload,
     UpsertPayload,
 } from './types.ts'
-import { getSharedConnection } from './connection-pool.ts'
+import { addSubscription, getSharedConnection, removeSubscription } from './connection-pool.ts'
 import {
     buildQueryName,
     buildVarArgs,
@@ -45,7 +46,8 @@ function subscriptionId(): string {
 interface NhostState {
     endpoint: string
     adminSecret: string | undefined
-    resolveInitHeaders: () => Promise<Record<string, string>>
+    headers: HeadersResolver | undefined
+    poolOwner: object
     execute: <T>(document: string, variables?: Record<string, unknown>) => Promise<NhostQueryResult<T>>
 }
 
@@ -85,7 +87,8 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
         return {
             endpoint: config.endpoint,
             adminSecret: config.adminSecret,
-            resolveInitHeaders: () => resolveHeaders(config.headers),
+            headers: config.headers,
+            poolOwner: {},
             execute: async <T>(document: string, variables?: Record<string, unknown>) => {
                 const response = await (config.fetch ?? fetch)(config.endpoint, {
                     method: 'POST',
@@ -164,32 +167,16 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
             const document = `subscription On${singular(ctx.resourceName)}${decls} { ${ctx.resourceName}${args} { ${fields} } }`
 
             const wsUrl = toWebSocketUrl(ctx.endpoint)
-            const conn = getSharedConnection(wsUrl, ctx.adminSecret, ctx.resolveInitHeaders)
+            const conn = getSharedConnection(wsUrl, ctx.adminSecret, ctx.headers, ctx.poolOwner)
 
             const id = subscriptionId()
-            conn.handlers.set(id, {
-                handler: data => ctx.emit?.('data', data),
+            addSubscription(conn, id, {
+                emit: (event, data) => ctx.emit?.(event, data),
                 query: document,
                 variables,
             })
 
-            if (conn.acknowledged) {
-                conn.ws.send(JSON.stringify({ id, type: 'subscribe', payload: { query: document, variables } }))
-            } else {
-                conn.pending.push({ id, query: document, variables })
-            }
-
-            return () => {
-                conn.handlers.delete(id)
-                if (conn.ws.readyState === WebSocket.OPEN) {
-                    conn.ws.send(JSON.stringify({ id, type: 'complete' }))
-                }
-                conn.refCount--
-                if (conn.refCount <= 0) {
-                    conn.intentionalClose = true
-                    conn.ws.close()
-                }
-            }
+            return () => removeSubscription(conn, id)
         },
     },
 })

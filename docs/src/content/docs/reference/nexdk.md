@@ -77,7 +77,7 @@ The typed error thrown by every driver. `toErrorPayload` builds the `error` even
 | `StandardSchemaV1` | The [Standard Schema](/nexdk/guides/standard-schema/) contract. |
 | `SdkDriver` | `{ name, bindResource(name, resource) }`. |
 | `SdkConfig` | The argument of `createSdk`. |
-| `SdkEvent` | `'request' \| 'success' \| 'error' \| 'data' \| 'connected' \| 'disconnected'`. |
+| `SdkEvent` | `'request' \| 'success' \| 'error' \| 'data' \| 'complete' \| 'connected' \| 'disconnected'`. |
 | `SdkEventHandler` | `(event: SdkEvent, data?: unknown) => void`. |
 | `Resource`, `AnyResource`, `ResourceConfig`, `ResourceMap` | The object returned by `defineResource`, and its config. |
 | `InferSchema<TResource>` | The inferred record type of a resource. |
