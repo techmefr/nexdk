@@ -11,6 +11,18 @@ The package is optional. A driver that does not want `ofetch` can use `fetch` di
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/http`).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http
+```
+
+## Bundle size on Node
+
+`ofetch` ships two entries. Its `node` export pulls `node-fetch-native`, a polyfill only used when `globalThis.fetch` is missing, and a bundler targeting Node includes it: about 33 kB gzip more (36.9 kB against 4.0 kB gzip for ofetch alone, measured with esbuild `--platform=node`). Browser, worker, Bun and Deno resolve the light entry. `@nexdk/http` cannot change that choice, because it is made by `ofetch` through its export conditions.
+
+If you bundle for Node and want the light entry, ask your bundler to match the `browser` condition before `node`: with esbuild, `--conditions=browser` (`resolve.conditions: ['browser']` in Vite). Node 22 and later has a global `fetch`, so nothing is lost. Servers that run unbundled are not affected.
+
 ## API
 
 ```ts

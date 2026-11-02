@@ -7,6 +7,9 @@ Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (
 - `ofetch`: real `dependency`.
 - `nexdk`: `peerDependency` (`>=0.0.1 <1`) + devDependency `workspace:*`.
 
+## Node bundle weight
+`ofetch` resolves to `node-fetch-native` under the `node` condition (about 33 kB gzip), which this package cannot avoid. The documented workaround is the bundler condition `browser`. Keep that note in the README and docs.
+
 ## Behaviour notes
 - `request` sets `retry: 0`: one driver call is one request and one `request`/`success`/`error` sequence.
 - A non-2xx response or a network failure throws `HttpError`, a subclass of `SdkError` from `nexdk`. `data` is the parsed body, `errors` is `data.errors` when `data` is an object that has it, else the PocketBase `data.data` map flattened to `{ field: [message] }` (only when it is non-empty and every entry has a string `message`), `message` is `data.message` when it is a non-empty string else `HTTP {status}`, `status` is 0 for a network failure.

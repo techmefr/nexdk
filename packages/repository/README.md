@@ -4,6 +4,12 @@ One `list`, `find`, `create`, `update`, `remove` interface over the nexdk REST d
 
 Not published to npm yet: build it from the [repository](https://github.com/techmefr/nexdk) (`packages/repository`). Full documentation: [nexdk docs](https://techmefr.github.io/nexdk/packages/repository/).
 
+Once published, install the package, the drivers you use and `@nexdk/http`:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/repository @nexdk/driver-pocketbase
+```
+
 ```ts
 import { createSdk, defineResource } from 'nexdk'
 import { createPocketbaseDriver } from '@nexdk/driver-pocketbase'

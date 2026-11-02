@@ -15,7 +15,11 @@ pnpm install
 pnpm build
 ```
 
-Peer dependencies: `nexdk`, `@supabase/supabase-js`.
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @supabase/supabase-js @nexdk/driver-supabase
+```
 
 ## Usage
 

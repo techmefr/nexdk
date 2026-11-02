@@ -19,6 +19,13 @@ pnpm install
 pnpm build
 ```
 
+Once published, install the SDK, the driver and what the driver needs. REST drivers need `@nexdk/http`, the supabase driver needs `@supabase/supabase-js`:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/driver-nest
+pnpm add nexdk @supabase/supabase-js @nexdk/driver-supabase
+```
+
 ## A minimal example
 
 ```ts

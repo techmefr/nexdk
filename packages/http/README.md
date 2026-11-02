@@ -15,7 +15,15 @@ pnpm install
 pnpm build
 ```
 
-Peer dependencies: `nexdk`.
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http
+```
+
+## Bundle size on Node
+
+A Node bundle of `ofetch` includes `node-fetch-native` (about 33 kB gzip more than the browser entry). It is chosen by `ofetch`, not by this package. To avoid it, match the `browser` condition in your bundler (esbuild `--conditions=browser`). Details in the [docs](https://techmefr.github.io/nexdk/packages/http/).
 
 ## Usage
 

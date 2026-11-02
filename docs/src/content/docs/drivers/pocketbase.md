@@ -9,6 +9,12 @@ REST driver for the [PocketBase](https://pocketbase.io) records API (`/api/colle
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/pocketbase`). It peer-depends on `nexdk` and `@nexdk/http`.
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/driver-pocketbase
+```
+
 ## Config
 
 ```ts

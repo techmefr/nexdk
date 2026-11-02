@@ -15,7 +15,11 @@ pnpm install
 pnpm build
 ```
 
-Peer dependencies: `nexdk`.
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/driver-nhost
+```
 
 ## Usage
 

@@ -9,6 +9,12 @@ description: Vue composables for nexdk resources — forms with Zod validation.
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/hooks`). It peer-depends on `nexdk`, `vue` and `zod` (3 or 4).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk vue zod @nexdk/hooks
+```
+
 ## Usage
 
 ```ts

@@ -9,6 +9,12 @@ GraphQL driver for a Hasura / Nhost backend, with subscriptions over `graphql-tr
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/nhost`).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/driver-nhost
+```
+
 ## Config
 
 ```ts

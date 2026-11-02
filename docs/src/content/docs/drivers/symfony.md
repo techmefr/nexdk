@@ -9,6 +9,12 @@ API Platform (Symfony) REST driver over Hydra / JSON-LD. Built with `defineDrive
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/symfony`).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/driver-symfony
+```
+
 ## Config
 
 ```ts

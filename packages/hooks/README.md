@@ -15,7 +15,11 @@ pnpm install
 pnpm build
 ```
 
-Peer dependencies: `nexdk`, `vue`, `zod`.
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk vue zod @nexdk/hooks
+```
 
 ## Usage
 

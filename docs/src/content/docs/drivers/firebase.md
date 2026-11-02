@@ -9,6 +9,12 @@ Driver for [Cloud Firestore](https://firebase.google.com/docs/firestore) through
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/firebase`).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/driver-firebase
+```
+
 ## Config
 
 ```ts

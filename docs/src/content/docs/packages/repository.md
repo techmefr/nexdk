@@ -11,6 +11,12 @@ It has no runtime dependency. `nexdk` is a peer, and each driver is an optional 
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/repository`).
 
+Once published, install the package, the drivers you use and `@nexdk/http`:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/repository @nexdk/driver-pocketbase
+```
+
 ## Interface
 
 ```ts

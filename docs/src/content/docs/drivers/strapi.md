@@ -9,6 +9,12 @@ REST driver for [Strapi](https://strapi.io) v5 (flat documents). Strapi wraps re
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/strapi`).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/driver-strapi
+```
+
 ## Config
 
 ```ts

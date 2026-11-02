@@ -9,6 +9,12 @@ Conventional REST CRUD driver. **It is the reference driver**: the worked exampl
 
 Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/drivers/nest`).
 
+Once published, install the package with everything it needs:
+
+```bash
+pnpm add nexdk @nexdk/http @nexdk/driver-nest
+```
+
 ## Config
 
 ```ts
