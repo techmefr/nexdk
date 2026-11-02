@@ -27,7 +27,9 @@ const sdk = createSdk({
 const posts = await sdk.pocketbase.posts.get({ sort: '-created' })
 ```
 
-## Methods
+`fetch` is optional: pass any `fetch` implementation and every HTTP request goes through it instead of `globalThis.fetch`, for example a mock or a custom transport.
+
+
 
 The resource name is the collection name.
 

@@ -5,6 +5,7 @@ export type { HeadersResolver }
 export interface PocketbaseConfig {
     baseUrl: string
     headers?: HeadersResolver
+    fetch?: typeof fetch
 }
 
 export interface PocketbaseIdPayload {
