@@ -75,4 +75,4 @@ export type Sdk<TDrivers extends Record<string, SdkDriver>> = {
     [K in keyof TDrivers]: TDrivers[K] & Record<string, ResourceProxy>
 }
 
-export type WriteInput<T> = Partial<T> & Record<string, unknown>
+export type WriteInput<T> = Partial<T> & Record<string, any>

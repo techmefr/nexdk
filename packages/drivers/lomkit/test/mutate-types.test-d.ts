@@ -24,7 +24,16 @@ describe('lomkit mutate payload types', () => {
 
     it('keeps the schema fields typed for reading', () => {
         expectTypeOf<NonNullable<LomkitMutatePayload<User>['attributes']>['age']>().toEqualTypeOf<number | undefined>()
-        expectTypeOf<NonNullable<LomkitMutatePayload<User>['attributes']>['password']>().toEqualTypeOf<unknown>()
+        expectTypeOf<NonNullable<LomkitMutatePayload<User>['attributes']>['password']>().toBeAny()
+    })
+
+    it('accepts an interface as the write body', () => {
+        interface NewUser {
+            name: string
+            password: string
+        }
+        const body: NewUser = { name: 'Alice', password: 'secret' }
+        sdk.lomkit.users.mutate({ operation: 'create', attributes: body })
     })
 
     it('accepts input fields that the resource does not return', () => {
