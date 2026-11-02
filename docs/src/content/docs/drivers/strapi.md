@@ -30,7 +30,9 @@ const articles = await sdk.strapi.articles.get({
 })
 ```
 
-## Methods
+`fetch` is optional: pass any `fetch` implementation and every HTTP request goes through it instead of `globalThis.fetch`, for example a mock or a custom transport.
+
+
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
