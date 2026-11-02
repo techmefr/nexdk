@@ -8,6 +8,7 @@ export default defineConfig({
         },
     },
     test: {
+        typecheck: { enabled: true, include: ['test/**/*.test-d.ts'] },
         globals: false,
         environment: 'node',
     },

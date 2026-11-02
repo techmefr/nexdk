@@ -17,5 +17,5 @@ export interface StandardSchemaV1<Input = unknown, Output = Input> {
 
 ## The exceptions
 
-- `@nexdk/hooks` is Zod-specific: `useResourceForm` reads `ZodObject` and `ZodDefault` internals to build form defaults.
+- `@nexdk/hooks` is Zod-specific (Zod 3 and Zod 4): `useResourceForm` reads `shape` and the default of each field by duck typing (`_def.typeName` or `_zod.def.type`) and validates with `safeParse`. See [`@nexdk/hooks`](/nexdk/packages/hooks/#supported-schemas).
 - `@nexdk/driver-nhost` reads `schema.shape` (a Zod object shape) to list the fields of a query when the resource has no fragment. Without a shape it selects `id`.

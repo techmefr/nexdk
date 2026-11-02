@@ -7,7 +7,7 @@ description: Vue composables for nexdk resources — forms with Zod validation.
 
 ## Install
 
-Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/hooks`). It peer-depends on `nexdk`, `vue` and `zod`.
+Not published to npm yet. Build it from [the repository](https://github.com/techmefr/nexdk) (`packages/hooks`). It peer-depends on `nexdk`, `vue` and `zod` (3 or 4).
 
 ## Usage
 
@@ -28,7 +28,7 @@ const onSubmit = handleSubmit(async (data) => {
 })
 ```
 
-The resource schema must be a `z.object`.
+The resource schema must be a Zod object schema (`z.object`): `useResourceForm` needs its `shape` and its `safeParse`.
 
 - **`values`**: a `Ref` of the current values. Fields start at their Zod default, or `null`.
 - **`errors`**: a `Ref` of field to messages, filled by `handleSubmit` when validation fails.
@@ -38,6 +38,12 @@ The resource schema must be a `z.object`.
 - **`fill(data)`**: patches `values` and resets the dirty baseline.
 - **`reset()`**: restores the initial values and clears `errors`.
 
-## The one Zod-specific package
+## Supported schemas
 
-`useResourceForm` reads `ZodObject` and `ZodDefault` internals to build the initial values, so `@nexdk/hooks` peer-depends on `zod`. See [Standard Schema](/nexdk/guides/standard-schema/#the-exceptions).
+`useResourceForm` is the one Zod-specific package. It supports Zod 3 (`^3.24`) and Zod 4 object schemas, and `nexdk` itself accepts any [Standard Schema](/nexdk/guides/standard-schema/#the-exceptions) validator.
+
+- Initial values are read by duck typing, not with `instanceof`: a field with `_def.typeName === 'ZodDefault'` (Zod 3) or `_zod.def.type === 'default'` (Zod 4, including `zod/v4` in Zod 3.25) starts at its default, which can be a value or a function. Any other field starts at `null`.
+- Because nothing is compared with `instanceof`, a schema built by another copy of `zod` (a duplicated install, a monorepo, `zod/v4`) behaves like any other.
+- Validation calls `schema.safeParse`, and the types come from the Standard Schema output of the schema, so `values` and the data given to `onValid` are typed for both Zod versions.
+- Defaults wrapped by another modifier (`.default(1).optional()`) are not unwrapped: the field starts at `null`.
+- Valibot and ArkType schemas work with `nexdk`, the drivers and `defineResource`, but not with `useResourceForm`: they have no `shape` and no `safeParse`.

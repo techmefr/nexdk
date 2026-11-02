@@ -1,35 +1,70 @@
 import type { ComputedRef, Ref } from 'vue'
-import { ZodDefault, type ZodObject, type ZodRawShape, type z } from 'zod'
 import { computed, ref } from 'vue'
-import type { AnyResource } from 'nexdk'
+import type { AnyResource, StandardSchemaV1 } from 'nexdk'
 
 type Nullable<T> = { [K in keyof T]: T[K] | null }
 
-type FormResource = AnyResource & { schema: ZodObject<ZodRawShape> }
-type FormValues<TResource extends FormResource> = Nullable<z.infer<TResource['schema']>>
-type FormErrors<TResource extends FormResource> = Partial<
-    Record<keyof z.infer<TResource['schema']>, string[]>
->
+interface FormIssue {
+    path: ReadonlyArray<PropertyKey>
+    message: string
+}
+
+type FormParseResult =
+    | { success: true; data: unknown }
+    | { success: false; error: { issues: ReadonlyArray<FormIssue> } }
+
+export type FormSchema = StandardSchemaV1 & {
+    shape: Record<string, unknown>
+    safeParse(value: unknown): FormParseResult
+}
+
+type FormResource = AnyResource & { schema: FormSchema }
+type Output<TResource extends FormResource> = StandardSchemaV1.InferOutput<TResource['schema']>
+type FormValues<TResource extends FormResource> = Nullable<Output<TResource>>
+type FormErrors<TResource extends FormResource> = Partial<Record<keyof Output<TResource>, string[]>>
 
 export interface ResourceFormReturn<TResource extends FormResource> {
     values: Ref<FormValues<TResource>>
     errors: Ref<FormErrors<TResource>>
     isDirty: ComputedRef<boolean>
     handleSubmit: (
-        onValid: (data: z.infer<TResource['schema']>) => Promise<void> | void,
+        onValid: (data: Output<TResource>) => Promise<void> | void,
     ) => () => Promise<void>
     setServerErrors: (serverErrors: Record<string, string[]>) => void
-    fill: (data: Partial<z.infer<TResource['schema']>>) => void
+    fill: (data: Partial<Output<TResource>>) => void
     reset: () => void
+}
+
+interface ZodV3Def {
+    typeName?: unknown
+    defaultValue?: unknown
+}
+
+interface ZodV4Def {
+    type?: unknown
+    defaultValue?: unknown
+}
+
+function readDefault(field: unknown): unknown {
+    if (field === null || typeof field !== 'object') return null
+    const candidate = field as { _def?: ZodV3Def; _zod?: { def?: ZodV4Def } }
+
+    const v3 = candidate._def
+    if (v3?.typeName === 'ZodDefault' && typeof v3.defaultValue === 'function') {
+        return (v3.defaultValue as () => unknown)()
+    }
+
+    const v4 = candidate._zod?.def
+    if (v4?.type === 'default') {
+        return typeof v4.defaultValue === 'function' ? (v4.defaultValue as () => unknown)() : v4.defaultValue
+    }
+
+    return null
 }
 
 function buildInitialValues<TResource extends FormResource>(resource: TResource): FormValues<TResource> {
     return Object.fromEntries(
-        Object.keys(resource.schema.shape).map(key => {
-            const field = resource.schema.shape[key]
-            const value = field instanceof ZodDefault ? field._def.defaultValue() : null
-            return [key, value]
-        }),
+        Object.entries(resource.schema.shape).map(([key, field]) => [key, readDefault(field)]),
     ) as FormValues<TResource>
 }
 
@@ -52,7 +87,7 @@ export function useResourceForm<TResource extends FormResource>(
     })
 
     function handleSubmit(
-        onValid: (data: z.infer<TResource['schema']>) => Promise<void> | void,
+        onValid: (data: Output<TResource>) => Promise<void> | void,
     ): () => Promise<void> {
         return async (): Promise<void> => {
             errors.value = {} as TErrors
@@ -70,7 +105,7 @@ export function useResourceForm<TResource extends FormResource>(
                 return
             }
 
-            await onValid(result.data)
+            await onValid(result.data as Output<TResource>)
         }
     }
 
@@ -78,7 +113,7 @@ export function useResourceForm<TResource extends FormResource>(
         errors.value = serverErrors as TErrors
     }
 
-    function fill(data: Partial<z.infer<TResource['schema']>>): void {
+    function fill(data: Partial<Output<TResource>>): void {
         Object.assign(values.value, data)
         baseline = { ...initial, ...data } as TValues
     }
