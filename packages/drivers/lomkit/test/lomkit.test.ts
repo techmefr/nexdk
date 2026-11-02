@@ -99,6 +99,7 @@ describe('LomkitDriver.mutate', () => {
         expect(errorPayloads).toEqual([
             {
                 message: 'Validation failed',
+                status: 422,
                 errors: { email: ['The email field is required.'] },
             },
         ])

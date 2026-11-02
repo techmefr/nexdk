@@ -4,6 +4,7 @@ import type { HeadersResolver } from '@nexdk/http'
 export interface LomkitConfig {
     baseUrl: string
     headers?: HeadersResolver
+    fetch?: typeof fetch
 }
 
 export interface LomkitPaginationMeta {
@@ -31,13 +32,21 @@ export interface LomkitValidationError {
     errors: Record<string, string[]>
 }
 
+export interface LomkitMutatePayload<T> {
+    operation?: 'create' | 'update' | (string & {})
+    key?: number | string
+    attributes?: Partial<T>
+    relations?: Record<string, unknown>
+    [field: string]: unknown
+}
+
 export interface LomkitResourceApi<T> {
     get(
         payload?: object,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitGetResult<T>>
     mutate(
-        payload?: object,
+        payload?: LomkitMutatePayload<T>,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitMutateResult<T>>
     delete(

@@ -31,15 +31,19 @@ const sdk = createSdk({
 
 `headers` is a record or a resolver, evaluated before every request.
 
+`fetch` is optional: pass any `fetch` implementation and every HTTP request goes through it instead of `globalThis.fetch`, for example a mock or a custom transport.
+
 ## Methods
 
 | Method | Maps to | Notes |
 |--------|---------|-------|
 | `get(payload?, onEvent?)` | `POST /{resource}/search` | The payload is the body. Returns `{ data: T[], meta? }`. |
-| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`. Returns `{ data: T[] }`. |
+| `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`. Returns `{ data: T[] }`. `payload` is a `LomkitMutatePayload<T>`: `attributes` is typed `Partial<T>` from the resource schema. |
 | `delete({ resources }, onEvent?)` | `DELETE /{resource}` | Sends `{ resources: [...] }`. Returns `{ success: true }`. |
 
 The URL uses the `name` of the bound resource, URL-encoded, or the call key when no resource is bound.
+
+`LomkitMutatePayload<T>` is `{ operation?, key?, attributes?: Partial<T>, relations?, ...other keys }`: a wrong attribute name or type is a type error, other keys stay free.
 
 `get` returns one page and its `meta` (`current_page`, `last_page`, `per_page`, `total`). It does not follow pages: set `search.page` and `search.limit` yourself.
 
@@ -53,10 +57,21 @@ const { data, meta } = await sdk.lomkit.users.get({
 
 ## Errors
 
-A failure emits `error`, then throws a plain `Error`.
+A failure emits `error`, then throws the `HttpError` from [`@nexdk/http`](/nexdk/packages/http/), a typed `SdkError` with `status`, `errors` and `data`.
 
-- On a 422, the `error` event carries `{ message, errors }`, the Laravel validation payload.
-- On any other failure, the event carries `{ message }` (for example `HTTP 500`). There is no `status`.
+- On a 422, the message is the Laravel `message`, `errors` is the field map (`{ email: ['…'] }`) and `data` is the full body.
+- The `error` event carries `{ message, status, errors }`. When the body has no `errors` key, `errors` is the raw response body.
+- A network failure has `status` 0.
+
+```ts
+import { SdkError } from 'nexdk'
+
+try {
+  await sdk.lomkit.users.mutate({ operation: 'create', attributes: { email: '' } })
+} catch (error) {
+  if (error instanceof SdkError && error.status === 422) console.log(error.errors)
+}
+```
 
 ```ts
 await sdk.lomkit.users.mutate({ operation: 'create', attributes: {} }, (event, data) => {

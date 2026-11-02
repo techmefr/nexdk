@@ -1,13 +1,13 @@
+import { toErrorPayload } from 'nexdk'
 import type { AnyResource, SdkDriver, SdkEventHandler } from 'nexdk'
-import { HttpError, request, resolveHeaders } from '@nexdk/http'
-import type { HeadersResolver } from '@nexdk/http'
+import { createRequest, resolveHeaders } from '@nexdk/http'
+import type { HeadersResolver, HttpRequest } from '@nexdk/http'
 import type {
     LomkitConfig,
     LomkitDeleteResult,
     LomkitGetResult,
     LomkitMutateResult,
     LomkitResourceApi,
-    LomkitValidationError,
 } from './types.ts'
 
 declare module 'nexdk' {
@@ -23,11 +23,13 @@ export class LomkitDriver implements SdkDriver {
 
     private readonly baseUrl: string
     private readonly headersConfig: HeadersResolver | undefined
+    private readonly httpRequest: HttpRequest
     private readonly resources = new Map<string, AnyResource>()
 
     constructor(config: LomkitConfig) {
         this.baseUrl = config.baseUrl.replace(/\/$/, '')
         this.headersConfig = config.headers
+        this.httpRequest = createRequest(config.fetch)
     }
 
     bindResource(resourceName: string, resource: AnyResource): void {
@@ -55,7 +57,7 @@ export class LomkitDriver implements SdkDriver {
 
         let result: LomkitGetResult<T>
         try {
-            result = await request<LomkitGetResult<T>>(`${this.baseUrl}/${urlName}/search`, {
+            result = await this.httpRequest<LomkitGetResult<T>>(`${this.baseUrl}/${urlName}/search`, {
                 method: 'POST',
                 headers: await this.buildHeaders(),
                 body: payload ?? {},
@@ -80,7 +82,7 @@ export class LomkitDriver implements SdkDriver {
 
         let result: LomkitMutateResult<T>
         try {
-            result = await request<LomkitMutateResult<T>>(`${this.baseUrl}/${urlName}/mutate`, {
+            result = await this.httpRequest<LomkitMutateResult<T>>(`${this.baseUrl}/${urlName}/mutate`, {
                 method: 'POST',
                 headers: await this.buildHeaders(),
                 body: { mutate: [payload] },
@@ -104,7 +106,7 @@ export class LomkitDriver implements SdkDriver {
         onEvent?.('request', { resource: name, payload })
 
         try {
-            await request(`${this.baseUrl}/${urlName}`, {
+            await this.httpRequest(`${this.baseUrl}/${urlName}`, {
                 method: 'DELETE',
                 headers: await this.buildHeaders(),
                 body: payload,
@@ -116,15 +118,8 @@ export class LomkitDriver implements SdkDriver {
         return { success: true }
     }
 
-    private handleError(error: unknown, onEvent?: SdkEventHandler): Error {
-        if (error instanceof HttpError && error.status === 422) {
-            const body = (error.data ?? {}) as Partial<LomkitValidationError>
-            const message = body.message ?? error.message
-            onEvent?.('error', { message, errors: body.errors })
-            return new Error(message)
-        }
-        const message = error instanceof HttpError ? error.message : (error as Error).message
-        onEvent?.('error', { message })
-        return new Error(message)
+    private handleError(error: unknown, onEvent?: SdkEventHandler): unknown {
+        onEvent?.('error', toErrorPayload(error))
+        return error
     }
 }
