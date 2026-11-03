@@ -9,6 +9,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         firebase: FirebaseResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        firebase: FirebaseResourceApi<T, true>
+    }
 }
 
 interface FirebaseState {

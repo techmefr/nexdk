@@ -51,7 +51,7 @@
     "scripts": {
         "build": "unbuild && pnpm --filter \"./packages/**\" build",
         "test": "vitest run && pnpm --filter \"./packages/**\" test",
-        "typecheck": "tsc --noEmit && pnpm --filter './packages/**' exec tsc --noEmit",
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json && pnpm --filter './packages/**' exec tsc --noEmit",
         "dev": "unbuild --stub"
     },
     "devDependencies": {

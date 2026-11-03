@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler, WriteInput } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -20,25 +20,25 @@ export interface NestRemoveResult {
     success: boolean
 }
 
-export interface NestResourceApi<T> {
+export interface NestResourceApi<T, TThrow extends boolean = false> {
     get(
         query?: Record<string, unknown>,
         onEvent?: SdkEventHandler,
-    ): Promise<T[]>
+    ): Promise<SdkReturn<TThrow, T[]>>
     find(
         payload: NestIdPayload,
         onEvent?: SdkEventHandler,
-    ): Promise<T>
+    ): Promise<SdkReturn<TThrow, T>>
     create(
         body: WriteInput<T>,
         onEvent?: SdkEventHandler,
-    ): Promise<T>
+    ): Promise<SdkReturn<TThrow, T>>
     update(
         payload: NestUpdatePayload,
         onEvent?: SdkEventHandler,
-    ): Promise<T>
+    ): Promise<SdkReturn<TThrow, T>>
     remove(
         payload: NestIdPayload,
         onEvent?: SdkEventHandler,
-    ): Promise<NestRemoveResult>
+    ): Promise<SdkReturn<TThrow, NestRemoveResult>>
 }

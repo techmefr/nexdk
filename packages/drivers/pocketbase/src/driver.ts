@@ -7,6 +7,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         pocketbase: PocketbaseResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        pocketbase: PocketbaseResourceApi<T, true>
+    }
 }
 
 interface PocketbaseState {

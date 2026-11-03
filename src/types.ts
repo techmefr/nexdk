@@ -89,7 +89,20 @@ export type SdkConfig<
     notify?: SdkEventHandler
     validateResponses?: boolean
     onStatus?: StatusHandlers
+    throw?: boolean
 }
+
+export type SdkResultError = Error & {
+    status?: number
+    errors?: unknown
+    data?: unknown
+}
+
+export type SdkResult<T> =
+    | { data: T; error: undefined }
+    | { data: undefined; error: SdkResultError }
+
+export type SdkReturn<TThrow extends boolean, T> = TThrow extends true ? T : SdkResult<T>
 
 export type ResourceProxy = Record<string, (...args: unknown[]) => unknown>
 

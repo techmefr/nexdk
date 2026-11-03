@@ -1,4 +1,4 @@
-import type { FetchLike, SdkEventHandler } from 'nexdk'
+import type { FetchLike, SdkEventHandler, SdkReturn } from 'nexdk'
 
 export type HeadersResolver = Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
 
@@ -49,35 +49,35 @@ export interface NhostMutationResult<T> {
     data: T | null
 }
 
-export interface NhostResourceApi<T> {
+export interface NhostResourceApi<T, TThrow extends boolean = false> {
     query<TData = T>(
         payload?: object,
         onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
-    ): Promise<NhostQueryResult<TData>>
+    ): Promise<SdkReturn<TThrow, NhostQueryResult<TData>>>
     mutation<TData = T>(
         payload?: object,
         onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
-    ): Promise<NhostMutationResult<TData>>
+    ): Promise<SdkReturn<TThrow, NhostMutationResult<TData>>>
     upsert<TData = T>(
         payload: UpsertPayload,
         onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
-    ): Promise<NhostMutationResult<TData>>
+    ): Promise<SdkReturn<TThrow, NhostMutationResult<TData>>>
     updateById<TData = T>(
         payload: UpdateByIdPayload,
         onEvent?: SdkEventHandler,
         options?: GraphQLOptions,
-    ): Promise<NhostMutationResult<TData>>
+    ): Promise<SdkReturn<TThrow, NhostMutationResult<TData>>>
     updateWhere(
         payload: UpdateWherePayload,
         onEvent?: SdkEventHandler,
-    ): Promise<{ affectedRows: number }>
+    ): Promise<SdkReturn<TThrow, { affectedRows: number }>>
     deleteById(
         payload: DeleteByIdPayload,
         onEvent?: SdkEventHandler,
-    ): Promise<{ success: boolean }>
+    ): Promise<SdkReturn<TThrow, { success: boolean }>>
     subscription(
         payload?: object,
         onEvent?: SdkEventHandler,

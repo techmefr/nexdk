@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler, WriteInput } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -39,10 +39,10 @@ export interface PocketbasePagination {
 
 export type PocketbaseCollection<T> = T[] & { readonly pagination?: PocketbasePagination }
 
-export interface PocketbaseResourceApi<T> {
-    get(query?: PocketbaseListQuery, onEvent?: SdkEventHandler): Promise<PocketbaseCollection<T>>
-    find(payload: PocketbaseIdPayload, onEvent?: SdkEventHandler): Promise<T>
-    create(body: WriteInput<T>, onEvent?: SdkEventHandler): Promise<T>
-    update(payload: PocketbaseUpdatePayload, onEvent?: SdkEventHandler): Promise<T>
-    remove(payload: PocketbaseIdPayload, onEvent?: SdkEventHandler): Promise<PocketbaseRemoveResult>
+export interface PocketbaseResourceApi<T, TThrow extends boolean = false> {
+    get(query?: PocketbaseListQuery, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, PocketbaseCollection<T>>>
+    find(payload: PocketbaseIdPayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
+    create(body: WriteInput<T>, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
+    update(payload: PocketbaseUpdatePayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
+    remove(payload: PocketbaseIdPayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, PocketbaseRemoveResult>>
 }

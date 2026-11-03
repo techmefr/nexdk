@@ -7,6 +7,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         symfony: SymfonyResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        symfony: SymfonyResourceApi<T, true>
+    }
 }
 
 interface SymfonyState {

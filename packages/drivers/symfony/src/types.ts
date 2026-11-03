@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler, WriteInput } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -27,25 +27,25 @@ export interface SymfonyPagination {
 
 export type SymfonyCollection<T> = T[] & { readonly pagination?: SymfonyPagination }
 
-export interface SymfonyResourceApi<T> {
+export interface SymfonyResourceApi<T, TThrow extends boolean = false> {
     get(
         query?: Record<string, unknown>,
         onEvent?: SdkEventHandler,
-    ): Promise<SymfonyCollection<T>>
+    ): Promise<SdkReturn<TThrow, SymfonyCollection<T>>>
     find(
         payload: SymfonyIdPayload,
         onEvent?: SdkEventHandler,
-    ): Promise<T>
+    ): Promise<SdkReturn<TThrow, T>>
     create(
         body: WriteInput<T>,
         onEvent?: SdkEventHandler,
-    ): Promise<T>
+    ): Promise<SdkReturn<TThrow, T>>
     update(
         payload: SymfonyUpdatePayload,
         onEvent?: SdkEventHandler,
-    ): Promise<T>
+    ): Promise<SdkReturn<TThrow, T>>
     remove(
         payload: SymfonyIdPayload,
         onEvent?: SdkEventHandler,
-    ): Promise<SymfonyRemoveResult>
+    ): Promise<SdkReturn<TThrow, SymfonyRemoveResult>>
 }

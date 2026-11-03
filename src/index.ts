@@ -22,6 +22,9 @@ export type {
     SdkDriver,
     SdkEvent,
     SdkEventHandler,
+    SdkResult,
+    SdkResultError,
+    SdkReturn,
     Sdk,
     ReactiveMethod,
     Resource,
@@ -38,5 +41,6 @@ export type {
     ResourceApiFor,
     ResourceApiKinds,
     ResourceApiUri,
+    ThrowingResourceApiKinds,
     TypedSdk,
 } from './typed-sdk.ts'

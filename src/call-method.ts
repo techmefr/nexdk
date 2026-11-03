@@ -1,7 +1,7 @@
 import { toErrorPayload } from './errors.ts'
 import { reactToStatus } from './on-status.ts'
 import { VALIDATED_METHODS, validateResponse } from './validate-response.ts'
-import type { AnyResource, SdkDriver, SdkEventHandler, StatusHandlers } from './types.ts'
+import type { AnyResource, SdkDriver, SdkEventHandler, SdkResult, SdkResultError, StatusHandlers } from './types.ts'
 
 export interface MethodCall {
     driver: SdkDriver
@@ -10,6 +10,7 @@ export interface MethodCall {
     handler: SdkEventHandler | undefined
     validated: AnyResource | undefined
     onStatus: StatusHandlers | undefined
+    throwErrors: boolean
 }
 
 interface HeldSuccess {
@@ -66,9 +67,15 @@ export function callMethod(call: MethodCall, payload: unknown, extra: unknown): 
     }
 
     const settled = resource === undefined ? result : result.then(value => validated(call, resource, value, success))
-    if (call.onStatus === undefined) return settled
-    return settled.catch(async (error: unknown) => {
-        await react(call, error)
-        throw error
-    })
+    const reacted = call.onStatus === undefined
+        ? settled
+        : settled.catch(async (error: unknown) => {
+              await react(call, error)
+              throw error
+          })
+    if (call.throwErrors) return reacted
+    return reacted.then(
+        (data: unknown): SdkResult<unknown> => ({ data, error: undefined }),
+        (error: unknown): SdkResult<unknown> => ({ data: undefined, error: error as SdkResultError }),
+    )
 }

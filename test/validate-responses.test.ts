@@ -27,6 +27,7 @@ function makeSdk(answers: Answers, options: { global?: boolean; resource?: boole
         resources: { stub: { users } },
         validateResponses: options.global,
         notify: options.notify,
+        throw: true,
     }) as unknown as { stub: { users: Record<string, (...args: unknown[]) => Promise<unknown>> } }
 }
 
@@ -126,6 +127,7 @@ describe('response validation enabled', () => {
             drivers: { stub: driver },
             resources: { stub: { users: defineResource({ name: 'users', schema }) } },
             validateResponses: true,
+            throw: true,
         }) as unknown as { stub: { users: { find: () => Promise<unknown> } } }
 
         expect(await sdk.stub.users.find()).toEqual({ id: 4 })

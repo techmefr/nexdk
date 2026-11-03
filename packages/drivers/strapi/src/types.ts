@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler, WriteInput } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -40,10 +40,10 @@ export interface StrapiPagination {
 
 export type StrapiCollection<T> = T[] & { readonly pagination?: StrapiPagination }
 
-export interface StrapiResourceApi<T> {
-    get(query?: StrapiListQuery, onEvent?: SdkEventHandler): Promise<StrapiCollection<T>>
-    find(payload: StrapiIdPayload, onEvent?: SdkEventHandler): Promise<T>
-    create(body: WriteInput<T>, onEvent?: SdkEventHandler): Promise<T>
-    update(payload: StrapiUpdatePayload, onEvent?: SdkEventHandler): Promise<T>
-    remove(payload: StrapiIdPayload, onEvent?: SdkEventHandler): Promise<StrapiRemoveResult>
+export interface StrapiResourceApi<T, TThrow extends boolean = false> {
+    get(query?: StrapiListQuery, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, StrapiCollection<T>>>
+    find(payload: StrapiIdPayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
+    create(body: WriteInput<T>, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
+    update(payload: StrapiUpdatePayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
+    remove(payload: StrapiIdPayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, StrapiRemoveResult>>
 }

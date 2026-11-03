@@ -21,7 +21,7 @@ function failing(status: number) {
 }
 
 function sdkWith(status: number, onStatus: StatusHandlers, notify?: (event: string, data?: unknown) => void) {
-    return createSdk({ drivers: { api: failing(status) }, onStatus, notify: notify as never }) as unknown as {
+    return createSdk({ drivers: { api: failing(status) }, onStatus, notify: notify as never, throw: true }) as unknown as {
         api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>
     }
 }
@@ -132,7 +132,7 @@ describe('onStatus', () => {
     })
 
     it('changes nothing without onStatus', async () => {
-        const sdk = createSdk({ drivers: { api: failing(401) } }) as unknown as {
+        const sdk = createSdk({ drivers: { api: failing(401) }, throw: true }) as unknown as {
             api: Record<string, Record<string, (...args: unknown[]) => Promise<unknown>>>
         }
         const pending = sdk.api.users.get()

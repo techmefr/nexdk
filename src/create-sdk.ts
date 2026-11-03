@@ -12,6 +12,13 @@ import type { TypedSdk } from './typed-sdk.ts'
 
 const RESERVED_DRIVER_KEYS = new Set(['name', 'bindResource'])
 
+interface CallOptions {
+    globalHandler: SdkEventHandler | undefined
+    validateAll: boolean
+    onStatus: StatusHandlers | undefined
+    throwErrors: boolean
+}
+
 function isDriverMethodName(driver: SdkDriver, name: string | symbol): name is string {
     return (
         typeof name === 'string'
@@ -24,18 +31,24 @@ function isDriverMethodName(driver: SdkDriver, name: string | symbol): name is s
 export function createSdk<
     TDrivers extends Record<string, SdkDriver>,
     TResources extends ResourcesByDriver<TDrivers> = Record<never, never>,
->(config: SdkConfig<TDrivers, TResources>): TypedSdk<TDrivers, TResources> {
+    TThrow extends boolean = false,
+>(config: SdkConfig<TDrivers, TResources> & { throw?: TThrow }): TypedSdk<TDrivers, TResources, TThrow> {
     const sdk = {} as Record<string, unknown>
-    const globalHandler = config.notify
+    const options: CallOptions = {
+        globalHandler: config.notify,
+        validateAll: config.validateResponses === true,
+        onStatus: config.onStatus,
+        throwErrors: config.throw === true,
+    }
 
     for (const key in config.drivers) {
         const driver = config.drivers[key]
         const resources = config.resources?.[key]
         bindDriverResources(key, driver, resources)
-        sdk[key] = createDriverProxy(driver, globalHandler, resources, config.validateResponses === true, config.onStatus)
+        sdk[key] = createDriverProxy(driver, resources, options)
     }
 
-    return sdk as TypedSdk<TDrivers, TResources>
+    return sdk as TypedSdk<TDrivers, TResources, TThrow>
 }
 
 function bindDriverResources(
@@ -59,10 +72,8 @@ function bindDriverResources(
 
 function createDriverProxy<TDriver extends SdkDriver>(
     driver: TDriver,
-    globalHandler: SdkEventHandler | undefined,
     resources: Record<string, AnyResource> | undefined,
-    validateAll: boolean,
-    onStatus: StatusHandlers | undefined,
+    options: CallOptions,
 ): TDriver {
     return new Proxy(driver, {
         get(target, prop: string | symbol) {
@@ -75,8 +86,8 @@ function createDriverProxy<TDriver extends SdkDriver>(
             }
 
             const resource = resources?.[prop]
-            const validate = resource !== undefined && (resource.validateResponses ?? validateAll)
-            return createResourceProxy(target, prop, globalHandler, validate ? resource : undefined, onStatus)
+            const validate = resource !== undefined && (resource.validateResponses ?? options.validateAll)
+            return createResourceProxy(target, prop, validate ? resource : undefined, options)
         },
     })
 }
@@ -84,10 +95,10 @@ function createDriverProxy<TDriver extends SdkDriver>(
 function createResourceProxy(
     driver: SdkDriver,
     resourceName: string,
-    globalHandler: SdkEventHandler | undefined,
     validated: AnyResource | undefined,
-    onStatus: StatusHandlers | undefined,
+    options: CallOptions,
 ): unknown {
+    const { onStatus, throwErrors } = options
     return new Proxy(
         {},
         {
@@ -101,8 +112,9 @@ function createResourceProxy(
                         )
                     }
 
-                    const handler = mergeEventHandlers(globalHandler, onEvent as SdkEventHandler | undefined)
-                    return callMethod({ driver, resourceName, methodName, handler, validated, onStatus }, payload, extra)
+                    const handler = mergeEventHandlers(options.globalHandler, onEvent as SdkEventHandler | undefined)
+                    const call = { driver, resourceName, methodName, handler, validated, onStatus, throwErrors }
+                    return callMethod(call, payload, extra)
                 }
             },
         },

@@ -8,6 +8,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         strapi: StrapiResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        strapi: StrapiResourceApi<T, true>
+    }
 }
 
 interface StrapiState {

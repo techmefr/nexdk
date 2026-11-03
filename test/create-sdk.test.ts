@@ -57,7 +57,7 @@ describe('createSdk', () => {
 
     it('forwards the 4th call argument to the driver, opaque to the core', async () => {
         const lomkit = new MockDriver('lomkit')
-        const sdk = createSdk({ drivers: { lomkit } })
+        const sdk = createSdk({ drivers: { lomkit }, throw: true })
         const extra = { id: 99, fromDriver: 'whatever the driver wants' }
 
         const result = await sdk.lomkit.users.get({ id: 99 }, undefined, extra)
@@ -147,7 +147,7 @@ describe('createSdk prototype safety', () => {
     })
 
     it('still dispatches own and class-prototype driver methods', async () => {
-        const sdk = createSdk({ drivers: { mock: new MockDriver('mock') } })
+        const sdk = createSdk({ drivers: { mock: new MockDriver('mock') }, throw: true })
         await expect(sdk.mock.users.get({ id: 1 })).resolves.toEqual({ id: 1, fromDriver: 'mock' })
     })
 

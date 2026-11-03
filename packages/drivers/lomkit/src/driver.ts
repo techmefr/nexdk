@@ -19,6 +19,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         lomkit: LomkitResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        lomkit: LomkitResourceApi<T, true>
+    }
 }
 
 export class LomkitDriver implements SdkDriver {

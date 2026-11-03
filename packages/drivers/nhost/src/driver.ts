@@ -25,6 +25,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         nhost: NhostResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        nhost: NhostResourceApi<T, true>
+    }
 }
 
 function asOptions(value: unknown): GraphQLOptions | undefined {

@@ -8,6 +8,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         supabase: SupabaseResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        supabase: SupabaseResourceApi<T, true>
+    }
 }
 
 export class SupabaseQueryError extends SdkError {

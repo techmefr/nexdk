@@ -7,6 +7,9 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         nest: NestResourceApi<T>
     }
+    interface ThrowingResourceApiKinds<T> {
+        nest: NestResourceApi<T, true>
+    }
 }
 
 interface NestState {

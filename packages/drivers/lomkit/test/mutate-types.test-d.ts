@@ -13,6 +13,7 @@ const userResource = defineResource({
 const sdk = createSdk({
     drivers: { lomkit: new LomkitDriver({ baseUrl: 'http://localhost' }) },
     resources: { lomkit: { users: userResource } },
+    throw: true,
 })
 
 type User = { id: number; name: string; age: number }
