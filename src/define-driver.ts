@@ -1,4 +1,4 @@
-import { toErrorPayload } from './errors.ts'
+import { traceCall } from './trace-call.ts'
 import type { AnyResource, SdkDriver, SdkEventHandler } from './types.ts'
 
 export type HeadersResolver =
@@ -45,44 +45,6 @@ export type DefinedDriver<TMethods> = SdkDriver & {
     [K in keyof TMethods]: ProxyMethod
 }
 
-function isReactiveResult(value: unknown): value is () => void {
-    return typeof value === 'function'
-}
-
-function runMethod<TState>(
-    method: DriverMethod<TState>,
-    ctx: DriverMethodContext & TState,
-    payload: unknown,
-    extra: unknown,
-): unknown {
-    ctx.emit?.('request', { resource: ctx.resourceName, payload })
-    let result: unknown
-    try {
-        result = method(ctx, payload, extra)
-    } catch (error) {
-        ctx.emit?.('error', toErrorPayload(error))
-        throw error
-    }
-
-    if (isReactiveResult(result)) return result
-
-    if (result instanceof Promise) {
-        return result.then(
-            value => {
-                ctx.emit?.('success', value)
-                return value
-            },
-            (error: unknown) => {
-                ctx.emit?.('error', toErrorPayload(error))
-                throw error
-            },
-        )
-    }
-
-    ctx.emit?.('success', result)
-    return result
-}
-
 export function defineDriver<
     TConfig,
     TState,
@@ -112,7 +74,7 @@ export function defineDriver<
                     emit: onEvent,
                     ...state,
                 } as DriverMethodContext & TState
-                return runMethod(method, ctx, payload, extra)
+                return traceCall({ emit: onEvent, resource: resourceName, payload }, () => method(ctx, payload, extra))
             }
             ;(built as Record<string, unknown>)[methodName] = proxyMethod
         }

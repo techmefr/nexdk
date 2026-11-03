@@ -10,6 +10,8 @@ export type {
 export { ResponseValidationError, SdkError, toErrorPayload } from './errors.ts'
 export type { ErrorEventPayload, SdkErrorInit } from './errors.ts'
 export { defineResource } from './define-resource.ts'
+export { traceCall } from './trace-call.ts'
+export type { TracedCall } from './trace-call.ts'
 export type { StandardSchemaV1 } from './standard-schema.ts'
 export type {
     AnyResource,

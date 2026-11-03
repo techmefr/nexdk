@@ -1,7 +1,5 @@
-import { toErrorPayload } from './errors.ts'
+import { callMethod } from './call-method.ts'
 import { mergeEventHandlers } from './merge.ts'
-import { reactToStatus } from './on-status.ts'
-import { VALIDATED_METHODS, validateResponse } from './validate-response.ts'
 import type {
     AnyResource,
     SdkConfig,
@@ -103,43 +101,8 @@ function createResourceProxy(
                         )
                     }
 
-                    const method = (driver as unknown as Record<string, unknown>)[methodName]
-
-                    const handler = mergeEventHandlers(
-                        globalHandler,
-                        onEvent as SdkEventHandler | undefined,
-                    )
-
-                    const react = (error: unknown): Promise<void> | undefined =>
-                        onStatus === undefined
-                            ? undefined
-                            : reactToStatus(onStatus, error, { driver: driver.name, resource: resourceName, method: methodName })
-
-                    let result: unknown
-                    try {
-                        result = (method as (...args: unknown[]) => unknown).call(driver, resourceName, payload, handler, extra)
-                    } catch (error) {
-                        void react(error)
-                        throw error
-                    }
-                    if (!(result instanceof Promise)) return result
-
-                    const settled =
-                        validated === undefined || !VALIDATED_METHODS.has(methodName)
-                            ? result
-                            : result.then(async value => {
-                                  try {
-                                      return await validateResponse(validated, methodName, value)
-                                  } catch (error) {
-                                      handler?.('error', toErrorPayload(error))
-                                      throw error
-                                  }
-                              })
-                    if (onStatus === undefined) return settled
-                    return settled.catch(async (error: unknown) => {
-                        await react(error)
-                        throw error
-                    })
+                    const handler = mergeEventHandlers(globalHandler, onEvent as SdkEventHandler | undefined)
+                    return callMethod({ driver, resourceName, methodName, handler, validated, onStatus }, payload, extra)
                 }
             },
         },

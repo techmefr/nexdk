@@ -1,4 +1,4 @@
-import { toErrorPayload } from 'nexdk'
+import { traceCall } from 'nexdk'
 import type { AnyResource, SdkDriver, SdkEventHandler } from 'nexdk'
 import { createRequest, encodeResource, resolveHeaders } from '@nexdk/http'
 import type { HeadersResolver, HttpRequest } from '@nexdk/http'
@@ -19,11 +19,6 @@ declare module 'nexdk' {
     interface ResourceApiKinds<T> {
         lomkit: LomkitResourceApi<T>
     }
-}
-
-interface Target {
-    name: string
-    url: string
 }
 
 export class LomkitDriver implements SdkDriver {
@@ -54,16 +49,21 @@ export class LomkitDriver implements SdkDriver {
         }
     }
 
-    private resolveTarget(resourceName: string): Target {
+    private call<R>(
+        resourceName: string,
+        payload: unknown,
+        onEvent: SdkEventHandler | undefined,
+        send: (url: string) => Promise<R>,
+    ): Promise<R> {
         const name = this.resources.get(resourceName)?.name ?? resourceName
-        return { name, url: `${this.baseUrl}/${encodeResource(name)}` }
+        return traceCall({ emit: onEvent, resource: name, payload }, () => send(`${this.baseUrl}/${encodeResource(name)}`))
     }
 
-    private async sendRequest<R>(path: string, method: string, body: unknown, onEvent?: SdkEventHandler): Promise<R> {
+    private async sendRequest<R>(path: string, method: string, body: unknown): Promise<R> {
         try {
             return await this.httpRequest<R>(path, { method, headers: await this.buildHeaders(), body })
         } catch (error) {
-            throw this.handleError(error, onEvent)
+            throw withFieldNames(error)
         }
     }
 
@@ -72,11 +72,9 @@ export class LomkitDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitGetResult<T>> {
-        const { name, url } = this.resolveTarget(resourceName)
-        onEvent?.('request', { resource: name, payload })
-        const result = await this.sendRequest<LomkitGetResult<T>>(`${url}/search`, 'POST', payload ?? {}, onEvent)
-        onEvent?.('success', result)
-        return result
+        return this.call(resourceName, payload, onEvent, url =>
+            this.sendRequest<LomkitGetResult<T>>(`${url}/search`, 'POST', payload ?? {}),
+        )
     }
 
     async mutate(
@@ -84,16 +82,8 @@ export class LomkitDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitMutateResult> {
-        const { name, url } = this.resolveTarget(resourceName)
-        onEvent?.('request', { resource: name, payload })
-        const result = await this.sendRequest<LomkitMutateResult>(
-            `${url}/mutate`,
-            'POST',
-            { mutate: Array.isArray(payload) ? payload : [payload] },
-            onEvent,
-        )
-        onEvent?.('success', result)
-        return result
+        const body = { mutate: Array.isArray(payload) ? payload : [payload] }
+        return this.call(resourceName, payload, onEvent, url => this.sendRequest<LomkitMutateResult>(`${url}/mutate`, 'POST', body))
     }
 
     async delete(
@@ -101,11 +91,10 @@ export class LomkitDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitDeleteResult> {
-        const { name, url } = this.resolveTarget(resourceName)
-        onEvent?.('request', { resource: name, payload })
-        await this.sendRequest(url, 'DELETE', payload, onEvent)
-        onEvent?.('success', { deleted: true })
-        return { success: true }
+        return this.call(resourceName, payload, onEvent, async url => {
+            await this.sendRequest(url, 'DELETE', payload)
+            return { success: true }
+        })
     }
 
     async restore<T>(
@@ -113,11 +102,9 @@ export class LomkitDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitBulkResult<T>> {
-        const { name, url } = this.resolveTarget(resourceName)
-        onEvent?.('request', { resource: name, payload })
-        const result = await this.sendRequest<LomkitBulkResult<T>>(`${url}/restore`, 'POST', payload, onEvent)
-        onEvent?.('success', result)
-        return result
+        return this.call(resourceName, payload, onEvent, url =>
+            this.sendRequest<LomkitBulkResult<T>>(`${url}/restore`, 'POST', payload),
+        )
     }
 
     async forceDelete<T>(
@@ -125,11 +112,9 @@ export class LomkitDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitBulkResult<T>> {
-        const { name, url } = this.resolveTarget(resourceName)
-        onEvent?.('request', { resource: name, payload })
-        const result = await this.sendRequest<LomkitBulkResult<T>>(`${url}/force`, 'DELETE', payload, onEvent)
-        onEvent?.('success', result)
-        return result
+        return this.call(resourceName, payload, onEvent, url =>
+            this.sendRequest<LomkitBulkResult<T>>(`${url}/force`, 'DELETE', payload),
+        )
     }
 
     async actions(
@@ -137,13 +122,11 @@ export class LomkitDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitActionResult> {
-        const { name, url } = this.resolveTarget(resourceName)
         const { name: action, ...body } = (payload ?? {}) as Partial<LomkitActionPayload>
         if (typeof action !== 'string' || action === '') throw new Error(`Invalid action name: "${action ?? ''}"`)
-        onEvent?.('request', { resource: name, payload })
-        const result = await this.sendRequest<LomkitActionResult>(`${url}/actions/${encodeURIComponent(action)}`, 'POST', body, onEvent)
-        onEvent?.('success', result)
-        return result
+        return this.call(resourceName, payload, onEvent, url =>
+            this.sendRequest<LomkitActionResult>(`${url}/actions/${encodeURIComponent(action)}`, 'POST', body),
+        )
     }
 
     async details(
@@ -151,16 +134,6 @@ export class LomkitDriver implements SdkDriver {
         payload?: unknown,
         onEvent?: SdkEventHandler,
     ): Promise<LomkitDetailsResult> {
-        const { name, url } = this.resolveTarget(resourceName)
-        onEvent?.('request', { resource: name, payload })
-        const result = await this.sendRequest<LomkitDetailsResult>(url, 'GET', undefined, onEvent)
-        onEvent?.('success', result)
-        return result
-    }
-
-    private handleError(error: unknown, onEvent?: SdkEventHandler): unknown {
-        const converted = withFieldNames(error)
-        onEvent?.('error', toErrorPayload(converted))
-        return converted
+        return this.call(resourceName, payload, onEvent, url => this.sendRequest<LomkitDetailsResult>(url, 'GET', undefined))
     }
 }
