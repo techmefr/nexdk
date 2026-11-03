@@ -41,7 +41,7 @@ interface SdkDriver {
 | `connected`    | A reactive transport opened                   |
 | `disconnected` | A reactive transport closed                   |
 
-**Emit `error`, then throw.** On any failure a method emits `error` once and throws. It never returns an empty value instead.
+**Throw, do not emit.** `request`, `success` and `error` are emitted by the core, once per call. On any failure a method throws; it never returns an empty value instead. A reactive method emits its own `data`, `connected`, `disconnected` and `complete`.
 
 ## Authoring with defineDriver
 
@@ -79,7 +79,7 @@ const sdk = createSdk({
   drivers: { my: createMyDriver({ baseUrl: 'https://api.example.com' }) },
 })
 
-const users = await sdk.my.users.get({}, (event) => console.log(event))
+const { data, error } = await sdk.my.users.get({}, (event) => console.log(event))
 ```
 
 Every method receives a `ctx`, then the payload and `extra`:
@@ -110,26 +110,31 @@ type HeadersResolver =
 
 ## Authoring by hand
 
-You can implement `SdkDriver` yourself, as `@nexdk/driver-lomkit` and `@nexdk/driver-supabase` do. You then own the resource map and the event handling of every method. Prefer `defineDriver` unless you need a shape it cannot express. `@nexdk/driver-nest` is the reference.
+You can implement `SdkDriver` yourself, as `@nexdk/driver-lomkit` and `@nexdk/driver-supabase` do. You then own the resource map, and wrap each method in `traceCall({ emit: onEvent, resource, payload }, () => send())` from `nexdk` so the core emits the events. Prefer `defineDriver` unless you need a shape it cannot express. `@nexdk/driver-nest` is the reference.
 
 ## End-to-end typing
 
 Typing is opt-in, through a registry in `nexdk`.
 
-Declare the per-resource API, with `T` the inferred record type:
+Declare the per-resource API, with `T` the inferred record type and `TThrow` the `throw` option of `createSdk`:
 
 ```ts
-export interface MyResourceApi<T> {
-  get(query?: object, onEvent?: SdkEventHandler): Promise<T[]>
+import type { SdkEventHandler, SdkReturn } from 'nexdk'
+
+export interface MyResourceApi<T, TThrow extends boolean = false> {
+  get(query?: object, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T[]>>
 }
 ```
 
-Register it by declaration merging:
+Register both modes by declaration merging:
 
 ```ts
 declare module 'nexdk' {
   interface ResourceApiKinds<T> {
     my: MyResourceApi<T>
+  }
+  interface ThrowingResourceApiKinds<T> {
+    my: MyResourceApi<T, true>
   }
 }
 ```

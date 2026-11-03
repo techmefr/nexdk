@@ -4,18 +4,18 @@ description: Every runtime export of the nexdk core package.
 ---
 
 ```ts
-import { ResponseValidationError, SdkError, createSdk, defineDriver, defineResource, resolveHeaders, toErrorPayload } from 'nexdk'
+import { ResponseValidationError, SdkError, createSdk, defineDriver, defineResource, resolveHeaders, toErrorPayload, traceCall } from 'nexdk'
 ```
 
 ## `createSdk(config)`
 
 ```ts
-function createSdk<TDrivers, TResources>(
-  config: SdkConfig<TDrivers, TResources>
-): TypedSdk<TDrivers, TResources>
+function createSdk<TDrivers, TResources, TThrow extends boolean = false>(
+  config: SdkConfig<TDrivers, TResources> & { throw?: TThrow }
+): TypedSdk<TDrivers, TResources, TThrow>
 ```
 
-Binds resources to drivers and returns the typed proxy.
+Binds resources to drivers and returns the typed proxy. An async call resolves `SdkResult<T>`: `{ data, error: undefined }` or `{ data: undefined, error }`, after `notify` and `onStatus` ran.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -23,6 +23,7 @@ Binds resources to drivers and returns the typed proxy.
 | `resources?` | `Record<driverKey, Record<resourceKey, AnyResource>>` | Bound with `driver.bindResource(resourceKey, resource)`. |
 | `notify?` | `SdkEventHandler` | Runs on every call, together with the per-call `onEvent`. See [Events](/nexdk/guides/events/). |
 | `onStatus?` | `{ [status: number]: handler, '4xx'?: handler, '5xx'?: handler }` | One handler per failed call, by exact status then by family, after `notify`. The handler receives `{ error, driver, resource, method }`. See [React to statuses](/nexdk/guides/react-to-statuses/). |
+| `throw?` | `boolean` | Off by default. With `true`, a call resolves the bare value and rejects with the error. |
 | `validateResponses?` | `boolean` | Off by default. Validates the answers of `get`, `find`, `create` and `update` against the resource schema. See [Validating responses](/nexdk/guides/standard-schema/#validating-responses-opt-in). |
 
 The call proxy is described in [Anatomy of a call](/nexdk/guides/anatomy-of-a-call/).
@@ -46,6 +47,14 @@ function defineDriver<TConfig, TState, TMethods>(
 ```
 
 `definition` is `{ name, setup: (config) => state, methods }`. See [Writing a driver](/nexdk/guides/writing-a-driver/).
+
+## `traceCall(call, run)`
+
+```ts
+function traceCall<T>(call: { emit, resource, payload, describeError? }, run: () => T): T
+```
+
+Emits `request`, runs `run`, then emits `success` or `error` once. `defineDriver` uses it; a hand-written driver wraps each method in it.
 
 ## `resolveHeaders(headers)`
 
@@ -90,7 +99,8 @@ The typed error thrown by every driver. `toErrorPayload` builds the `error` even
 | `FetchLike` | `(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>`: the type of the `fetch` option of the REST drivers. Narrower than `typeof fetch`, so `mock.fetch` and the `fetch` of bun-types are accepted without a cast. |
 | `ErrorEventPayload`, `SdkErrorInit` | The `error` event payload `{ message, status?, errors? }`, and the init of `SdkError`. |
 | `StatusHandlers`, `StatusHandler`, `StatusContext`, `StatusError` | The `onStatus` option, a handler, the object it receives and its `error`. |
-| `ResourceApiKinds<T>` | The registry a driver augments to type its API. See [End-to-end typing](/nexdk/guides/writing-a-driver/#end-to-end-typing). |
+| `SdkResult<T>`, `SdkResultError`, `SdkReturn<TThrow, T>` | The `{ data, error }` union, its error, and `T` or `SdkResult<T>` depending on `throw`. |
+| `ResourceApiKinds<T>`, `ThrowingResourceApiKinds<T>` | The registries a driver augments to type its API, by default and with `throw: true`. See [End-to-end typing](/nexdk/guides/writing-a-driver/#end-to-end-typing). |
 | `ResourceApiFor`, `ResourceApiUri`, `TypedSdk`, `Sdk`, `ResourcesByDriver` | Types behind the typed SDK. |
 
 ## `ResponseValidationError`

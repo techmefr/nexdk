@@ -31,7 +31,7 @@ const sdk = createSdk({
   drivers: { strapi: createStrapiDriver({ baseUrl: 'http://localhost:1337' }) },
 })
 
-const articles = await sdk.strapi.articles.get({ filters: { title: { $eq: 'Hello' } } })
+const { data: articles } = await sdk.strapi.articles.get({ filters: { title: { $eq: 'Hello' } } })
 ```
 
 ## Documentation

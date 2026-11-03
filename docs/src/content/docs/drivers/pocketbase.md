@@ -30,7 +30,7 @@ const sdk = createSdk({
   },
 })
 
-const posts = await sdk.pocketbase.posts.get({ sort: '-created' })
+const { data: posts } = await sdk.pocketbase.posts.get({ sort: '-created' })
 ```
 
 `fetch` is optional: pass any function `(input, init?) => Promise<Response>` (the `FetchLike` type, exported by `nexdk` and `@nexdk/http`) and every HTTP request goes through it instead of `globalThis.fetch`, for example `mock.fetch` from shamock or the `fetch` of bun-types, without a cast.
@@ -52,13 +52,13 @@ The resource name is the collection name.
 `get` follows every page and returns all the items. If you set `page` or `perPage`, it makes one request and returns that page only. `get({ page: 2 })` without `perPage` is therefore one page of the PocketBase default size (30), not the rest of the records: you fixed the page, so nexdk does not go on.
 
 ```ts
-const second = await sdk.pocketbase.posts.get({ page: 2, perPage: 20 })
+const { data: second } = await sdk.pocketbase.posts.get({ page: 2, perPage: 20 })
 ```
 
 With `skipTotal`, PocketBase answers `totalPages: -1`. `get` then asks for the next page as long as the previous one was full (`perPage` of the response) and stops on a short or empty page, so no record is dropped.
 
 ```ts
-const all = await sdk.pocketbase.posts.get({ skipTotal: true })
+const { data: all } = await sdk.pocketbase.posts.get({ skipTotal: true })
 ```
 
 [dialectr](/nexdk/guides/ecosystem/#dialectr) can build the query with `toPocketbase`. It sets `perPage` when you call `limit()`.
@@ -72,11 +72,8 @@ A validation failure answers `{ status, message, data: { field: { code, message 
 ```ts
 import { SdkError } from 'nexdk'
 
-try {
-  await sdk.pocketbase.users.create({ email: 'a@b.test' })
-} catch (error) {
-  if (error instanceof SdkError) console.log(error.errors)
-}
+const { error } = await sdk.pocketbase.users.create({ email: 'a@b.test' })
+if (error instanceof SdkError) console.log(error.errors)
 ```
 
 An invalid query (unknown filter field, unknown sort field, malformed filter) is answered by PocketBase with a generic 400 that names no clause. nexdk reports it as `PocketBase rejected the request: <server message>` with `status` 400, and adds nothing else.
@@ -90,6 +87,6 @@ A fresh PocketBase ships an auth collection named `users`. A resource named `use
 The array returned by `get` carries a non-enumerable `pagination` property, as the Symfony and Firebase drivers do: `{ page, perPage, totalItems, totalPages }`, read from the page answer (the first page when `get` follows every page). With `skipTotal`, PocketBase answers `-1`: `totalItems` and `totalPages` are then `undefined`. It does not show up in `Object.keys`, `JSON.stringify` or `toEqual`.
 
 ```ts
-const rows = await sdk.pocketbase.posts.get({ page: 2, perPage: 20 })
+const { data: rows } = await sdk.pocketbase.posts.get({ page: 2, perPage: 20 })
 rows.pagination?.totalItems
 ```

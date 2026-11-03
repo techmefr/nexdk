@@ -8,7 +8,7 @@ Every call emits a subset of `request`, `success`, `error`, `data`, `complete`, 
 - Async methods emit `request`, then `success` or `error`.
 - Reactive methods (subscriptions) return an unsubscribe function and emit `data`, `connected`, `disconnected` and, for a subscription ended by the server, `complete`.
 
-The rule for drivers: **emit `error`, then throw.** A failure is never swallowed.
+The core emits `request`, `success` and `error`, once per call (`defineDriver`, or `traceCall` in a class driver). Drivers only do the transport and throw on failure; through `createSdk` the call then resolves `{ data: undefined, error }`, or rejects with `throw: true`. A failure is never swallowed.
 
 ```ts
 sdk.lomkit.users.get({}, (event, data) => {
@@ -18,11 +18,11 @@ sdk.lomkit.users.get({}, (event, data) => {
 
 ## Error payload
 
-Every driver emits `error` with `{ message, status?, errors? }` and throws a typed `SdkError` (exported from `nexdk`) carrying `status`, `errors` and `data`.
+The `error` event carries `{ message, status?, errors? }`; the error itself is a typed `SdkError` (exported from `nexdk`) carrying `status`, `errors` and `data`.
 
 - `status` is the HTTP status, set when the error has one (0 for a network failure).
 - `errors` is the field-error map of the response body when it has an `errors` key (Laravel 422: `{ email: ['…'] }`), else the raw response body.
-- `data` (on the thrown error only) is the parsed response body.
+- `data` (on the error only) is the parsed response body.
 
 `@nexdk/http` throws `HttpError`, a subclass of `SdkError`. lomkit, nest, symfony, pocketbase, strapi and firebase use it. nhost throws an `SdkError` (HTTP failures carry `status`, GraphQL errors carry `errors`). supabase throws `SupabaseQueryError`, an `SdkError` whose `errors` is `{ code, details, hint }`.
 

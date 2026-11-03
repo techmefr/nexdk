@@ -56,7 +56,7 @@ The URL uses the `name` of the bound resource, URL-encoded, or the call key when
 `get` returns one page; the pagination fields (`current_page`, `last_page`, `per_page`, `total`) are at the root of the result. It does not follow pages: set `search.page` and `search.limit` yourself. Laravel sends `meta` as `[]` when it is empty, so `result.meta?.gates` is safe to read.
 
 ```ts
-const { data, total } = await sdk.lomkit.users.get({
+const { data: page, error } = await sdk.lomkit.users.get({
   search: { filters: [{ field: 'name', operator: 'like', value: 'A%' }], limit: 20, page: 1 },
 })
 ```
@@ -70,10 +70,10 @@ const { data, total } = await sdk.lomkit.users.get({
 Aggregates and includes add keys to each row. Declare them with the generic of `get`:
 
 ```ts
-const page = await sdk.lomkit.users.get<{ posts_count: number }>({
+const { data: page, error } = await sdk.lomkit.users.get<{ posts_count: number }>({
   search: { aggregates: [{ relation: 'posts', type: 'count' }] },
 })
-page.data[0].posts_count
+if (!error) page.data[0].posts_count
 ```
 
 ## Gates
@@ -83,9 +83,9 @@ Ask for gates inside `search`. The backend answers one `gates` object per row, a
 ```ts
 import { isGateAllowed } from '@nexdk/driver-lomkit'
 
-const page = await sdk.lomkit.posts.get({ search: { gates: ['create', 'update', 'delete'] } })
-page.meta?.gates?.authorized_to_create
-isGateAllowed(page.data[0].gates?.authorized_to_update)
+const { data: page } = await sdk.lomkit.posts.get({ search: { gates: ['create', 'update', 'delete'] } })
+page?.meta?.gates?.authorized_to_create
+isGateAllowed(page?.data[0].gates?.authorized_to_update)
 ```
 
 Names are Lomkit's defaults (`authorized_to_view`, `authorized_to_create`, `authorized_to_update`, `authorized_to_delete`, `authorized_to_restore`, `authorized_to_force_delete`). A gate is a boolean, or `{ allowed, message }` when the backend enables gate messages: `isGateAllowed` reads both. Custom names or a custom `gates` key are not known to the types: the index signature of `LomkitGates` accepts them.
@@ -122,7 +122,7 @@ await sdk.lomkit.users.mutate({
 
 ## Errors
 
-A failure emits `error`, then throws the `HttpError` from [`@nexdk/http`](/nexdk/packages/http/), a typed `SdkError` with `status`, `errors` and `data`.
+A failure emits `error`, then gives the `HttpError` from [`@nexdk/http`](/nexdk/packages/http/), a typed `SdkError` with `status`, `errors` and `data`.
 
 - On a 422, the message is the Laravel `message`, `errors` is the field map and `data` is the raw body.
 - The driver turns Laravel's paths into simple field names, on the thrown error and on the `error` event: `mutate.0.attributes.email` becomes `email`, `search.limit` becomes `limit`, `mutate.0.relations.posts.1.attributes.title` becomes `posts.1.title`. Messages of keys that end up with the same name are merged. Other keys (`resources.0`, `fields.role`) are kept. `data.errors` keeps the original keys.
@@ -132,11 +132,8 @@ A failure emits `error`, then throws the `HttpError` from [`@nexdk/http`](/nexdk
 ```ts
 import { SdkError } from 'nexdk'
 
-try {
-  await sdk.lomkit.users.mutate({ operation: 'create', attributes: { email: '' } })
-} catch (error) {
-  if (error instanceof SdkError && error.status === 422) console.log(error.errors)
-}
+const { error } = await sdk.lomkit.users.mutate({ operation: 'create', attributes: { email: '' } })
+if (error instanceof SdkError && error.status === 422) console.log(error.errors)
 ```
 
 To react to a status for the whole app (401 logout, 403 redirect), see [React to statuses](/nexdk/guides/react-to-statuses/).

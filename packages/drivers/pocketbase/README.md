@@ -31,7 +31,7 @@ const sdk = createSdk({
   drivers: { pocketbase: createPocketbaseDriver({ baseUrl: 'http://127.0.0.1:8090' }) },
 })
 
-const posts = await sdk.pocketbase.posts.get({ sort: '-created' })
+const { data: posts } = await sdk.pocketbase.posts.get({ sort: '-created' })
 ```
 
 ## Documentation

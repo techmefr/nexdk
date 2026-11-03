@@ -30,7 +30,7 @@ const sdk = createSdk({
   },
 })
 
-const books = await sdk.symfony.books.get({ page: 1 })
+const { data: books } = await sdk.symfony.books.get({ page: 1 })
 ```
 
 ## Methods

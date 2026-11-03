@@ -69,12 +69,12 @@ export const sdk = createSdk({
   resources: { lomkit: { products: product } },
 })
 
-const { data } = await sdk.lomkit.products.get({
+const { data, error } = await sdk.lomkit.products.get({
   search: { filters: [{ field: 'price', operator: '<', value: 100 }] },
 })
 ```
 
-`data` is typed as `{ id: number; name: string; price: number }[]`.
+Once `error` is checked, `data.data` is typed as `{ id: number; name: string; price: number }[]`. A call never throws unless you pass `throw: true` to `createSdk`.
 
 <FeatureGrid>
 	<FeatureCard title="One call grammar" icon={rocketIcon}>
@@ -84,7 +84,7 @@ const { data } = await sdk.lomkit.products.get({
 		Resources use any <a href="https://standardschema.dev">Standard Schema</a> validator: Zod, Valibot, ArkType.
 	</FeatureCard>
 	<FeatureCard title="One driver contract" icon={routeIcon}>
-		`defineDriver` supplies the `request`, `success` and `error` events. Authors write only the protocol translation.
+		The core emits the `request`, `success` and `error` events, once per call. Authors write only the protocol translation.
 	</FeatureCard>
 	<FeatureCard title="Zero-dependency core" icon={packageIcon}>
 		`nexdk` depends on nothing. Drivers and hooks peer-depend on it.

@@ -31,7 +31,7 @@ const sdk = createSdk({
   drivers: { firebase: createFirebaseDriver({ projectId: 'my-project' }) },
 })
 
-const todos = await sdk.firebase.todos.get({ orderBy: 'title' })
+const { data: todos } = await sdk.firebase.todos.get({ orderBy: 'title' })
 ```
 
 ## Documentation

@@ -78,19 +78,22 @@ const sdk = createSdk({
   resources: { lomkit: { products: product } },
 })
 
-const { data } = await sdk.lomkit.products.get({
+const { data, error } = await sdk.lomkit.products.get({
   search: { filters: [{ field: 'price', operator: '<', value: 100 }] },
 })
+
+if (error) console.error(error.status, error.errors)
+else console.log(data.data)
 ```
 
-`data` is typed as `{ id: number; name: string; price: number }[]`.
+A call does not throw: it resolves `{ data, error }`. Once `error` is checked, `data.data` is typed as `{ id: number; name: string; price: number }[]`. Pass `createSdk({ throw: true })` to get the bare value and a rejection instead.
 
 - **`defineResource({ name, schema, fragments?, relations? })`**: declares a resource. `schema` is any [Standard Schema](https://standardschema.dev) validator (Zod, Valibot, ArkType).
-- **`createSdk({ drivers, resources?, notify?, validateResponses? })`**: binds resources to drivers and returns the typed SDK. `validateResponses` (off by default) checks answers against the schemas, see [Standard Schema](https://techmefr.github.io/nexdk/guides/standard-schema/#validating-responses-opt-in). `notify` runs on every call, together with the per-call `onEvent`. Each handler is isolated: if one throws, the other still runs.
-- **`defineDriver({ name, setup, methods })`**: authors a driver. It emits `request`, `success` and `error` for you.
+- **`createSdk({ drivers, resources?, notify?, validateResponses?, onStatus?, throw? })`**: binds resources to drivers and returns the typed SDK. `validateResponses` (off by default) checks answers against the schemas, see [Standard Schema](https://techmefr.github.io/nexdk/guides/standard-schema/#validating-responses-opt-in). `notify` runs on every call, together with the per-call `onEvent`. Each handler is isolated: if one throws, the other still runs.
+- **`defineDriver({ name, setup, methods })`**: authors a driver. The core emits `request`, `success` and `error`, once per call; a class driver wraps its calls in `traceCall`.
 - **`extra`** (third argument): opaque to the core. nhost reads `{ fragment }` from it.
 
-Errors: a driver emits `error` with `{ message, status?, errors? }`, then throws a typed `SdkError` (`status`, `errors`, `data`). REST drivers take an optional `fetch` in their config to inject a mock or a custom transport. `createSdk` refuses a resource key that collides with a member of its driver (`resources`, `name`, `get`...).
+Errors: the `error` event carries `{ message, status?, errors? }`, `onStatus` runs, then the call resolves `{ data: undefined, error }` with the typed `SdkError` (`status`, `errors`, `data`), or rejects with it under `throw: true`. A driver called directly, without `createSdk`, rejects. REST drivers take an optional `fetch` in their config to inject a mock or a custom transport. `createSdk` refuses a resource key that collides with a member of its driver (`resources`, `name`, `get`...).
 
 ## Drivers
 

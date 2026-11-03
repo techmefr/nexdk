@@ -30,7 +30,7 @@ const sdk = createSdk({
   },
 })
 
-const users = await sdk.nest.users.get({ page: 1 })
+const { data: users } = await sdk.nest.users.get({ page: 1 })
 ```
 
 `headers` is a record or a resolver, evaluated before every request.

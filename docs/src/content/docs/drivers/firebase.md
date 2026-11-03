@@ -30,7 +30,7 @@ const sdk = createSdk({
   },
 })
 
-const todos = await sdk.firebase.todos.get({ orderBy: 'title' })
+const { data: todos } = await sdk.firebase.todos.get({ orderBy: 'title' })
 ```
 
 | Option | Default | Notes |

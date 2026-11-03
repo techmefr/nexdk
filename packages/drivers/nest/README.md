@@ -31,7 +31,7 @@ const sdk = createSdk({
   drivers: { nest: createNestDriver({ baseUrl: 'https://api.example.com' }) },
 })
 
-const users = await sdk.nest.users.get({ page: 1 })
+const { data: users } = await sdk.nest.users.get({ page: 1 })
 ```
 
 ## Documentation

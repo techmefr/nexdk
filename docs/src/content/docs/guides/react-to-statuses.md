@@ -34,7 +34,7 @@ It receives one object:
 
 | Field | Value |
 |-------|-------|
-| `error` | The thrown error (an `SdkError` with `status`, `errors` and `data`). |
+| `error` | The error of the call (an `SdkError` with `status`, `errors` and `data`). |
 | `driver` | The driver name, for example `lomkit`. |
 | `resource` | The resource key of the call, for example `users`. |
 | `method` | The driver method, for example `get`. |
@@ -42,14 +42,14 @@ It receives one object:
 ## Rules
 
 - It runs once per failed call, after `notify` and the per-call `onEvent` have received the `error` event.
-- It may be asynchronous. The call waits for it before rejecting, so a logout is finished when your `catch` runs.
-- It never hides the failure: the call still rejects with the original error.
+- It may be asynchronous. The call waits for it before resolving `{ data: undefined, error }` (or rejecting with `throw: true`), so a logout is finished when you read `error`.
+- It never hides the failure: `error` is still the original error.
 - If it throws (or rejects), the exception is dropped. The notification and the original error are not affected.
 - There is no retry and no token refresh. The handler observes the failure, it does not replay the call.
 
 ## In an OSDD app
 
-Declare the handlers once, in the technical layer that builds the SDK, so functional layers only see the typed result or the thrown error.
+Declare the handlers once, in the technical layer that builds the SDK, so functional layers only see `{ data, error }`.
 
 ```ts
 import { createSdk } from 'nexdk'

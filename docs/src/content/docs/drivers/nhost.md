@@ -56,7 +56,7 @@ const sdk = createSdk({
 | `subscription(payload?, onEvent?, options?)` | subscription | Returns an unsubscribe function. Emits `connected`, `disconnected`, `data`, `complete` and `error`. |
 
 ```ts
-const result = await sdk.nhost.products.query<{ products: { id: string; name: string }[] }>({
+const { data: result } = await sdk.nhost.products.query<{ products: { id: string; name: string }[] }>({
   where: { name: { _eq: 'A' } },
   limit: 5,
 })

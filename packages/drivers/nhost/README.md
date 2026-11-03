@@ -38,7 +38,7 @@ const sdk = createSdk({
   resources: { nhost: { products: product } },
 })
 
-const result = await sdk.nhost.products.query<{ products: { id: string; name: string }[] }>({ limit: 5 })
+const { data: result } = await sdk.nhost.products.query<{ products: { id: string; name: string }[] }>({ limit: 5 })
 ```
 
 ## Documentation

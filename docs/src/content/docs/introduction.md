@@ -43,8 +43,10 @@ export const sdk = createSdk({
   resources: { nest: { products: product } },
 })
 
-const products = await sdk.nest.products.get({ page: 1 })
+const { data: products, error } = await sdk.nest.products.get({ page: 1 })
 ```
+
+A call resolves `{ data, error }` and does not throw. Check `error` first: `data` is then typed from the schema. `createSdk({ ..., throw: true })` returns the bare value and rejects instead.
 
 From here:
 

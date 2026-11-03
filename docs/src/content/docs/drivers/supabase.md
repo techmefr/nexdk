@@ -59,9 +59,6 @@ A Postgrest error emits `error` with `{ message, status, errors, code?, details?
 ```ts
 import { SupabaseQueryError } from '@nexdk/driver-supabase'
 
-try {
-  await sdk.supabase.messages.insert({ text: 'hi' })
-} catch (error) {
-  if (error instanceof SupabaseQueryError) console.log(error.code, error.hint)
-}
+const { error } = await sdk.supabase.messages.insert({ text: 'hi' })
+if (error instanceof SupabaseQueryError) console.log(error.code, error.hint)
 ```

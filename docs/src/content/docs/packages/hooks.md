@@ -30,7 +30,8 @@ const product = defineResource({
 const { values, errors, isDirty, handleSubmit, setServerErrors, fill, reset } = useResourceForm(product)
 
 const onSubmit = handleSubmit(async (data) => {
-  await sdk.lomkit.products.mutate({ operation: 'create', attributes: data })
+  const { error } = await sdk.lomkit.products.mutate({ operation: 'create', attributes: data })
+  if (error?.status === 422) setServerErrors(error.errors as Record<string, string[]>)
 })
 ```
 

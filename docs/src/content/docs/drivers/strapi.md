@@ -30,7 +30,7 @@ const sdk = createSdk({
   },
 })
 
-const articles = await sdk.strapi.articles.get({
+const { data: articles } = await sdk.strapi.articles.get({
   filters: { title: { $eq: 'Hello' } },
   populate: ['author'],
 })
@@ -67,6 +67,6 @@ The resource name and the id are URL-encoded. A failure emits `error` with `{ me
 The array returned by `get` carries a non-enumerable `pagination` property with `meta.pagination` as Strapi sent it (`{ page, pageSize, pageCount, total }`, or `{ start, limit, total }`), read from the page answer (the first page when `get` follows every page). It is absent when the answer has no `meta.pagination`. It does not show up in `Object.keys`, `JSON.stringify` or `toEqual`.
 
 ```ts
-const rows = await sdk.strapi.articles.get({ pagination: { page: 2, pageSize: 20 } })
+const { data: rows } = await sdk.strapi.articles.get({ pagination: { page: 2, pageSize: 20 } })
 rows.pagination?.total
 ```

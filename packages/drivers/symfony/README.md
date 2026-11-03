@@ -31,7 +31,7 @@ const sdk = createSdk({
   drivers: { symfony: createSymfonyDriver({ baseUrl: 'https://api.example.com' }) },
 })
 
-const books = await sdk.symfony.books.get({ page: 1 })
+const { data: books } = await sdk.symfony.books.get({ page: 1 })
 ```
 
 ## Documentation
