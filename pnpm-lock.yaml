@@ -221,10 +221,6 @@ importers:
         version: 3.25.76
 
   packages/http:
-    dependencies:
-      ofetch:
-        specifier: ^1.5.1
-        version: 1.5.1
     devDependencies:
       nexdk:
         specifier: workspace:*

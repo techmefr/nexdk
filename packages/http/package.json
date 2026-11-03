@@ -1,7 +1,7 @@
 {
     "name": "@nexdk/http",
     "version": "0.0.1",
-    "description": "Shared REST toolkit — ofetch-based JSON request, query-string/id helpers, and an emit-then-throw HTTP error contract for defineDriver-based drivers.",
+    "description": "Shared REST toolkit — native fetch JSON request, query-string/id helpers, and an emit-then-throw HTTP error contract for defineDriver-based drivers.",
     "type": "module",
     "license": "MIT",
     "author": "techmefr",
@@ -17,7 +17,6 @@
     "keywords": [
         "http",
         "fetch",
-        "ofetch",
         "rest",
         "driver"
     ],
@@ -44,9 +43,6 @@
         "build": "unbuild",
         "test": "vitest run",
         "dev": "unbuild --stub"
-    },
-    "dependencies": {
-        "ofetch": "^1.5.1"
     },
     "peerDependencies": {
         "nexdk": ">=0.0.1 <1"

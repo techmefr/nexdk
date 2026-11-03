@@ -1,6 +1,6 @@
 # @nexdk/http
 
-Shared REST toolkit for nexdk drivers: a JSON `request` over ofetch, the `HttpError` contract, and query-string and id helpers.
+Shared REST toolkit for nexdk drivers: a JSON `request` over the native `fetch`, the `HttpError` contract, and query-string and id helpers.
 
 Part of [nexdk](https://github.com/techmefr/nexdk).
 
@@ -20,10 +20,6 @@ Once published, install the package with everything it needs:
 ```bash
 pnpm add nexdk @nexdk/http
 ```
-
-## Bundle size on Node
-
-A Node bundle of `ofetch` includes `node-fetch-native` (about 33 kB gzip more than the browser entry). It is chosen by `ofetch`, not by this package. To avoid it, match the `browser` condition in your bundler (esbuild `--conditions=browser`). Details in the [docs](https://techmefr.github.io/nexdk/packages/http/).
 
 ## Usage
 

@@ -1,19 +1,19 @@
 # AGENT.md — @nexdk/http
 
 ## Role
-Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (JSON request over `ofetch`, `init.fetch` optional), `createRequest(fetch?)`, `HttpError` (an `SdkError`: `status`, `data`, `errors`), `toQuery`, `splitId`, `encodeId`, plus `resolveHeaders` and `HeadersResolver` re-exported from `nexdk`.
+Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (JSON request over the native `fetch`, `init.fetch` optional), `createRequest(fetch?)`, `HttpError` (an `SdkError`: `status`, `data`, `errors`), `toQuery`, `splitId`, `encodeId`, plus `resolveHeaders` and `HeadersResolver` re-exported from `nexdk`.
 
 ## Dependency rule
-- `ofetch`: real `dependency`.
+- No runtime `dependency`.
 - `nexdk`: `peerDependency` (`>=0.0.1 <1`) + devDependency `workspace:*`.
 
-## Node bundle weight
-`ofetch` resolves to `node-fetch-native` under the `node` condition (about 33 kB gzip), which this package cannot avoid. The documented workaround is the bundler condition `browser`. Keep that note in the README and docs.
+## Native fetch parity
+`request` replaced `ofetch` and keeps its behaviour: plain objects, arrays and `toJSON` bodies of PATCH/POST/PUT/DELETE are JSON-encoded with `content-type` and `accept` defaults (`application/x-www-form-urlencoded` is honoured), stream bodies get `duplex: 'half'`, `timeout` only applies when no `signal` is given and is cleared once the response headers arrive, the body is parsed by content type (missing or JSON type: lenient JSON parse in `src/body.ts` that drops `__proto__` and `constructor.prototype` keys, `text/*`: text, otherwise blob), 101/204/205/304 and HEAD have no body, and only 4xx/5xx throw.
 
 ## Behaviour notes
-- `request` sets `retry: 0`: one driver call is one request and one `request`/`success`/`error` sequence.
+- No retry: one driver call is one request and one `request`/`success`/`error` sequence.
 - A non-2xx response or a network failure throws `HttpError`, a subclass of `SdkError` from `nexdk`. `data` is the parsed body, `errors` is `data.errors` when `data` is an object that has it, else the PocketBase `data.data` map flattened to `{ field: [message] }` (only when it is non-empty and every entry has a string `message`), `message` is `data.message` when it is a non-empty string else `HTTP {status}`, `status` is 0 for a network failure.
-- `request` honours `init.fetch` by building an ofetch client with `createFetch({ fetch })` (ofetch ignores a per-call `fetch` option). `createRequest(fetch)` returns a `request` bound to that `fetch`; without a `fetch` it returns `request` (global fetch, resolved at call time).
+- `request` calls `init.fetch` when given, else `globalThis.fetch`. `createRequest(fetch)` returns a `request` bound to that `fetch`; without a `fetch` it returns `request` (global fetch, resolved at call time).
 - `toQuery` skips `undefined` and `null`, repeats the key for arrays, JSON-encodes other objects, returns `''` when empty.
 - `splitId` splits `{ id, ...rest }` into `{ id, body }`.
 - `encodeId` URL-encodes an id and throws on an empty id, `.` and `..`. Drivers also `encodeURIComponent` the resource name.
@@ -28,5 +28,5 @@ Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (
 `pnpm --filter @nexdk/http build` · `... test`. Tests stub the global `fetch` and inject one through `init.fetch`.
 
 ## FetchLike and Nest validation
-- `FetchLike` (`(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>`) is defined in `nexdk` and re-exported. `HttpRequestInit.fetch` and `createRequest` take it; the one cast to `typeof fetch` is inside `request` (ofetch types). Do not widen driver options back to `typeof fetch`: bun-types' `fetch` has `preconnect`, shamock's `mock.fetch` has not. `test/fetch-like.test-d.ts` guards it.
+- `FetchLike` (`(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>`) is defined in `nexdk` and re-exported. `HttpRequestInit.fetch` and `createRequest` take it. Do not widen driver options back to `typeof fetch`: bun-types' `fetch` has `preconnect`, shamock's `mock.fetch` has not. `test/fetch-like.test-d.ts` guards it.
 - `errorsFromData` maps a Nest `ValidationPipe` body (`statusCode` number, `error` string, `message` string array) to `errors`: `<property> must|should|has|is|contains|cannot|does ...` keyed by the property (lowercase start, dotted allowed), `each value in <p> ...` and `property <p> should not exist` too, anything else under `_`. Tested in `test/error-data.test.ts`.

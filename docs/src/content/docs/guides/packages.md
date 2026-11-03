@@ -8,7 +8,7 @@ The workspace is split into small packages, each usable on its own. None is publ
 | Package | Role | Depends on |
 |---------|------|------------|
 | `nexdk` | The SDK: `createSdk`, `defineResource`, `defineDriver`, `resolveHeaders` and the types. See the [API reference](/nexdk/reference/nexdk/). | nothing |
-| [`@nexdk/http`](/nexdk/packages/http/) | REST toolkit: `request`, `createRequest`, `HttpError`, `toQuery`, `splitId`, `encodeId`. | `nexdk` (peer), `ofetch` |
+| [`@nexdk/http`](/nexdk/packages/http/) | REST toolkit: `request`, `createRequest`, `HttpError`, `toQuery`, `splitId`, `encodeId`. | `nexdk` (peer) |
 | [`@nexdk/hooks`](/nexdk/packages/hooks/) | `useResourceForm` (Vue forms with Zod). | `nexdk`, `vue`, `zod` 3 or 4 (peers) |
 | [`@nexdk/repository`](/nexdk/packages/repository/) | One `list`, `find`, `create`, `update`, `remove` interface and a normalised page over lomkit, pocketbase, strapi, nest and symfony. | `nexdk` (peer), the drivers you use (optional peers) |
 | [`@nexdk/driver-lomkit`](/nexdk/drivers/lomkit/) | Laravel + Lomkit (`search`, `mutate`, `delete`). | `nexdk`, `@nexdk/http` (peers) |
