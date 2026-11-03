@@ -56,7 +56,6 @@ export default defineConfig({
 					items: [
 						{ label: '@nexdk/http (REST toolkit)', slug: 'packages/http', attrs: { class: 'sidebar-icon icon-globe' } },
 						{ label: '@nexdk/hooks (Vue forms)', slug: 'packages/hooks', attrs: { class: 'sidebar-icon icon-puzzle' } },
-						{ label: '@nexdk/repository', slug: 'packages/repository', attrs: { class: 'sidebar-icon icon-layout-grid' } },
 					],
 				},
 				{

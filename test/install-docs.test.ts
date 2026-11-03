@@ -17,7 +17,7 @@ function listPackages(): PackageInfo[] {
             dir: `packages/drivers/${name}`,
             docPage: `docs/src/content/docs/drivers/${name}.md`,
         })),
-        ...['http', 'hooks', 'repository'].map((name) => ({
+        ...['http', 'hooks'].map((name) => ({
             dir: `packages/${name}`,
             docPage: `docs/src/content/docs/packages/${name}.md`,
         })),
@@ -64,7 +64,7 @@ describe('documented install commands', () => {
     }
 
     it('lists every package of the workspace', () => {
-        expect(listPackages().length).toBeGreaterThanOrEqual(11)
+        expect(listPackages().length).toBeGreaterThanOrEqual(10)
         for (const pkg of listPackages()) expect(existsSync(join(root, pkg.docPage))).toBe(true)
     })
 

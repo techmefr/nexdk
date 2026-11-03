@@ -105,7 +105,7 @@ Official drivers live in `packages/drivers/` and peer-depend on `nexdk` only.
 - [`@nexdk/driver-strapi`](packages/drivers/strapi): Strapi v5 REST
 - [`@nexdk/driver-firebase`](packages/drivers/firebase): Cloud Firestore REST
 
-Shared packages: [`@nexdk/http`](packages/http) (REST toolkit), [`@nexdk/hooks`](packages/hooks) (Vue forms) and [`@nexdk/repository`](packages/repository) (one list/find/create/update/remove interface over the REST drivers).
+Shared packages: [`@nexdk/http`](packages/http) (REST toolkit) and [`@nexdk/hooks`](packages/hooks) (Vue forms).
 
 The pocketbase, strapi and firebase drivers follow every page on `get`, unless you set the page size or the page yourself.
 

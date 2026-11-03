@@ -21,7 +21,7 @@ The core SDK. Exports `createSdk`, `defineResource`, `defineDriver`, `resolveHea
 `create-sdk.ts` (proxy, resource binding) · `on-status.ts` (status handlers) · `errors.ts` (`SdkError`, `toErrorPayload`) · `define-resource.ts` · `define-driver.ts` · `typed-sdk.ts` (type registry) · `types.ts` · `merge.ts` · `standard-schema.ts`.
 
 ## Workspace
-`packages/http` (REST toolkit), `packages/hooks` (Vue forms), `packages/repository` (common repository interface), `packages/drivers/*` (lomkit, nhost, supabase, nest, symfony, pocketbase, strapi, firebase), `docs/` (Starlight site).
+`packages/http` (REST toolkit), `packages/hooks` (Vue forms), `packages/drivers/*` (lomkit, nhost, supabase, nest, symfony, pocketbase, strapi, firebase), `docs/` (Starlight site).
 
 ## Docs rules
 English, short, no comments in code blocks. Examples must run against the built packages. Nothing is published to npm: link to GitHub, never to npmjs.
@@ -35,6 +35,6 @@ Publishable packages declare `nexdk` (and `@nexdk/http` for REST drivers) as `pe
 `createSdk({ validateResponses: true })` or `defineResource({ validateResponses })` (the resource wins) validates the answers of `get`, `find`, `create` and `update` against the resource schema with `schema['~standard'].validate`. Off by default: no behaviour change. `get` accepts an array or a `{ data: [...] }` envelope, the other methods a record; each row is validated, the validated output is returned (non-enumerable properties such as `pagination` are kept). A failure throws `ResponseValidationError` (an `SdkError`, status 0, `errors` keyed by dotted path with a row index, `_` for the root, raw answer in `data`) and emits `error`, after the driver emitted `success`. Code: `src/validate-response.ts`, wired in `src/create-sdk.ts`. Other methods (`remove`, `mutate`, nhost `query`...) are never validated.
 
 ## Types and packages
-`WriteInput<T>` (`src/types.ts`) is the type of write bodies: `create` of nest, symfony, pocketbase, strapi, firebase, `attributes` of lomkit `mutate`, repository `create` and `update`. Do not narrow it back to `Partial<T>`: a write body carries input fields the schema does not return. Guarded by `packages/drivers/lomkit/test/mutate-types.test-d.ts`.
+`WriteInput<T>` (`src/types.ts`) is the type of write bodies: `create` of nest, symfony, pocketbase, strapi, firebase, `attributes` of lomkit `mutate`. Do not narrow it back to `Partial<T>`: a write body carries input fields the schema does not return. Guarded by `packages/drivers/lomkit/test/mutate-types.test-d.ts`.
 
-`FetchLike` is the type of every `fetch` option (see `@nexdk/http`). `packages/repository` (`@nexdk/repository`) is the common list/find/create/update/remove interface over the REST drivers; see its AGENT.md.
+`FetchLike` is the type of every `fetch` option (see `@nexdk/http`).
