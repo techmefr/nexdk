@@ -1,17 +1,18 @@
-import { SdkError, defineDriver, resolveHeaders } from 'nexdk'
+import { defineDriver } from 'nexdk'
 import type { AnyResource, SdkEventHandler } from 'nexdk'
 import type {
     DeleteByIdPayload,
     GraphQLOptions,
     HeadersResolver,
     NhostConfig,
-    NhostQueryResult,
     NhostResourceApi,
     UpdateByIdPayload,
     UpdateWherePayload,
     UpsertPayload,
 } from './types.ts'
 import { addSubscription, getSharedConnection, removeSubscription } from './connection-pool.ts'
+import { assertNoGraphQLErrors, createExecute } from './graphql-http.ts'
+import type { Execute } from './graphql-http.ts'
 import {
     buildQueryName,
     buildVarArgs,
@@ -30,12 +31,6 @@ function asOptions(value: unknown): GraphQLOptions | undefined {
     return value as GraphQLOptions | undefined
 }
 
-function assertNoGraphQLErrors(raw: NhostQueryResult<unknown>): void {
-    if (raw.errors && raw.errors.length > 0) {
-        throw new SdkError(raw.errors.map(error => error.message).join('; '), { errors: raw.errors, data: raw })
-    }
-}
-
 function subscriptionId(): string {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID()
@@ -48,7 +43,7 @@ interface NhostState {
     adminSecret: string | undefined
     headers: HeadersResolver | undefined
     poolOwner: object
-    execute: <T>(document: string, variables?: Record<string, unknown>) => Promise<NhostQueryResult<T>>
+    execute: Execute
 }
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
@@ -78,28 +73,13 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
     subscription: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => () => void
 }>({
     name: 'nhost',
-    setup: config => {
-        const buildHeaders = async (): Promise<Record<string, string>> => ({
-            'Content-Type': 'application/json',
-            ...(config.adminSecret ? { 'x-hasura-admin-secret': config.adminSecret } : {}),
-            ...(await resolveHeaders(config.headers)),
-        })
-        return {
-            endpoint: config.endpoint,
-            adminSecret: config.adminSecret,
-            headers: config.headers,
-            poolOwner: {},
-            execute: async <T>(document: string, variables?: Record<string, unknown>) => {
-                const response = await (config.fetch ?? fetch)(config.endpoint, {
-                    method: 'POST',
-                    headers: await buildHeaders(),
-                    body: JSON.stringify({ query: document, variables }),
-                })
-                if (!response.ok) throw await toHttpError(response)
-                return (await response.json()) as NhostQueryResult<T>
-            },
-        }
-    },
+    setup: config => ({
+        endpoint: config.endpoint,
+        adminSecret: config.adminSecret,
+        headers: config.headers,
+        poolOwner: {},
+        execute: createExecute(config),
+    }),
     methods: {
         query: async (ctx, payload, options) => {
             enumIdentifier(ctx.resourceName)
@@ -191,16 +171,4 @@ export function nhostDriver(config: NhostConfig): ReturnType<typeof defineNhostD
         bindResource(resourceName, resource)
     }
     return driver
-}
-
-async function toHttpError(response: Response): Promise<SdkError> {
-    let data: unknown
-    try {
-        data = await response.json()
-    } catch {
-        data = undefined
-    }
-    const body = data !== null && typeof data === 'object' ? (data as Record<string, unknown>) : undefined
-    const errors = body?.errors
-    return new SdkError(`HTTP ${response.status}`, { status: response.status, errors, data })
 }
