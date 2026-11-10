@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkCallOptions, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -35,9 +35,9 @@ export interface FirebaseRemoveResult {
 export type FirebasePage<T> = T[] & { readonly nextPageToken?: string }
 
 export interface FirebaseResourceApi<T, TThrow extends boolean = false> {
-    get(query?: FirebaseListQuery, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, FirebasePage<T>>>
-    find(payload: FirebaseIdPayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
-    create(body: WriteInput<T> & { id?: string }, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
-    update(payload: FirebaseUpdatePayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, T>>
-    remove(payload: FirebaseIdPayload, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, FirebaseRemoveResult>>
+    get(query?: FirebaseListQuery, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, FirebasePage<T>>>
+    find(payload: FirebaseIdPayload, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, T>>
+    create(body: WriteInput<T> & { id?: string }, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, T>>
+    update(payload: FirebaseUpdatePayload, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, T>>
+    remove(payload: FirebaseIdPayload, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, FirebaseRemoveResult>>
 }

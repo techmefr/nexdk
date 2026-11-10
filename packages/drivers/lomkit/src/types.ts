@@ -1,4 +1,4 @@
-import type { SdkEventHandler, SdkReturn } from 'nexdk'
+import type { SdkCallOptions, SdkEventHandler, SdkReturn } from 'nexdk'
 import type { FetchLike, HeadersResolver } from '@nexdk/http'
 import type { LomkitSearchPayload } from './search-types.ts'
 import type { LomkitActionPayload, LomkitBulkPayload, LomkitMutatePayload } from './mutation-types.ts'
@@ -28,29 +28,36 @@ export interface LomkitResourceApi<T, TThrow extends boolean = false> {
     get<E extends object = {}>(
         payload?: LomkitSearchPayload<T>,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, LomkitGetResult<T, E>>>
     mutate(
         payload?: LomkitMutatePayload<T> | LomkitMutatePayload<T>[],
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, LomkitMutateResult>>
     delete(
         payload: LomkitBulkPayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, LomkitDeleteResult<T>>>
     restore(
         payload: LomkitBulkPayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, LomkitBulkResult<T>>>
     forceDelete(
         payload: LomkitBulkPayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, LomkitBulkResult<T>>>
     actions(
         payload: LomkitActionPayload<T>,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, LomkitActionResult>>
     details(
         payload?: undefined,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, LomkitDetailsResult>>
 }

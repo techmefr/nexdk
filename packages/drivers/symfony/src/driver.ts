@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery, withCallOptions } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import type { SymfonyConfig, SymfonyIdPayload, SymfonyResourceApi } from './types.ts'
 
@@ -36,11 +36,11 @@ function unwrapCollection(body: unknown): unknown {
 }
 
 export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
-    get: (ctx: SymfonyState & { resourceName: string }, payload: unknown) => Promise<unknown>
-    find: (ctx: SymfonyState & { resourceName: string }, payload: unknown) => Promise<unknown>
-    create: (ctx: SymfonyState & { resourceName: string }, payload: unknown) => Promise<unknown>
-    update: (ctx: SymfonyState & { resourceName: string }, payload: unknown) => Promise<unknown>
-    remove: (ctx: SymfonyState & { resourceName: string }, payload: unknown) => Promise<{ success: boolean }>
+    get: (ctx: SymfonyState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
+    find: (ctx: SymfonyState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
+    create: (ctx: SymfonyState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
+    update: (ctx: SymfonyState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
+    remove: (ctx: SymfonyState & { resourceName: string }, payload: unknown, options: unknown) => Promise<{ success: boolean }>
 }>({
     name: 'symfony',
     setup: config => {
@@ -57,43 +57,43 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         }
     },
     methods: {
-        get: async (ctx, payload) => {
+        get: async (ctx, payload, options) => {
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}${toQuery(payload)}`
-            const body = await ctx.request(url, {
+            const body = await withCallOptions(ctx.request, options)(url, {
                 method: 'GET',
                 headers: await ctx.buildHeaders('application/ld+json'),
             })
             return unwrapCollection(body)
         },
-        find: async (ctx, payload) => {
+        find: async (ctx, payload, options) => {
             const { id } = payload as SymfonyIdPayload
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}/${encodeId(id)}`
-            return ctx.request(url, {
+            return withCallOptions(ctx.request, options)(url, {
                 method: 'GET',
                 headers: await ctx.buildHeaders('application/ld+json'),
             })
         },
-        create: async (ctx, payload) => {
+        create: async (ctx, payload, options) => {
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}`
-            return ctx.request(url, {
+            return withCallOptions(ctx.request, options)(url, {
                 method: 'POST',
                 headers: await ctx.buildHeaders('application/ld+json'),
                 body: payload ?? {},
             })
         },
-        update: async (ctx, payload) => {
+        update: async (ctx, payload, options) => {
             const { id, body } = splitId(payload)
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}/${encodeId(id)}`
-            return ctx.request(url, {
+            return withCallOptions(ctx.request, options)(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders('application/merge-patch+json', true),
                 body,
             })
         },
-        remove: async (ctx, payload) => {
+        remove: async (ctx, payload, options) => {
             const { id } = payload as SymfonyIdPayload
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}/${encodeId(id)}`
-            await ctx.request(url, {
+            await withCallOptions(ctx.request, options)(url, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders('application/ld+json'),
             })

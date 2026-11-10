@@ -1,4 +1,5 @@
 import { createSdk, defineResource } from 'nexdk'
+import type { SdkCallOptions } from 'nexdk'
 import { describe, expectTypeOf, it } from 'vitest'
 import { z } from 'zod'
 import { LomkitDriver } from '../src/driver.ts'
@@ -188,5 +189,13 @@ describe('other operations', () => {
         expectTypeOf(details.data.actions[0].uriKey).toEqualTypeOf<string>()
         expectTypeOf(details.data.fields).toEqualTypeOf<string[]>()
         expectTypeOf(details.data.relations[0].constraints.required_on_creation).toEqualTypeOf<boolean>()
+    })
+})
+
+describe('per-call options', () => {
+    it('types the third argument of every method as call options', () => {
+        expectTypeOf(sdk.lomkit.users.get).parameter(2).toEqualTypeOf<SdkCallOptions | undefined>()
+        expectTypeOf(sdk.lomkit.users.delete).parameter(2).toEqualTypeOf<SdkCallOptions | undefined>()
+        expectTypeOf<LomkitDeleteResult<User>>().toEqualTypeOf<LomkitBulkResult<User>>()
     })
 })

@@ -18,6 +18,7 @@ export type {
     AsyncMethod,
     FetchLike,
     InferSchema,
+    SdkCallOptions,
     SdkConfig,
     SdkDriver,
     SdkEvent,

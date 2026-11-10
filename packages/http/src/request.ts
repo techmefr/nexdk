@@ -1,5 +1,5 @@
 import { SdkError } from 'nexdk'
-import type { FetchLike, SdkErrorKind } from 'nexdk'
+import type { FetchLike, SdkCallOptions, SdkErrorKind } from 'nexdk'
 import { isJsonBody, isStreamBody, readBody } from './body.ts'
 import { errorsFromData, messageFromData } from './error-data.ts'
 import { anySignal, failureKind, requestSignal } from './signals.ts'
@@ -105,5 +105,23 @@ export function createRequest(fetchImpl?: FetchLike, options?: HttpRequestOption
             signal: anySignal(options?.signal, init?.signal),
             timeout: init?.timeout ?? options?.timeout,
             fetch: fetchImpl,
+        })
+}
+
+function mergeHeaders(base: Record<string, string> | undefined, extra: Record<string, string>): Record<string, string> {
+    const headers = new Headers(base)
+    for (const [name, value] of Object.entries(extra)) headers.set(name, value)
+    return Object.fromEntries(headers)
+}
+
+export function withCallOptions(httpRequest: HttpRequest, options: unknown): HttpRequest {
+    if (options === null || typeof options !== 'object') return httpRequest
+    const call = options as SdkCallOptions
+    return (url, init) =>
+        httpRequest(url, {
+            ...init,
+            headers: call.headers === undefined ? init?.headers : mergeHeaders(init?.headers, call.headers),
+            signal: anySignal(init?.signal, call.signal),
+            timeout: call.timeout ?? init?.timeout,
         })
 }

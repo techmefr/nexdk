@@ -1,5 +1,5 @@
 export { resolveHeaders } from 'nexdk'
-export type { FetchLike, HeadersResolver, SdkErrorKind } from 'nexdk'
-export { HttpError, createRequest, request } from './request.ts'
+export type { FetchLike, HeadersResolver, SdkCallOptions, SdkErrorKind } from 'nexdk'
+export { HttpError, createRequest, request, withCallOptions } from './request.ts'
 export type { HttpFailure, HttpRequest, HttpRequestInit, HttpRequestOptions } from './request.ts'
 export { encodeId, encodeResource, splitId, toQuery } from './query.ts'

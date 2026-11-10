@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { createRequest, encodeId, encodeResource, resolveHeaders, splitId } from '@nexdk/http'
+import { createRequest, encodeId, encodeResource, resolveHeaders, splitId, withCallOptions } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import { toStrapiQuery } from './query.ts'
 import type { StrapiConfig, StrapiIdPayload, StrapiPagination, StrapiResourceApi } from './types.ts'
@@ -43,11 +43,11 @@ type Ctx = StrapiState & { resourceName: string }
 const collectionUrl = (ctx: Ctx): string => `${ctx.baseUrl}/api/${encodeResource(ctx.resourceName)}`
 
 export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
-    get: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    find: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    create: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    update: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    remove: (ctx: Ctx, payload: unknown) => Promise<{ success: boolean }>
+    get: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    find: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    create: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    update: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    remove: (ctx: Ctx, payload: unknown, options: unknown) => Promise<{ success: boolean }>
 }>({
     name: 'strapi',
     setup: config => ({
@@ -60,13 +60,13 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
         }),
     }),
     methods: {
-        get: async (ctx, payload) => {
+        get: async (ctx, payload, options) => {
             const query = (payload ?? {}) as Record<string, unknown>
             const headers = await ctx.buildHeaders()
             const fetchPage = (page: number | undefined): Promise<StrapiEnvelope> => {
                 const pagination = (query.pagination ?? {}) as Record<string, unknown>
                 const pageQuery = page === undefined ? query : { ...query, pagination: { ...pagination, page } }
-                return ctx.request<StrapiEnvelope>(`${collectionUrl(ctx)}${toStrapiQuery(pageQuery)}`, {
+                return withCallOptions(ctx.request, options)<StrapiEnvelope>(`${collectionUrl(ctx)}${toStrapiQuery(pageQuery)}`, {
                     method: 'GET',
                     headers,
                 })
@@ -87,34 +87,34 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
             }
             return withPagination(items, first)
         },
-        find: async (ctx, payload) => {
+        find: async (ctx, payload, options) => {
             const { id } = payload as StrapiIdPayload
-            const envelope = await ctx.request<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
+            const envelope = await withCallOptions(ctx.request, options)<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'GET',
                 headers: await ctx.buildHeaders(),
             })
             return envelope.data
         },
-        create: async (ctx, payload) => {
-            const envelope = await ctx.request<StrapiEnvelope>(collectionUrl(ctx), {
+        create: async (ctx, payload, options) => {
+            const envelope = await withCallOptions(ctx.request, options)<StrapiEnvelope>(collectionUrl(ctx), {
                 method: 'POST',
                 headers: await ctx.buildHeaders(),
                 body: { data: payload ?? {} },
             })
             return envelope.data
         },
-        update: async (ctx, payload) => {
+        update: async (ctx, payload, options) => {
             const { id, body } = splitId(payload)
-            const envelope = await ctx.request<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
+            const envelope = await withCallOptions(ctx.request, options)<StrapiEnvelope>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'PUT',
                 headers: await ctx.buildHeaders(),
                 body: { data: body },
             })
             return envelope.data
         },
-        remove: async (ctx, payload) => {
+        remove: async (ctx, payload, options) => {
             const { id } = payload as StrapiIdPayload
-            await ctx.request(`${collectionUrl(ctx)}/${encodeId(id)}`, {
+            await withCallOptions(ctx.request, options)(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders(),
             })

@@ -1,4 +1,4 @@
-import type { FetchLike, SdkEventHandler, SdkReturn } from 'nexdk'
+import type { FetchLike, SdkCallOptions, SdkEventHandler, SdkReturn } from 'nexdk'
 
 export interface SupabaseConfig {
     url: string
@@ -18,9 +18,9 @@ export interface SupabaseError {
 }
 
 export interface SupabaseResourceApi<T, TThrow extends boolean = false> {
-    get(payload?: object, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, SupabaseResult<T>>>
-    insert(payload?: object, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, SupabaseResult<T>>>
-    update(payload?: object, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, SupabaseResult<T>>>
-    remove(payload?: object, onEvent?: SdkEventHandler): Promise<SdkReturn<TThrow, { success: boolean }>>
+    get(payload?: object, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, SupabaseResult<T>>>
+    insert(payload?: object, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, SupabaseResult<T>>>
+    update(payload?: object, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, SupabaseResult<T>>>
+    remove(payload?: object, onEvent?: SdkEventHandler, options?: SdkCallOptions): Promise<SdkReturn<TThrow, { success: boolean }>>
     subscribe(payload?: object, onEvent?: SdkEventHandler): () => void
 }

@@ -15,6 +15,12 @@ export type SdkEventHandler = (event: SdkEvent, data?: unknown) => void
 
 export type SdkErrorKind = 'timeout' | 'abort' | 'network' | 'http'
 
+export interface SdkCallOptions {
+    signal?: AbortSignal
+    timeout?: number
+    headers?: Record<string, string>
+}
+
 export type AnyResource = Resource<StandardSchemaV1>
 
 export interface ResourceConfig<TSchema extends StandardSchemaV1> {
@@ -39,7 +45,7 @@ export type InferSchema<TResource extends AnyResource> =
 export type AsyncMethod<TReturn> = (
     payload?: unknown,
     onEvent?: SdkEventHandler,
-    extra?: unknown,
+    options?: SdkCallOptions,
 ) => Promise<TReturn>
 
 export type ReactiveMethod = (

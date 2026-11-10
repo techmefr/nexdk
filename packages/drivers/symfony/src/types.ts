@@ -1,4 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
+import type { FetchLike, HeadersResolver, SdkCallOptions, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 
@@ -31,21 +31,26 @@ export interface SymfonyResourceApi<T, TThrow extends boolean = false> {
     get(
         query?: Record<string, unknown>,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, SymfonyCollection<T>>>
     find(
         payload: SymfonyIdPayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, T>>
     create(
         body: WriteInput<T>,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, T>>
     update(
         payload: SymfonyUpdatePayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, T>>
     remove(
         payload: SymfonyIdPayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, SymfonyRemoveResult>>
 }

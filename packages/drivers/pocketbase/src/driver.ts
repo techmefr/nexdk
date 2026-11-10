@@ -1,5 +1,5 @@
 import { defineDriver } from 'nexdk'
-import { HttpError, createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery } from '@nexdk/http'
+import { HttpError, createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery, withCallOptions } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import type { PocketbaseConfig, PocketbaseIdPayload, PocketbaseResourceApi } from './types.ts'
 
@@ -61,11 +61,11 @@ const recordsUrl = (ctx: Ctx): string =>
     `${ctx.baseUrl}/api/collections/${encodeResource(ctx.resourceName)}/records`
 
 export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, {
-    get: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    find: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    create: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    update: (ctx: Ctx, payload: unknown) => Promise<unknown>
-    remove: (ctx: Ctx, payload: unknown) => Promise<{ success: boolean }>
+    get: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    find: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    create: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    update: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
+    remove: (ctx: Ctx, payload: unknown, options: unknown) => Promise<{ success: boolean }>
 }>({
     name: 'pocketbase',
     setup: config => ({
@@ -78,11 +78,11 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
         }),
     }),
     methods: {
-        get: async (ctx, payload) => {
+        get: async (ctx, payload, options) => {
             const query = (payload ?? {}) as Record<string, unknown>
             const headers = await ctx.buildHeaders()
             const fetchPage = (extra: Record<string, unknown>): Promise<PocketbaseList> =>
-                ctx.request<PocketbaseList>(`${recordsUrl(ctx)}${toQuery({ ...query, ...extra })}`, {
+                withCallOptions(ctx.request, options)<PocketbaseList>(`${recordsUrl(ctx)}${toQuery({ ...query, ...extra })}`, {
                     method: 'GET',
                     headers,
                 })
@@ -109,30 +109,30 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
             }
             return withPagination(items, first)
         },
-        find: async (ctx, payload) => {
+        find: async (ctx, payload, options) => {
             const { id } = payload as PocketbaseIdPayload
-            return ctx.request(`${recordsUrl(ctx)}/${encodeId(id)}`, {
+            return withCallOptions(ctx.request, options)(`${recordsUrl(ctx)}/${encodeId(id)}`, {
                 method: 'GET',
                 headers: await ctx.buildHeaders(),
             })
         },
-        create: async (ctx, payload) =>
-            ctx.request(recordsUrl(ctx), {
+        create: async (ctx, payload, options) =>
+            withCallOptions(ctx.request, options)(recordsUrl(ctx), {
                 method: 'POST',
                 headers: await ctx.buildHeaders(),
                 body: payload ?? {},
             }),
-        update: async (ctx, payload) => {
+        update: async (ctx, payload, options) => {
             const { id, body } = splitId(payload)
-            return ctx.request(`${recordsUrl(ctx)}/${encodeId(id)}`, {
+            return withCallOptions(ctx.request, options)(`${recordsUrl(ctx)}/${encodeId(id)}`, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders(),
                 body,
             })
         },
-        remove: async (ctx, payload) => {
+        remove: async (ctx, payload, options) => {
             const { id } = payload as PocketbaseIdPayload
-            await ctx.request(`${recordsUrl(ctx)}/${encodeId(id)}`, {
+            await withCallOptions(ctx.request, options)(`${recordsUrl(ctx)}/${encodeId(id)}`, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders(),
             })

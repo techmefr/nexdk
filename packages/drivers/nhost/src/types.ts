@@ -1,4 +1,4 @@
-import type { FetchLike, SdkEventHandler, SdkReturn } from 'nexdk'
+import type { FetchLike, SdkCallOptions, SdkEventHandler, SdkReturn } from 'nexdk'
 
 export type HeadersResolver = Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
 
@@ -21,7 +21,7 @@ export interface NhostQueryResult<T> {
     errors?: GraphQLError[]
 }
 
-export interface GraphQLOptions {
+export interface GraphQLOptions extends SdkCallOptions {
     fragment?: string
 }
 
@@ -73,10 +73,12 @@ export interface NhostResourceApi<T, TThrow extends boolean = false> {
     updateWhere(
         payload: UpdateWherePayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, { affectedRows: number }>>
     deleteById(
         payload: DeleteByIdPayload,
         onEvent?: SdkEventHandler,
+        options?: SdkCallOptions,
     ): Promise<SdkReturn<TThrow, { success: boolean }>>
     subscription(
         payload?: object,
