@@ -15,7 +15,11 @@ const driver = () =>
             sync: () => {
                 throw failure
             },
+            watch: () => {
+                throw failure
+            },
         },
+        reactive: ['stream', 'watch'],
     })({})
 
 type Calls = Record<string, Record<string, (payload?: unknown) => unknown>>
@@ -47,10 +51,23 @@ describe('result object of createSdk', () => {
         expect(await makeSdk().users.crash()).toEqual({ data: undefined, error: 'plain' })
     })
 
-    it('leaves reactive methods and synchronous throws unchanged', () => {
+    it('leaves reactive methods unchanged and throws synchronously with throw: true', () => {
         const { users } = makeSdk()
         expect(typeof users.stream()).toBe('function')
         expect(() => makeSdk(true).users.sync()).toThrow('HTTP 401')
+    })
+
+    it('rethrows the synchronous throw of a reactive method instead of resolving it', async () => {
+        const { users, notify, onStatus } = makeSdk()
+        expect(() => users.watch()).toThrow('HTTP 401')
+        expect(notify).toHaveBeenCalledWith('error', { message: 'HTTP 401', status: 401, resource: 'users', method: 'watch' })
+        await Promise.resolve()
+        expect(onStatus).toHaveBeenCalledTimes(1)
+    })
+
+    it('resolves the synchronous throw of an async method as { data: undefined, error }', async () => {
+        const { users } = makeSdk()
+        expect(await users.sync()).toEqual({ data: undefined, error: failure })
     })
 
     it('rejects with throw: true', async () => {

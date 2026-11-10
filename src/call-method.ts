@@ -2,7 +2,7 @@ import { toErrorPayload } from './errors.ts'
 import { reactToStatus } from './on-status.ts'
 import { callContext } from './trace-call.ts'
 import { VALIDATED_METHODS, validateResponse } from './validate-response.ts'
-import type { AnyResource, SdkDriver, SdkEventHandler, SdkResult, SdkResultError, StatusHandlers } from './types.ts'
+import type { AnyResource, SdkCallOptions, SdkDriver, SdkEventHandler, SdkResult, SdkResultError, StatusHandlers } from './types.ts'
 
 export interface MethodCall {
     driver: SdkDriver
@@ -99,7 +99,11 @@ export function failCall(call: MethodCall, error: unknown, resource?: string): P
     return settle(call, Promise.reject(error))
 }
 
-export function callMethod(call: MethodCall, payload: unknown, extra: unknown): unknown {
+function isReactive(call: MethodCall): boolean {
+    return call.driver.reactiveMethods?.includes(call.methodName) === true
+}
+
+export function callMethod(call: MethodCall, payload: unknown, options: SdkCallOptions | undefined): unknown {
     const method = (call.driver as unknown as Record<string, (...args: unknown[]) => unknown>)[call.methodName]
     const resource = call.validated !== undefined && VALIDATED_METHODS.has(call.methodName) ? call.validated : undefined
     const success = resource === undefined ? { handler: call.handler, release: () => undefined } : holdSuccess(call.handler)
@@ -107,9 +111,9 @@ export function callMethod(call: MethodCall, payload: unknown, extra: unknown): 
 
     let result: unknown
     try {
-        result = method.call(call.driver, call.resourceName, payload, events.handler, extra)
+        result = method.call(call.driver, call.resourceName, payload, events.handler, options)
     } catch (error) {
-        if (call.throwErrors) {
+        if (call.throwErrors || isReactive(call)) {
             void react(call, error)
             throw error
         }

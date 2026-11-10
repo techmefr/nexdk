@@ -2,6 +2,7 @@ import { callMethod, failCall } from './call-method.ts'
 import { mergeEventHandlers } from './merge.ts'
 import type {
     AnyResource,
+    SdkCallOptions,
     SdkConfig,
     SdkDriver,
     SdkEventHandler,
@@ -105,7 +106,7 @@ function createResourceProxy(
             get(_target, methodName: string | symbol) {
                 if (typeof methodName === 'symbol' || methodName in Object.prototype) return undefined
 
-                return (payload?: unknown, onEvent?: unknown, extra?: unknown) => {
+                return (payload?: unknown, onEvent?: unknown, callOptions?: SdkCallOptions) => {
                     const handler = mergeEventHandlers(options.globalHandler, onEvent as SdkEventHandler | undefined)
                     const call = { driver, resourceName, methodName, handler, validated, onStatus, throwErrors }
                     if (!isDriverMethodName(driver, methodName)) {
@@ -115,7 +116,7 @@ function createResourceProxy(
                         if (throwErrors) throw error
                         return failCall(call, error)
                     }
-                    return callMethod(call, payload, extra)
+                    return callMethod(call, payload, callOptions)
                 }
             },
         },

@@ -74,6 +74,7 @@ export type ReactiveMethod = (
 
 export interface SdkDriver {
     readonly name: string
+    readonly reactiveMethods?: readonly string[]
     bindResource(resourceName: string, resource: AnyResource): void
 }
 
