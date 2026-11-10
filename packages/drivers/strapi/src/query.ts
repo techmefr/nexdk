@@ -37,5 +37,5 @@ export function toStrapiQuery(payload: unknown): string {
     if (pairs.length === 0) return ''
     const params = new URLSearchParams()
     for (const [key, value] of pairs) params.append(key, value)
-    return `?${params.toString()}`
+    return `?${params.toString().replace(/\+/g, '%20')}`
 }

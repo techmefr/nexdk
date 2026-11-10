@@ -47,6 +47,12 @@ describe('toStrapiQuery', () => {
         )
     })
 
+    it('encodes a space as %20 like @nexdk/http, and a plus sign as %2B', () => {
+        const query = toStrapiQuery({ filters: { title: { $containsi: 'a b+c' } } })
+        expect(query).toBe('?filters%5Btitle%5D%5B%24containsi%5D=a%20b%2Bc')
+        expect(query).not.toContain('+')
+    })
+
     it('returns an empty string without parameters', () => {
         expect(toStrapiQuery(undefined)).toBe('')
         expect(toStrapiQuery({})).toBe('')
