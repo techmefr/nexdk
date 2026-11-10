@@ -30,10 +30,6 @@ declare module 'nexdk' {
     }
 }
 
-function asOptions(value: unknown): GraphQLOptions | undefined {
-    return value as GraphQLOptions | undefined
-}
-
 function subscriptionId(): string {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID()
@@ -67,15 +63,16 @@ function toWebSocketUrl(endpoint: string): string {
 }
 
 const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
-    query: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
-    mutation: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
-    upsert: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
-    updateById: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<unknown>
-    updateWhere: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<{ affectedRows: number }>
-    deleteById: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => Promise<{ success: boolean }>
-    subscription: (ctx: NhostState & CtxBase, payload: unknown, options: unknown) => () => void
+    query: (ctx: NhostState & CtxBase, payload: unknown, options: GraphQLOptions | undefined) => Promise<unknown>
+    mutation: (ctx: NhostState & CtxBase, payload: unknown, options: GraphQLOptions | undefined) => Promise<unknown>
+    upsert: (ctx: NhostState & CtxBase, payload: unknown, options: GraphQLOptions | undefined) => Promise<unknown>
+    updateById: (ctx: NhostState & CtxBase, payload: unknown, options: GraphQLOptions | undefined) => Promise<unknown>
+    updateWhere: (ctx: NhostState & CtxBase, payload: unknown, options: GraphQLOptions | undefined) => Promise<{ affectedRows: number }>
+    deleteById: (ctx: NhostState & CtxBase, payload: unknown, options: GraphQLOptions | undefined) => Promise<{ success: boolean }>
+    subscription: (ctx: NhostState & CtxBase, payload: unknown, options: GraphQLOptions | undefined) => () => void
 }>({
     name: 'nhost',
+    reactive: ['subscription'],
     setup: config => ({
         endpoint: config.endpoint,
         adminSecret: config.adminSecret,
@@ -86,20 +83,20 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
     methods: {
         query: async (ctx, payload, options) => {
             enumIdentifier(ctx.resourceName)
-            const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
+            const fields = resolveFields(ctx.resource, options?.fragment)
             const operationName = buildQueryName(ctx.resourceName)
             const { decls, args, variables } = buildVarArgs(ctx.resourceName, payload)
             const document = `query ${operationName}${decls} { ${ctx.resourceName}${args} { ${fields} } }`
-            const raw = await ctx.execute(document, variables, asOptions(options))
+            const raw = await ctx.execute(document, variables, options)
             assertNoGraphQLErrors(raw)
             return raw
         },
         mutation: async (ctx, payload, options) => {
             enumIdentifier(ctx.resourceName)
-            const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
+            const fields = resolveFields(ctx.resource, options?.fragment)
             const data = (payload ?? {}) as Record<string, unknown>
             const document = `mutation Insert${singular(ctx.resourceName)}($object: ${ctx.resourceName}_insert_input!) { insert_${ctx.resourceName}_one(object: $object) { ${fields} } }`
-            const raw = await ctx.execute<Record<string, unknown>>(document, { object: data }, asOptions(options))
+            const raw = await ctx.execute<Record<string, unknown>>(document, { object: data }, options)
             assertNoGraphQLErrors(raw)
             const result = (raw.data as Record<string, unknown>)?.[`insert_${ctx.resourceName}_one`] ?? null
             return { data: result }
@@ -107,11 +104,11 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
         upsert: async (ctx, payload, options) => {
             enumIdentifier(ctx.resourceName)
             const { data, conflictConstraint, updateColumns } = payload as UpsertPayload
-            const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
+            const fields = resolveFields(ctx.resource, options?.fragment)
             const constraint = enumIdentifier(conflictConstraint)
             const cols = updateColumns.map(enumIdentifier).join(', ')
             const document = `mutation Upsert${singular(ctx.resourceName)}($object: ${ctx.resourceName}_insert_input!) { insert_${ctx.resourceName}_one(object: $object, on_conflict: { constraint: ${constraint}, update_columns: [${cols}] }) { ${fields} } }`
-            const raw = await ctx.execute<Record<string, unknown>>(document, { object: data }, asOptions(options))
+            const raw = await ctx.execute<Record<string, unknown>>(document, { object: data }, options)
             assertNoGraphQLErrors(raw)
             const result = (raw.data as Record<string, unknown>)?.[`insert_${ctx.resourceName}_one`] ?? null
             return { data: result }
@@ -119,9 +116,9 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
         updateById: async (ctx, payload, options) => {
             enumIdentifier(ctx.resourceName)
             const { id, data } = payload as UpdateByIdPayload
-            const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
+            const fields = resolveFields(ctx.resource, options?.fragment)
             const document = `mutation Update${singular(ctx.resourceName)}($pk: ${ctx.resourceName}_pk_columns_input!, $set: ${ctx.resourceName}_set_input!) { update_${ctx.resourceName}_by_pk(pk_columns: $pk, _set: $set) { ${fields} } }`
-            const raw = await ctx.execute<Record<string, unknown>>(document, { pk: { id }, set: data }, asOptions(options))
+            const raw = await ctx.execute<Record<string, unknown>>(document, { pk: { id }, set: data }, options)
             assertNoGraphQLErrors(raw)
             const result = (raw.data as Record<string, unknown>)?.[`update_${ctx.resourceName}_by_pk`] ?? null
             return { data: result }
@@ -130,7 +127,7 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
             enumIdentifier(ctx.resourceName)
             const { where, data } = payload as UpdateWherePayload
             const document = `mutation UpdateWhere${singular(ctx.resourceName)}($where: ${ctx.resourceName}_bool_exp!, $set: ${ctx.resourceName}_set_input!) { update_${ctx.resourceName}(where: $where, _set: $set) { affected_rows } }`
-            const raw = await ctx.execute<Record<string, { affected_rows: number }>>(document, { where, set: data }, asOptions(options))
+            const raw = await ctx.execute<Record<string, { affected_rows: number }>>(document, { where, set: data }, options)
             assertNoGraphQLErrors(raw)
             const affected = (raw.data as Record<string, { affected_rows: number }>)?.[`update_${ctx.resourceName}`]?.affected_rows ?? 0
             return { affectedRows: affected }
@@ -139,13 +136,13 @@ const defineNhostDriver = defineDriver<NhostConfig, NhostState, {
             enumIdentifier(ctx.resourceName)
             const { id } = payload as DeleteByIdPayload
             const document = `mutation Delete${singular(ctx.resourceName)}($id: uuid!) { delete_${ctx.resourceName}_by_pk(id: $id) { id } }`
-            const raw = await ctx.execute(document, { id }, asOptions(options))
+            const raw = await ctx.execute(document, { id }, options)
             assertNoGraphQLErrors(raw)
             return { success: true }
         },
         subscription: (ctx, payload, options) => {
             enumIdentifier(ctx.resourceName)
-            const fields = resolveFields(ctx.resource, asOptions(options)?.fragment)
+            const fields = resolveFields(ctx.resource, options?.fragment)
             const { decls, args, variables } = buildVarArgs(ctx.resourceName, payload)
             const document = `subscription On${singular(ctx.resourceName)}${decls} { ${ctx.resourceName}${args} { ${fields} } }`
 

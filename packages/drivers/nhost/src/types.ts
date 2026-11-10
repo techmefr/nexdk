@@ -8,6 +8,8 @@ export interface NhostConfig {
     fetch?: FetchLike
     headers?: HeadersResolver
     onResponse?: ResponseHook
+    timeout?: number
+    signal?: AbortSignal
 }
 
 export interface GraphQLError {

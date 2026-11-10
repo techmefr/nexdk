@@ -1,6 +1,6 @@
-import { resolveHeaders } from 'nexdk'
+import { anySignal, callSignal, mergeHeaders, resolveHeaders } from 'nexdk'
 import type { SdkCallOptions } from 'nexdk'
-import { failureError, graphQLError, toHttpError } from './errors.ts'
+import { failureError, graphQLError, toHttpError, unreadableError } from './errors.ts'
 import type { NhostConfig, NhostQueryResult } from './types.ts'
 
 export type Execute = <T>(
@@ -9,17 +9,9 @@ export type Execute = <T>(
     options?: SdkCallOptions,
 ) => Promise<NhostQueryResult<T>>
 
-function callSignal(options: SdkCallOptions | undefined): AbortSignal | undefined {
-    const timeout = options?.timeout ? AbortSignal.timeout(options.timeout) : undefined
-    if (options?.signal === undefined || timeout === undefined) return options?.signal ?? timeout
-    return AbortSignal.any([options.signal, timeout])
-}
-
-function callHeaders(base: Record<string, string>, extra: Record<string, string> | undefined): Record<string, string> {
-    if (extra === undefined) return base
-    const headers = new Headers(base)
-    for (const [name, value] of Object.entries(extra)) headers.set(name, value)
-    return Object.fromEntries(headers)
+function executeSignal(config: NhostConfig, options: SdkCallOptions | undefined): AbortSignal | undefined {
+    const timeout = options?.timeout ?? config.timeout
+    return anySignal(config.signal, callSignal({ signal: options?.signal, timeout }))
 }
 
 export function createExecute(config: NhostConfig): Execute {
@@ -35,17 +27,24 @@ export function createExecute(config: NhostConfig): Execute {
             throw failureError(error, signal)
         }
     }
+    const read = async <T>(response: Response, signal: AbortSignal | undefined): Promise<NhostQueryResult<T>> => {
+        try {
+            return (await response.json()) as NhostQueryResult<T>
+        } catch (error) {
+            throw unreadableError(response, error, signal)
+        }
+    }
     return async <T>(document: string, variables?: Record<string, unknown>, options?: SdkCallOptions) => {
-        const signal = callSignal(options)
+        const signal = executeSignal(config, options)
         const response = await post({
             method: 'POST',
-            headers: callHeaders(await buildHeaders(), options?.headers),
+            headers: mergeHeaders(await buildHeaders(), options?.headers),
             body: JSON.stringify({ query: document, variables }),
             ...(signal === undefined ? {} : { signal }),
         }, signal)
         if (config.onResponse) await config.onResponse(response, { url: config.endpoint, method: 'POST' })
         if (!response.ok) throw await toHttpError(response)
-        return (await response.json()) as NhostQueryResult<T>
+        return read<T>(response, signal)
     }
 }
 

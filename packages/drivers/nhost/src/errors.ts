@@ -1,5 +1,4 @@
-import { SdkError } from 'nexdk'
-import type { SdkErrorKind } from 'nexdk'
+import { SdkError, failureKind } from 'nexdk'
 import type { GraphQLError } from './types.ts'
 
 const statusByCode: Record<string, number> = {
@@ -33,20 +32,14 @@ export function graphQLError(errors: GraphQLError[], data: unknown): SdkError {
     return new SdkError(message, { status: graphQLStatus(errors), errors, data, kind: 'http' })
 }
 
-function named(value: unknown, name: string): boolean {
-    return value !== null && typeof value === 'object' && (value as { name?: unknown }).name === name
-}
-
-function failureKind(error: unknown, signal: AbortSignal | undefined): SdkErrorKind {
-    if (signal?.aborted) return named(signal.reason, 'TimeoutError') ? 'timeout' : 'abort'
-    if (named(error, 'TimeoutError')) return 'timeout'
-    if (named(error, 'AbortError')) return 'abort'
-    return 'network'
-}
-
 export function failureError(error: unknown, signal: AbortSignal | undefined): SdkError {
     const message = error instanceof Error ? error.message : String(error)
     return new SdkError(message, { status: 0, kind: failureKind(error, signal), cause: error })
+}
+
+export function unreadableError(response: Response, error: unknown, signal: AbortSignal | undefined): SdkError {
+    const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+    return new SdkError(`response body unreadable: ${message}`, { status: response.status, kind: failureKind(error, signal), cause: error })
 }
 
 export async function toHttpError(response: Response): Promise<SdkError> {
