@@ -53,7 +53,7 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
         const databaseId = encodeURIComponent(config.databaseId ?? '(default)')
         return {
             documentsUrl: `${baseUrl}/v1/projects/${encodeURIComponent(config.projectId)}/databases/${databaseId}/documents`,
-            request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal }),
+            request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal, onResponse: config.onResponse }),
             buildHeaders: async () => ({
                 'Content-Type': 'application/json',
                 Accept: 'application/json',

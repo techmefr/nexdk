@@ -2,6 +2,13 @@ import type { StandardSchemaV1 } from './standard-schema.ts'
 
 export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
 
+export interface ResponseRequest {
+    url: string
+    method: string
+}
+
+export type ResponseHook = (response: Response, request: ResponseRequest) => void | Promise<void>
+
 export type SdkEvent =
     | 'request'
     | 'success'

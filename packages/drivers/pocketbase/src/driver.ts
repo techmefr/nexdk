@@ -70,7 +70,7 @@ export const pocketbaseDriver = defineDriver<PocketbaseConfig, PocketbaseState, 
     name: 'pocketbase',
     setup: config => ({
         baseUrl: config.baseUrl.replace(/\/$/, ''),
-        request: explainRejections(createRequest(config.fetch, { timeout: config.timeout, signal: config.signal })),
+        request: explainRejections(createRequest(config.fetch, { timeout: config.timeout, signal: config.signal, onResponse: config.onResponse })),
         buildHeaders: async () => ({
             'Content-Type': 'application/json',
             Accept: 'application/json',

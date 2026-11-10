@@ -1,5 +1,5 @@
 import { SdkError } from 'nexdk'
-import type { FetchLike, SdkCallOptions, SdkErrorKind } from 'nexdk'
+import type { FetchLike, ResponseHook, SdkCallOptions, SdkErrorKind } from 'nexdk'
 import { isJsonBody, isStreamBody, readBody } from './body.ts'
 import { errorsFromData, messageFromData } from './error-data.ts'
 import { anySignal, failureKind, requestSignal } from './signals.ts'
@@ -7,6 +7,7 @@ import { anySignal, failureKind, requestSignal } from './signals.ts'
 export interface HttpRequestOptions {
     timeout?: number
     signal?: AbortSignal
+    onResponse?: ResponseHook
 }
 
 export interface HttpRequestInit extends HttpRequestOptions {
@@ -91,6 +92,7 @@ async function read(response: Response, init: HttpRequestInit | undefined, metho
 export async function request<T>(url: string, init?: HttpRequestInit): Promise<T> {
     const method = init?.method?.toUpperCase()
     const response = await send(url, init, method)
+    if (init?.onResponse) await init.onResponse(response, { url, method: method ?? 'GET' })
     const data = await read(response, init, method, url)
     if (response.status >= 400 && response.status < 600) throw new HttpError(response.status, data)
     return data as T
@@ -104,6 +106,7 @@ export function createRequest(fetchImpl?: FetchLike, options?: HttpRequestOption
             ...init,
             signal: anySignal(options?.signal, init?.signal),
             timeout: init?.timeout ?? options?.timeout,
+            onResponse: init?.onResponse ?? options?.onResponse,
             fetch: fetchImpl,
         })
 }

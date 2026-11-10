@@ -30,7 +30,7 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
         const baseUrl = config.baseUrl.replace(/\/$/, '')
         return {
             baseUrl,
-            request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal }),
+            request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal, onResponse: config.onResponse }),
             buildHeaders: async () => ({
                 'Content-Type': 'application/json',
                 Accept: 'application/json',

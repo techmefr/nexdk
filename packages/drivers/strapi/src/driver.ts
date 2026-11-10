@@ -52,7 +52,7 @@ export const strapiDriver = defineDriver<StrapiConfig, StrapiState, {
     name: 'strapi',
     setup: config => ({
         baseUrl: config.baseUrl.replace(/\/$/, ''),
-        request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal }),
+        request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal, onResponse: config.onResponse }),
         buildHeaders: async () => ({
             'Content-Type': 'application/json',
             Accept: 'application/json',

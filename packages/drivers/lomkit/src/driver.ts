@@ -42,6 +42,7 @@ export class LomkitDriver implements SdkDriver {
         this.httpRequest = createRequest(config.fetch, {
             timeout: config.timeout,
             signal: config.signal,
+            onResponse: config.onResponse,
         })
     }
 

@@ -35,6 +35,7 @@ export function createExecute(config: NhostConfig): Execute {
             body: JSON.stringify({ query: document, variables }),
             ...(signal === undefined ? {} : { signal }),
         })
+        if (config.onResponse) await config.onResponse(response, { url: config.endpoint, method: 'POST' })
         if (!response.ok) throw await toHttpError(response)
         return (await response.json()) as NhostQueryResult<T>
     }

@@ -47,7 +47,7 @@ export const symfonyDriver = defineDriver<SymfonyConfig, SymfonyState, {
         const baseUrl = config.baseUrl.replace(/\/$/, '')
         return {
             baseUrl,
-            request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal }),
+            request: createRequest(config.fetch, { timeout: config.timeout, signal: config.signal, onResponse: config.onResponse }),
             buildHeaders: async (contentType, forceContentType = false) => {
                 const custom = await resolveHeaders(config.headers)
                 if (!forceContentType) return { 'Content-Type': contentType, Accept: 'application/ld+json', ...custom }

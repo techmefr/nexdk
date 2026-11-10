@@ -1,5 +1,5 @@
 import type { SdkCallOptions, SdkEventHandler, SdkReturn } from 'nexdk'
-import type { FetchLike, HeadersResolver } from '@nexdk/http'
+import type { FetchLike, HeadersResolver, ResponseHook } from '@nexdk/http'
 import type { LomkitSearchPayload } from './search-types.ts'
 import type { LomkitActionPayload, LomkitBulkPayload, LomkitMutatePayload } from './mutation-types.ts'
 import type {
@@ -22,6 +22,7 @@ export interface LomkitConfig {
     fetch?: FetchLike
     timeout?: number
     signal?: AbortSignal
+    onResponse?: ResponseHook
 }
 
 export interface LomkitResourceApi<T, TThrow extends boolean = false> {

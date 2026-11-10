@@ -1,4 +1,4 @@
-import type { FetchLike, SdkCallOptions, SdkEventHandler, SdkReturn } from 'nexdk'
+import type { FetchLike, ResponseHook, SdkCallOptions, SdkEventHandler, SdkReturn } from 'nexdk'
 
 export type HeadersResolver = Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
 
@@ -7,6 +7,7 @@ export interface NhostConfig {
     adminSecret?: string
     fetch?: FetchLike
     headers?: HeadersResolver
+    onResponse?: ResponseHook
 }
 
 export interface GraphQLError {

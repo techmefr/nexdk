@@ -1,4 +1,5 @@
 import type { FetchLike, HeadersResolver, SdkCallOptions, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
+import type { ResponseHook } from '@nexdk/http'
 
 export type { HeadersResolver }
 
@@ -10,6 +11,7 @@ export interface FirebaseConfig {
     fetch?: FetchLike
     timeout?: number
     signal?: AbortSignal
+    onResponse?: ResponseHook
 }
 
 export interface FirebaseIdPayload {
