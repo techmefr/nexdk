@@ -1,5 +1,4 @@
-import type { FetchLike, HeadersResolver, SdkCallOptions, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
-import type { ResponseHook } from '@nexdk/http'
+import type { FetchLike, HeadersResolver, ResponseHook, SdkCallOptions, SdkEventHandler, SdkReturn, WriteInput } from 'nexdk'
 
 export type { HeadersResolver }
 

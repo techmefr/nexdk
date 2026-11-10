@@ -1,5 +1,5 @@
 import type { SdkCallOptions, SdkEventHandler, SdkReturn } from 'nexdk'
-import type { FetchLike, HeadersResolver, ResponseHook } from '@nexdk/http'
+import type { FetchLike, HeadersResolver, ResponseHook } from 'nexdk'
 import type { LomkitSearchPayload } from './search-types.ts'
 import type { LomkitActionPayload, LomkitBulkPayload, LomkitMutatePayload } from './mutation-types.ts'
 import type {
@@ -11,7 +11,7 @@ import type {
     LomkitMutateResult,
 } from './result-types.ts'
 
-export type { FetchLike } from '@nexdk/http'
+export type { FetchLike } from 'nexdk'
 export type * from './gate-types.ts'
 export type * from './search-types.ts'
 export type * from './mutation-types.ts'

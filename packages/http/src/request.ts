@@ -1,8 +1,8 @@
-import { SdkError } from 'nexdk'
+import { SdkError, anySignal, callSignal, failureKind, mergeHeaders } from 'nexdk'
 import type { FetchLike, ResponseHook, SdkCallOptions, SdkErrorKind } from 'nexdk'
 import { isJsonBody, isStreamBody, readBody } from './body.ts'
 import { errorsFromData, messageFromData } from './error-data.ts'
-import { anySignal, failureKind, requestSignal } from './signals.ts'
+import { requestSignal } from './signals.ts'
 
 export interface HttpRequestOptions {
     timeout?: number
@@ -61,39 +61,42 @@ function requestInit(init: HttpRequestInit | undefined, method: string | undefin
     return options
 }
 
-function noResponse(error: unknown, signal: AbortSignal | undefined, method: string | undefined, url: string): HttpError {
+function detail(error: unknown): string {
     const cause = error as Error | undefined
-    const detail = cause?.message || cause?.toString() || ''
-    const message = `[${method ?? 'GET'}] ${JSON.stringify(url)}: <no response>${detail ? ` ${detail}` : ''}`
+    const text = cause?.message || cause?.toString() || ''
+    return text ? ` ${text}` : ''
+}
+
+function noResponse(error: unknown, signal: AbortSignal | undefined, method: string | undefined, url: string): HttpError {
+    const message = `[${method ?? 'GET'}] ${JSON.stringify(url)}: <no response>${detail(error)}`
     return new HttpError(0, undefined, message, { kind: failureKind(error, signal), cause: error })
 }
 
-async function send(url: string, init: HttpRequestInit | undefined, method: string | undefined): Promise<Response> {
-    const options = requestInit(init, method)
-    const { signal, dispose } = requestSignal(init?.signal, init?.timeout)
-    if (signal) options.signal = signal
-    try {
-        return await (init?.fetch ?? globalThis.fetch)(url, options)
-    } catch (error) {
-        throw noResponse(error, signal, method, url)
-    } finally {
-        dispose()
-    }
-}
-
-async function read(response: Response, init: HttpRequestInit | undefined, method: string | undefined, url: string): Promise<unknown> {
-    try {
-        return await readBody(response, method)
-    } catch (error) {
-        throw noResponse(error, init?.signal, method, url)
-    }
+function unreadable(response: Response, error: unknown, signal: AbortSignal | undefined, method: string | undefined, url: string): HttpError {
+    const message = `[${method ?? 'GET'}] ${JSON.stringify(url)}: response body unreadable${detail(error)}`
+    return new HttpError(response.status, undefined, message, { kind: failureKind(error, signal), cause: error })
 }
 
 export async function request<T>(url: string, init?: HttpRequestInit): Promise<T> {
     const method = init?.method?.toUpperCase()
-    const response = await send(url, init, method)
+    const options = requestInit(init, method)
+    const { signal, clearTimeout } = requestSignal(init?.signal, init?.timeout)
+    if (signal) options.signal = signal
+    let response: Response
+    try {
+        response = await (init?.fetch ?? globalThis.fetch)(url, options)
+    } catch (error) {
+        throw noResponse(error, signal, method, url)
+    } finally {
+        clearTimeout()
+    }
     if (init?.onResponse) await init.onResponse(response, { url, method: method ?? 'GET' })
-    const data = await read(response, init, method, url)
+    let data: unknown
+    try {
+        data = await readBody(response, method)
+    } catch (error) {
+        throw unreadable(response, error, signal, method, url)
+    }
     if (response.status >= 400 && response.status < 600) throw new HttpError(response.status, data)
     return data as T
 }
@@ -111,20 +114,14 @@ export function createRequest(fetchImpl?: FetchLike, options?: HttpRequestOption
         })
 }
 
-function mergeHeaders(base: Record<string, string> | undefined, extra: Record<string, string>): Record<string, string> {
-    const headers = new Headers(base)
-    for (const [name, value] of Object.entries(extra)) headers.set(name, value)
-    return Object.fromEntries(headers)
-}
-
-export function withCallOptions(httpRequest: HttpRequest, options: unknown): HttpRequest {
-    if (options === null || typeof options !== 'object') return httpRequest
-    const call = options as SdkCallOptions
+export function withCallOptions(httpRequest: HttpRequest, options: SdkCallOptions | undefined): HttpRequest {
+    if (options === undefined) return httpRequest
+    const deadline = callSignal(options)
     return (url, init) =>
         httpRequest(url, {
             ...init,
-            headers: call.headers === undefined ? init?.headers : mergeHeaders(init?.headers, call.headers),
-            signal: anySignal(init?.signal, call.signal),
-            timeout: call.timeout ?? init?.timeout,
+            headers: options.headers === undefined ? init?.headers : mergeHeaders(init?.headers, options.headers),
+            signal: anySignal(init?.signal, deadline),
+            timeout: options.timeout ? 0 : init?.timeout,
         })
 }

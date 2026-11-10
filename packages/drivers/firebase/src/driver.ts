@@ -1,4 +1,5 @@
 import { defineDriver } from 'nexdk'
+import type { SdkCallOptions } from 'nexdk'
 import { createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery, withCallOptions } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import type { FirebaseConfig, FirebaseIdPayload, FirebaseResourceApi } from './types.ts'
@@ -41,11 +42,11 @@ const updateMask = (keys: string[]): string =>
     keys.map(key => `updateMask.fieldPaths=${encodeURIComponent(fieldPath(key))}`).join('&')
 
 export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
-    get: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
-    find: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
-    create: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
-    update: (ctx: Ctx, payload: unknown, options: unknown) => Promise<unknown>
-    remove: (ctx: Ctx, payload: unknown, options: unknown) => Promise<{ success: boolean }>
+    get: (ctx: Ctx, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    find: (ctx: Ctx, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    create: (ctx: Ctx, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    update: (ctx: Ctx, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    remove: (ctx: Ctx, payload: unknown, options: SdkCallOptions | undefined) => Promise<{ success: boolean }>
 }>({
     name: 'firebase',
     setup: config => {
@@ -63,10 +64,11 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
     },
     methods: {
         get: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const query = (payload ?? {}) as Record<string, unknown>
             const headers = await ctx.buildHeaders()
             const fetchPage = (extra: Record<string, unknown>): Promise<FirestoreList> =>
-                withCallOptions(ctx.request, options)<FirestoreList>(`${collectionUrl(ctx)}${toQuery({ ...query, ...extra })}`, {
+                request<FirestoreList>(`${collectionUrl(ctx)}${toQuery({ ...query, ...extra })}`, {
                     method: 'GET',
                     headers,
                 })
@@ -87,17 +89,19 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
             return documents.map(document => decodeDocument(document))
         },
         find: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const { id } = payload as FirebaseIdPayload
-            const document = await withCallOptions(ctx.request, options)<FirestoreDocument>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
+            const document = await request<FirestoreDocument>(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'GET',
                 headers: await ctx.buildHeaders(),
             })
             return decodeDocument(document)
         },
         create: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const { id, ...fields } = (payload ?? {}) as { id?: string } & Record<string, unknown>
             const query = id === undefined ? '' : `?documentId=${encodeId(id)}`
-            const document = await withCallOptions(ctx.request, options)<FirestoreDocument>(`${collectionUrl(ctx)}${query}`, {
+            const document = await request<FirestoreDocument>(`${collectionUrl(ctx)}${query}`, {
                 method: 'POST',
                 headers: await ctx.buildHeaders(),
                 body: { fields: encodeFields(fields) },
@@ -105,12 +109,13 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
             return decodeDocument(document, WRITTEN)
         },
         update: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const { id, body } = splitId(payload)
             const fields = encodeFields(body)
             const removed = Object.keys(body).filter(key => body[key] === deleteField)
             const keys = [...Object.keys(fields), ...removed]
             if (keys.length === 0) throw new Error('update requires at least one field')
-            const document = await withCallOptions(ctx.request, options)<FirestoreDocument>(
+            const document = await request<FirestoreDocument>(
                 `${collectionUrl(ctx)}/${encodeId(id)}?${updateMask(keys)}&currentDocument.exists=true`,
                 {
                     method: 'PATCH',
@@ -121,8 +126,9 @@ export const firebaseDriver = defineDriver<FirebaseConfig, FirebaseState, {
             return decodeDocument(document, WRITTEN)
         },
         remove: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const { id } = payload as FirebaseIdPayload
-            await withCallOptions(ctx.request, options)(`${collectionUrl(ctx)}/${encodeId(id)}`, {
+            await request(`${collectionUrl(ctx)}/${encodeId(id)}`, {
                 method: 'DELETE',
                 headers: await ctx.buildHeaders(),
             })

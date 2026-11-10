@@ -1,4 +1,5 @@
 import { defineDriver } from 'nexdk'
+import type { SdkCallOptions } from 'nexdk'
 import { createRequest, encodeId, encodeResource, resolveHeaders, splitId, toQuery, withCallOptions } from '@nexdk/http'
 import type { HttpRequest } from '@nexdk/http'
 import type { NestConfig, NestIdPayload, NestResourceApi } from './types.ts'
@@ -19,11 +20,11 @@ interface NestState {
 }
 
 export const nestDriver = defineDriver<NestConfig, NestState, {
-    get: (ctx: NestState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
-    find: (ctx: NestState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
-    create: (ctx: NestState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
-    update: (ctx: NestState & { resourceName: string }, payload: unknown, options: unknown) => Promise<unknown>
-    remove: (ctx: NestState & { resourceName: string }, payload: unknown, options: unknown) => Promise<{ success: boolean }>
+    get: (ctx: NestState & { resourceName: string }, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    find: (ctx: NestState & { resourceName: string }, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    create: (ctx: NestState & { resourceName: string }, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    update: (ctx: NestState & { resourceName: string }, payload: unknown, options: SdkCallOptions | undefined) => Promise<unknown>
+    remove: (ctx: NestState & { resourceName: string }, payload: unknown, options: SdkCallOptions | undefined) => Promise<{ success: boolean }>
 }>({
     name: 'nest',
     setup: config => {
@@ -40,35 +41,40 @@ export const nestDriver = defineDriver<NestConfig, NestState, {
     },
     methods: {
         get: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}${toQuery(payload)}`
-            return withCallOptions(ctx.request, options)(url, { method: 'GET', headers: await ctx.buildHeaders() })
+            return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         find: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const { id } = payload as NestIdPayload
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}/${encodeId(id)}`
-            return withCallOptions(ctx.request, options)(url, { method: 'GET', headers: await ctx.buildHeaders() })
+            return request(url, { method: 'GET', headers: await ctx.buildHeaders() })
         },
         create: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}`
-            return withCallOptions(ctx.request, options)(url, {
+            return request(url, {
                 method: 'POST',
                 headers: await ctx.buildHeaders(),
                 body: payload ?? {},
             })
         },
         update: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const { id, body } = splitId(payload)
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}/${encodeId(id)}`
-            return withCallOptions(ctx.request, options)(url, {
+            return request(url, {
                 method: 'PATCH',
                 headers: await ctx.buildHeaders(),
                 body,
             })
         },
         remove: async (ctx, payload, options) => {
+            const request = withCallOptions(ctx.request, options)
             const { id } = payload as NestIdPayload
             const url = `${ctx.baseUrl}/${encodeResource(ctx.resourceName)}/${encodeId(id)}`
-            await withCallOptions(ctx.request, options)(url, { method: 'DELETE', headers: await ctx.buildHeaders() })
+            await request(url, { method: 'DELETE', headers: await ctx.buildHeaders() })
             return { success: true }
         },
     },

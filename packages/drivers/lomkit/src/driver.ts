@@ -60,7 +60,7 @@ export class LomkitDriver implements SdkDriver {
 
     private call<R>(
         method: string,
-        target: { resourceName: string; payload: unknown; onEvent: SdkEventHandler | undefined; options: unknown },
+        target: { resourceName: string; payload: unknown; onEvent: SdkEventHandler | undefined; options: SdkCallOptions | undefined },
         run: (send: Send) => Promise<R>,
     ): Promise<R> {
         const name = this.resources.get(target.resourceName)?.name ?? target.resourceName
