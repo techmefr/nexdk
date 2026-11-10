@@ -33,9 +33,25 @@ function holdSuccess(handler: SdkEventHandler | undefined): HeldSuccess {
     }
 }
 
+function watchErrors(handler: SdkEventHandler | undefined): { handler: SdkEventHandler | undefined; emitted: () => boolean } {
+    if (handler === undefined) return { handler, emitted: () => false }
+    let emitted = false
+    return {
+        handler: (event, data) => {
+            if (event === 'error') emitted = true
+            handler(event, data)
+        },
+        emitted: () => emitted,
+    }
+}
+
 function react(call: MethodCall, error: unknown): Promise<void> | undefined {
     if (call.onStatus === undefined) return undefined
     return reactToStatus(call.onStatus, error, { driver: call.driver.name, resource: call.resourceName, method: call.methodName })
+}
+
+function emitError(call: MethodCall, error: unknown): void {
+    call.handler?.('error', { ...toErrorPayload(error), ...callContext(call.resourceName, call.methodName) })
 }
 
 async function validated(call: MethodCall, resource: AnyResource, value: unknown, success: HeldSuccess): Promise<unknown> {
@@ -43,31 +59,14 @@ async function validated(call: MethodCall, resource: AnyResource, value: unknown
     try {
         checked = await validateResponse(resource, call.methodName, value)
     } catch (error) {
-        call.handler?.('error', { ...toErrorPayload(error), ...callContext(call.resourceName, call.methodName) })
+        emitError(call, error)
         throw error
     }
     success.release()
     return checked
 }
 
-export function callMethod(call: MethodCall, payload: unknown, extra: unknown): unknown {
-    const method = (call.driver as unknown as Record<string, (...args: unknown[]) => unknown>)[call.methodName]
-    const resource = call.validated !== undefined && VALIDATED_METHODS.has(call.methodName) ? call.validated : undefined
-    const success = resource === undefined ? { handler: call.handler, release: () => undefined } : holdSuccess(call.handler)
-
-    let result: unknown
-    try {
-        result = method.call(call.driver, call.resourceName, payload, success.handler, extra)
-    } catch (error) {
-        void react(call, error)
-        throw error
-    }
-    if (!(result instanceof Promise)) {
-        success.release()
-        return result
-    }
-
-    const settled = resource === undefined ? result : result.then(value => validated(call, resource, value, success))
+function settle(call: MethodCall, settled: Promise<unknown>): Promise<unknown> {
     const reacted = call.onStatus === undefined
         ? settled
         : settled.catch(async (error: unknown) => {
@@ -79,4 +78,34 @@ export function callMethod(call: MethodCall, payload: unknown, extra: unknown): 
         (data: unknown): SdkResult<unknown> => ({ data, error: undefined }),
         (error: unknown): SdkResult<unknown> => ({ data: undefined, error: error as SdkResultError }),
     )
+}
+
+export function failCall(call: MethodCall, error: unknown): Promise<unknown> {
+    emitError(call, error)
+    return settle(call, Promise.reject(error))
+}
+
+export function callMethod(call: MethodCall, payload: unknown, extra: unknown): unknown {
+    const method = (call.driver as unknown as Record<string, (...args: unknown[]) => unknown>)[call.methodName]
+    const resource = call.validated !== undefined && VALIDATED_METHODS.has(call.methodName) ? call.validated : undefined
+    const success = resource === undefined ? { handler: call.handler, release: () => undefined } : holdSuccess(call.handler)
+    const errors = watchErrors(success.handler)
+
+    let result: unknown
+    try {
+        result = method.call(call.driver, call.resourceName, payload, errors.handler, extra)
+    } catch (error) {
+        if (call.throwErrors) {
+            void react(call, error)
+            throw error
+        }
+        return errors.emitted() ? settle(call, Promise.reject(error)) : failCall(call, error)
+    }
+    if (!(result instanceof Promise)) {
+        success.release()
+        return result
+    }
+
+    const settled = resource === undefined ? result : result.then(value => validated(call, resource, value, success))
+    return settle(call, settled)
 }

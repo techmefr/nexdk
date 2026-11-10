@@ -50,7 +50,7 @@ describe('result object of createSdk', () => {
     it('leaves reactive methods and synchronous throws unchanged', () => {
         const { users } = makeSdk()
         expect(typeof users.stream()).toBe('function')
-        expect(() => users.sync()).toThrow('HTTP 401')
+        expect(() => makeSdk(true).users.sync()).toThrow('HTTP 401')
     })
 
     it('rejects with throw: true', async () => {

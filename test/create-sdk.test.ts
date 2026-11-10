@@ -76,7 +76,7 @@ describe('createSdk', () => {
 
     it('throws when driver does not have the requested method', () => {
         const lomkit = new MockDriver('lomkit')
-        const sdk = createSdk({ drivers: { lomkit } })
+        const sdk = createSdk({ drivers: { lomkit }, throw: true })
 
         expect(() => sdk.lomkit.users.nonExistentMethod()).toThrow(
             'Driver "lomkit" has no method "nonExistentMethod"',
@@ -140,7 +140,7 @@ describe('createSdk prototype safety', () => {
 
     it('does not let a resource call bindResource or name as a method', () => {
         const driver = new MockDriver('mock')
-        const sdk = createSdk({ drivers: { mock: driver } })
+        const sdk = createSdk({ drivers: { mock: driver }, throw: true })
         const users = sdk.mock.users as unknown as Record<string, (...args: unknown[]) => unknown>
         expect(() => users.bindResource('x')).toThrow('has no method')
         expect(driver.boundResources).toEqual([])

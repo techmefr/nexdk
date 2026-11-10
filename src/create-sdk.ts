@@ -1,4 +1,4 @@
-import { callMethod } from './call-method.ts'
+import { callMethod, failCall } from './call-method.ts'
 import { mergeEventHandlers } from './merge.ts'
 import type {
     AnyResource,
@@ -106,14 +106,15 @@ function createResourceProxy(
                 if (typeof methodName === 'symbol' || methodName in Object.prototype) return undefined
 
                 return (payload?: unknown, onEvent?: unknown, extra?: unknown) => {
-                    if (!isDriverMethodName(driver, methodName)) {
-                        throw new Error(
-                            `Driver "${driver.name}" has no method "${methodName}" for resource "${resourceName}"`,
-                        )
-                    }
-
                     const handler = mergeEventHandlers(options.globalHandler, onEvent as SdkEventHandler | undefined)
                     const call = { driver, resourceName, methodName, handler, validated, onStatus, throwErrors }
+                    if (!isDriverMethodName(driver, methodName)) {
+                        const error = new Error(
+                            `Driver "${driver.name}" has no method "${methodName}" for resource "${resourceName}"`,
+                        )
+                        if (throwErrors) throw error
+                        return failCall(call, error)
+                    }
                     return callMethod(call, payload, extra)
                 }
             },
