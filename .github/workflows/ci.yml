@@ -24,6 +24,9 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Install browser
+        run: pnpm --filter @nexdk/nuxt exec playwright-core install --with-deps chromium-headless-shell
+
       - name: Build
         run: pnpm build
 
