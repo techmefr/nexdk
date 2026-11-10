@@ -1,4 +1,6 @@
 export { createSdk } from './create-sdk.ts'
+export { defineSdkConfig } from './define-sdk-config.ts'
+export type { DefinedSdkConfig } from './define-sdk-config.ts'
 export { anySignal, callSignal, failureKind, mergeHeaders } from './call-options.ts'
 export { defineDriver, resolveHeaders } from './define-driver.ts'
 export type {
