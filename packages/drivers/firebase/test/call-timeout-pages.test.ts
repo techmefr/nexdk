@@ -10,7 +10,7 @@ function pages(): { fetch: typeof globalThis.fetch; calls: () => number } {
             calls++
             const page = calls
             init?.signal?.addEventListener('abort', () => reject(init.signal?.reason))
-            setTimeout(() => resolve(new Response(JSON.stringify({ documents: [{ name: `projects/p/databases/(default)/documents/users/${page}`, fields: {} }], nextPageToken: page < 3 ? `t${page}` : undefined }), { headers: { 'content-type': 'application/json' } })), 40)
+            setTimeout(() => resolve(new Response(JSON.stringify({ documents: [{ name: `projects/p/databases/(default)/documents/users/${page}`, fields: {} }], nextPageToken: page < 3 ? `t${page}` : undefined }), { headers: { 'content-type': 'application/json' } })), 200)
         })) as typeof globalThis.fetch
     return { fetch, calls: () => calls }
 }
@@ -19,7 +19,7 @@ describe('firebase per-call timeout on a paginated get', () => {
     it('covers the whole call, not each page', async () => {
         const { fetch, calls } = pages()
         const driver = createFirebaseDriver({ projectId: 'p', baseUrl: 'http://api.test', fetch }) as unknown as { get: Get }
-        const error = await driver.get('users', {}, undefined, { timeout: 100 }).catch(e => e)
+        const error = await driver.get('users', {}, undefined, { timeout: 500 }).catch(e => e)
         expect(calls()).toBeGreaterThanOrEqual(2)
         expect(error).toMatchObject({ status: 0, kind: 'timeout' })
     })
@@ -27,7 +27,7 @@ describe('firebase per-call timeout on a paginated get', () => {
     it('reads every page when the call has time', async () => {
         const { fetch, calls } = pages()
         const driver = createFirebaseDriver({ projectId: 'p', baseUrl: 'http://api.test', fetch }) as unknown as { get: Get }
-        const rows = await driver.get('users', {}, undefined, { timeout: 1000 })
+        const rows = await driver.get('users', {}, undefined, { timeout: 5000 })
         expect(calls()).toBe(3)
         expect(rows).toHaveLength(3)
     })
