@@ -26,22 +26,31 @@ pnpm add nexdk nuxt @nexdk/nuxt
 ```ts
 export default defineNuxtConfig({
   modules: ['@nexdk/nuxt'],
+  runtimeConfig: { public: { apiUrl: 'https://api.example.com' } },
+})
+```
+
+`app/sdk.config.ts` (the default `~/sdk.config`; `nexdk: { sdk: '~/other/path' }` moves it):
+
+```ts
+import { LomkitDriver } from '@nexdk/driver-lomkit'
+import { defineResource, defineSdkConfig } from 'nexdk'
+import type { NuxtApp } from '#app'
+import { z } from 'zod'
+
+const users = defineResource({ name: 'users', schema: z.object({ id: z.number(), name: z.string() }) })
+
+export default (nuxtApp: NuxtApp) => defineSdkConfig({
+  drivers: { lomkit: new LomkitDriver({ baseUrl: nuxtApp.$config.public.apiUrl }) },
+  resources: { lomkit: { users } },
 })
 ```
 
 ```ts
-import { lomkit } from '@nexdk/driver-lomkit'
-
-export default {
-  drivers: { lomkit: lomkit({ baseUrl: 'https://api.example.com' }) },
-}
+const { data, error } = await useSdk().lomkit.users.get({ search: { limit: 10 } })
 ```
 
-The config lives in `sdk.config.ts` at the root of the app (`nexdk: { sdk: '~/other/path' }` to move it). Its default export is an `SdkConfig`, or a function `(nuxtApp) => SdkConfig` to read the runtime config or the request.
-
-```ts
-const { data, error } = await useSdk().lomkit.users.search({})
-```
+Export a function: it runs once per Nuxt app, so every SSR request gets its own drivers, `notify` and `onStatus`. An exported object is created once per server process and shared by every request. `defineSdkConfig` (auto-imported) keeps `throw: true` literal, so the types match the runtime.
 
 ## Documentation
 

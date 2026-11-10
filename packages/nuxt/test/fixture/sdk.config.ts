@@ -26,7 +26,7 @@ async function fakeFetch(_input: RequestInfo | URL, init?: RequestInit): Promise
     return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } })
 }
 
-export default (nuxtApp: NuxtApp) => ({
+export default (nuxtApp: NuxtApp) => defineSdkConfig({
     drivers: {
         lomkit: new LomkitDriver({
             baseUrl: 'http://api.test',

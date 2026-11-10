@@ -6,5 +6,5 @@ export default defineBuildConfig({
     rollup: {
         emitCJS: false,
     },
-    externals: ['@nuxt/kit', '@nuxt/schema', 'nexdk', 'nuxt', '#app', '#build/nexdk/config.mjs'],
+    externals: ['@nuxt/kit', 'nexdk', 'nuxt', '#app', '#build/nexdk/config.mjs'],
 })

@@ -1,7 +1,7 @@
 {
     "name": "@nexdk/nuxt",
     "version": "0.0.1",
-    "description": "Nuxt module for nexdk — useSdk() and $sdk built from one config file, in SSR and on the client.",
+    "description": "Nuxt module for nexdk \u2014 useSdk() and $sdk built from one config file, in SSR and on the client.",
     "type": "module",
     "license": "MIT",
     "author": "techmefr",
@@ -45,7 +45,7 @@
         "dev": "unbuild --stub"
     },
     "dependencies": {
-        "@nuxt/kit": "^4.6.3"
+        "@nuxt/kit": "^4.0.0"
     },
     "peerDependencies": {
         "nexdk": ">=0.0.1 <1",
@@ -61,6 +61,7 @@
         "typescript": "^5.9.3",
         "unbuild": "^3.6.1",
         "vitest": "^5.0.5",
-        "vue": "^3.5.44"
+        "vue": "^3.5.44",
+        "zod": "^3.24.0"
     }
 }
