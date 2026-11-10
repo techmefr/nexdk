@@ -45,7 +45,7 @@ const sdk = createSdk({
 |--------|---------|-------|
 | `get(payload?, onEvent?)` | `POST /{resource}/search` | The payload is the body. Returns the Laravel page: `{ data: T[], current_page, last_page, per_page, total, from, to, meta }`. |
 | `mutate(payload?, onEvent?)` | `POST /{resource}/mutate` | Sends `{ mutate: [payload] }`, or `{ mutate: payload }` when `payload` is an array. Returns `{ created: key[], updated: key[] }`. |
-| `delete({ resources }, onEvent?)` | `DELETE /{resource}` | Sends `{ resources: [...] }`. Returns `{ success: true }`. |
+| `delete({ resources }, onEvent?)` | `DELETE /{resource}` | Sends `{ resources: [...] }`. Returns the deleted rows the server answers, `{ data, meta }` (`LomkitDeleteResult<T>`). |
 | `restore({ resources }, onEvent?)` | `POST /{resource}/restore` | Needs `withSoftDeletes()` on the Laravel route. Returns `{ data: T[], meta }`, the restored rows. |
 | `forceDelete({ resources }, onEvent?)` | `DELETE /{resource}/force` | Same route rule. Removes live and trashed rows for good. Returns `{ data: T[], meta }`. |
 | `actions({ name, ...body }, onEvent?)` | `POST /{resource}/actions/{name}` | `body` is `search`, `resources` or `fields` depending on the action. Returns `{ data: { impacted } }`. |

@@ -18,3 +18,8 @@ Emit `error` with `{ message, status, errors, code?, details?, hint? }` (`toErro
 
 ## Build/test
 `pnpm --filter @nexdk/driver-supabase build` · `... test`.
+
+## Call options and events
+- Methods pass their name to `traceCall`. The per-call options go through `src/call-options.ts`: `signal` and `timeout` (combined) to `abortSignal`, `headers` to `setHeader`; nothing is called without options.
+- No `onResponse`: supabase-js turns fetch errors into result objects, so a hook exception could not stay the error of the call.
+- `remove` keeps `{ success: true }`: Postgrest answers no row with the default `return=minimal`.

@@ -30,6 +30,8 @@ const sdk = createSdk({
 
 `fetch` is optional (type `FetchLike`, any function `(input, init?) => Promise<Response>`) and is forwarded to supabase-js as `global.fetch`, so every request of the client goes through it.
 
+Each method takes per-call options `{ signal, timeout, headers }` as third argument: `signal` and `timeout` go to `abortSignal`, `headers` to the query. There is no `onResponse` option and errors carry no `kind`: supabase-js turns fetch failures into result objects.
+
 ## Methods
 
 The resource name is the table name.
@@ -39,7 +41,7 @@ The resource name is the table name.
 | `get(payload?, onEvent?)` | `select *`. Every `payload` key becomes an equality filter. Returns `{ data: T[] }`. |
 | `insert(payload?, onEvent?)` | Inserts the payload. Returns `{ data: T[] }`. |
 | `update({ id, ...fields }, onEvent?)` | Updates the row with that `id`. Returns `{ data: T[] }`. |
-| `remove({ id }, onEvent?)` | Deletes the row with that `id`. Returns `{ success: true }`. |
+| `remove({ id }, onEvent?)` | Deletes the row with that `id`. Returns `{ success: true }`: Postgrest answers no row by default (`return=minimal`). |
 | `subscribe(payload?, onEvent?)` | Listens to `postgres_changes` on the table. Returns an unsubscribe function. |
 
 `subscribe` accepts `{ room_id }` to filter on `room_id`. It must match `[\w-]+`, or the call throws. It emits `connected`, `disconnected` and `data`.

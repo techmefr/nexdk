@@ -8,7 +8,7 @@ Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (
 - `nexdk`: `peerDependency` (`>=0.0.1 <1`) + devDependency `workspace:*`.
 
 ## Native fetch parity
-`request` replaced `ofetch` and keeps its behaviour: plain objects, arrays and `toJSON` bodies of PATCH/POST/PUT/DELETE are JSON-encoded with `content-type` and `accept` defaults (`application/x-www-form-urlencoded` is honoured), stream bodies get `duplex: 'half'`, `timeout` only applies when no `signal` is given and is cleared once the response headers arrive, the body is parsed by content type (missing or JSON type: lenient JSON parse in `src/body.ts` that drops `__proto__` and `constructor.prototype` keys, `text/*`: text, otherwise blob), 101/204/205/304 and HEAD have no body, and only 4xx/5xx throw.
+`request` replaced `ofetch` and keeps its behaviour: plain objects, arrays and `toJSON` bodies of PATCH/POST/PUT/DELETE are JSON-encoded with `content-type` and `accept` defaults (`application/x-www-form-urlencoded` is honoured), stream bodies get `duplex: 'half'`, `timeout` is cleared once the response headers arrive, the body is parsed by content type (missing or JSON type: lenient JSON parse in `src/body.ts` that drops `__proto__` and `constructor.prototype` keys, `text/*`: text, otherwise blob), 101/204/205/304 and HEAD have no body, and only 4xx/5xx throw.
 
 ## Behaviour notes
 - No retry: one driver call is one request and one `request`/`success`/`error` sequence.
@@ -21,7 +21,9 @@ Shared REST toolkit for `defineDriver`-based drivers: `request<T>(url, init?)` (
 
 ## Error shapes and options
 - `HttpError.message` is the first usable backend message (`message` string or array joined by `, `, `detail`, `error.message`, `error.details`, string `error`, `title`), else `HTTP {status}`. `errors` is normalized to `Record<string, string[]>` from `errors`, API Platform `violations`, Strapi `error.details.errors` or the PocketBase `data` map, else `undefined`. `data` is the raw body. `toErrorPayload` no longer falls back to `data` for an `SdkError`, so the thrown error and the `error` event carry the same `status` and `errors`.
-- `timeout` and `signal` are optional on `request` and `createRequest(fetch, { timeout, signal })`; an abort is an `HttpError` with status 0.
+- `timeout`, `signal` and `onResponse` are optional on `request` and `createRequest(fetch, { timeout, signal, onResponse })`. `timeout` and `signal` are combined (`AbortSignal.any`); a per-request `signal` is combined with the default one, a per-request `timeout` or `onResponse` wins. A failure without a response is an `HttpError` with status 0 and `kind` `timeout`, `abort` or `network` (`src/signals.ts`), the original error in `cause`; a 4xx/5xx has `kind` `http`.
+- `onResponse(response, { url, method })` runs on every response before `readBody`, awaited; its throw is the error of the call, never wrapped.
+- `withCallOptions(request, options)` applies the per-call `SdkCallOptions` of a driver method: headers merged case-insensitively over the driver ones, timeout wins, signals combined.
 - `toQuery` encodes a space as `%20`. `encodeResource(name)` applies the `encodeId` guard to resource names.
 
 ## Build/test

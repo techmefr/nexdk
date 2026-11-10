@@ -51,10 +51,10 @@ function defineDriver<TConfig, TState, TMethods>(
 ## `traceCall(call, run)`
 
 ```ts
-function traceCall<T>(call: { emit, resource, payload, describeError? }, run: () => T): T
+function traceCall<T>(call: { emit, resource, method?, payload, describeError? }, run: () => T): T
 ```
 
-Emits `request`, runs `run`, then emits `success` or `error` once. `defineDriver` uses it; a hand-written driver wraps each method in it.
+Emits `request` (`{ resource, method, payload }`), runs `run`, then emits `success` (`{ resource, method, data }`) or `error` (the error payload plus `resource` and `method`) once. `method` is omitted from the payloads when not given. `defineDriver` uses it; a hand-written driver wraps each method in it.
 
 ## `resolveHeaders(headers)`
 
@@ -73,13 +73,14 @@ class SdkError extends Error {
   readonly status: number | undefined
   readonly errors: unknown
   readonly data: unknown
-  constructor(message: string, init?: { status?: number; errors?: unknown; data?: unknown })
+  readonly kind: SdkErrorKind | undefined
+  constructor(message: string, init?: { status?: number; errors?: unknown; data?: unknown; kind?: SdkErrorKind; cause?: unknown })
 }
 
-function toErrorPayload(error: unknown): { message: string; status?: number; errors?: unknown }
+function toErrorPayload(error: unknown): { message: string; status?: number; errors?: unknown; kind?: SdkErrorKind }
 ```
 
-The typed error thrown by every driver. `toErrorPayload` builds the `error` event payload: `status` when the error has a numeric `status`, `errors` from `error.errors`, else `error.data` for an error with a status. See [Events](/nexdk/guides/events/#error-payload).
+The typed error thrown by every driver. `toErrorPayload` builds the `error` event payload: `status` when the error has a numeric `status`, `errors` from `error.errors`, else `error.data` for an error with a status, `kind` when the error has a string `kind`. See [Events](/nexdk/guides/events/#error-payload).
 
 ## Types
 
@@ -97,7 +98,11 @@ The typed error thrown by every driver. `toErrorPayload` builds the `error` even
 | `DriverDefinition`, `DriverMethod`, `DriverMethodContext`, `DefinedDriver` | Types behind `defineDriver`. |
 | `HeadersResolver` | A record, or a function returning one. |
 | `FetchLike` | `(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>`: the type of the `fetch` option of the REST drivers. Narrower than `typeof fetch`, so `mock.fetch` and the `fetch` of bun-types are accepted without a cast. |
-| `ErrorEventPayload`, `SdkErrorInit` | The `error` event payload `{ message, status?, errors? }`, and the init of `SdkError`. |
+| `ErrorEventPayload`, `SdkErrorInit` | The `error` event payload `{ message, status?, errors?, kind?, resource?, method? }`, and the init of `SdkError`. |
+| `RequestEventPayload`, `SuccessEventPayload` | `{ resource, method?, payload }` and `{ resource, method?, data }`. |
+| `SdkErrorKind` | `'timeout' \| 'abort' \| 'network' \| 'http'`. |
+| `SdkCallOptions` | `{ signal?, timeout?, headers? }`: the third argument of a resource method. |
+| `ResponseHook`, `ResponseRequest` | `(response, { url, method }) => void \| Promise<void>`: the `onResponse` option of the HTTP drivers. |
 | `StatusHandlers`, `StatusHandler`, `StatusContext`, `StatusError` | The `onStatus` option, a handler, the object it receives and its `error`. |
 | `SdkResult<T>`, `SdkResultError`, `SdkReturn<TThrow, T>` | The `{ data, error }` union, its error, and `T` or `SdkResult<T>` depending on `throw`. |
 | `ResourceApiKinds<T>`, `ThrowingResourceApiKinds<T>` | The registries a driver augments to type its API, by default and with `throw: true`. See [End-to-end typing](/nexdk/guides/writing-a-driver/#end-to-end-typing). |

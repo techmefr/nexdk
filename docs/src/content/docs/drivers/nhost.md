@@ -43,6 +43,8 @@ const sdk = createSdk({
 
 `fetch` is optional: pass any function `(input, init?) => Promise<Response>` (the `FetchLike` type) and every HTTP query and mutation goes through it instead of `globalThis.fetch`. WebSocket subscriptions are not affected.
 
+`onResponse(response, { url, method })` is optional and runs on every HTTP response before the status check; a throw inside it is the error of the call. Each method takes `{ fragment, signal, timeout, headers }` as third argument: the call headers win over the driver ones, `signal` and `timeout` abort the request. nhost errors carry no `kind`.
+
 ## Methods
 
 | Method | GraphQL operation | Notes |

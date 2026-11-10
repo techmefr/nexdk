@@ -60,7 +60,7 @@ const { data: articles } = await sdk.strapi.articles.get({
 
 ## Errors
 
-The resource name and the id are URL-encoded. A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`. The `message` is the backend message when there is one and `errors` is normalized to `{ field: [message] }` when possible (see [`@nexdk/http`](/nexdk/packages/http/)); `data` keeps the raw body. The thrown error and the event carry the same `status` and `errors`. The `timeout` (milliseconds) and `signal` (`AbortSignal`) config options abort a request with a status 0 error; neither is set by default. A resource name that is empty, `.` or `..` is refused like an id.
+The resource name and the id are URL-encoded. A failure emits `error` with `{ message, status, errors }`, then throws an `HttpError`. The `message` is the backend message when there is one and `errors` is normalized to `{ field: [message] }` when possible (see [`@nexdk/http`](/nexdk/packages/http/)); `data` keeps the raw body. The thrown error and the event carry the same `status` and `errors`. The `timeout` (milliseconds) and `signal` (`AbortSignal`) config options abort a request with a status 0 error (`kind` `timeout` or `abort`); neither is set by default. Each method also takes per-call options `{ signal, timeout, headers }` as third argument, and `onResponse(response, { url, method })` in the config runs on every response before parsing (see [`@nexdk/http`](/nexdk/packages/http/)). A resource name that is empty, `.` or `..` is refused like an id.
 
 ## Totals
 

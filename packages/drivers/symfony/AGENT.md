@@ -17,7 +17,7 @@ API Platform (Symfony) driver over Hydra / JSON-LD: `get`, `find`, `create`, `up
 Errors: `error` with `{ message, status, errors }`, then an `HttpError` (an `SdkError` with `status`, `errors`, `data`) is thrown. `config.fetch` (optional) is given to `createRequest` and kept in the driver state as `ctx.request`: always call `ctx.request`, never the global `request`.
 
 ## Errors and options
-- `message` is the backend message when identifiable and `errors` is normalized (see `@nexdk/http`); the thrown error and the `error` event carry the same `status` and `errors`. `config.timeout` and `config.signal` go to `createRequest`. A resource name that is empty, `.` or `..` throws `Invalid resource name`.
+- `message` is the backend message when identifiable and `errors` is normalized (see `@nexdk/http`); the thrown error and the `error` event carry the same `status` and `errors`. `config.timeout`, `config.signal` and `config.onResponse` go to `createRequest`; the per-call options (third argument) go through `withCallOptions`. A resource name that is empty, `.` or `..` throws `Invalid resource name`.
 
 - `get` returns the members with a non-enumerable `pagination` property `{ totalItems, view }`. `update` always sends `application/merge-patch+json`, whatever `headers` contains.
 

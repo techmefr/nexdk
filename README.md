@@ -40,7 +40,7 @@ Driver-based SDK. Talk to REST, GraphQL and WebSocket backends through **one res
 | ⚡ **Realtime-ready** | Subscriptions and events share the same grammar. |
 
 ```
-sdk.[driver].[resource].[method](payload?, onEvent?, extra?)
+sdk.[driver].[resource].[method](payload?, onEvent?, options?)
 ```
 
 ## Install
@@ -91,9 +91,10 @@ A call does not throw: it resolves `{ data, error }`. Once `error` is checked, `
 - **`defineResource({ name, schema, fragments?, relations? })`**: declares a resource. `schema` is any [Standard Schema](https://standardschema.dev) validator (Zod, Valibot, ArkType).
 - **`createSdk({ drivers, resources?, notify?, validateResponses?, onStatus?, throw? })`**: binds resources to drivers and returns the typed SDK. `validateResponses` (off by default) checks answers against the schemas, see [Standard Schema](https://techmefr.github.io/nexdk/guides/standard-schema/#validating-responses-opt-in). `notify` runs on every call, together with the per-call `onEvent`. Each handler is isolated: if one throws, the other still runs.
 - **`defineDriver({ name, setup, methods })`**: authors a driver. The core emits `request`, `success` and `error`, once per call; a class driver wraps its calls in `traceCall`.
-- **`extra`** (third argument): opaque to the core. nhost reads `{ fragment }` from it.
+- **`options`** (third argument): `{ signal?, timeout?, headers? }` for this call, over the driver config; the call and driver signals are combined. nhost also reads `{ fragment }`.
+- **`onResponse(response, { url, method })`** (config of the HTTP drivers): runs on every response before parsing, to read headers or refresh a token.
 
-Errors: the `error` event carries `{ message, status?, errors? }`, `onStatus` runs, then the call resolves `{ data: undefined, error }` with the typed `SdkError` (`status`, `errors`, `data`), or rejects with it under `throw: true`. A driver called directly, without `createSdk`, rejects. REST drivers take an optional `fetch` in their config to inject a mock or a custom transport. `createSdk` refuses a resource key that collides with a member of its driver (`resources`, `name`, `get`...).
+Errors: the `error` event carries `{ message, status?, errors?, kind?, resource, method }`, `onStatus` runs, then the call resolves `{ data: undefined, error }` with the typed `SdkError` (`status`, `errors`, `data`, `kind`: `timeout`, `abort`, `network` or `http`), or rejects with it under `throw: true`. An unknown method or a synchronous driver throw resolves the same way. A driver called directly, without `createSdk`, rejects. REST drivers take an optional `fetch` in their config to inject a mock or a custom transport. `createSdk` refuses a resource key that collides with a member of its driver (`resources`, `name`, `get`...).
 
 ## Drivers
 
@@ -108,7 +109,7 @@ Official drivers live in `packages/drivers/` and peer-depend on `nexdk` only.
 - [`@nexdk/driver-strapi`](packages/drivers/strapi): Strapi v5 REST
 - [`@nexdk/driver-firebase`](packages/drivers/firebase): Cloud Firestore REST
 
-Shared packages: [`@nexdk/http`](packages/http) (REST toolkit) and [`@nexdk/hooks`](packages/hooks) (Vue forms).
+Shared packages: [`@nexdk/http`](packages/http) (REST toolkit), [`@nexdk/hooks`](packages/hooks) (Vue forms) and [`@nexdk/nuxt`](packages/nuxt) (Nuxt module: `useSdk()` and `$sdk`).
 
 The pocketbase, strapi and firebase drivers follow every page on `get`, unless you set the page size or the page yourself.
 

@@ -5,7 +5,7 @@ description: The unified event contract every driver follows.
 
 Every call emits a subset of `request`, `success`, `error`, `data`, `complete`, `connected` and `disconnected`.
 
-- Async methods emit `request`, then `success` or `error`.
+- Async methods emit `request` (`{ resource, method, payload }`), then `success` (`{ resource, method, data }`) or `error`.
 - Reactive methods (subscriptions) return an unsubscribe function and emit `data`, `connected`, `disconnected` and, for a subscription ended by the server, `complete`.
 
 The core emits `request`, `success` and `error`, once per call (`defineDriver`, or `traceCall` in a class driver). Drivers only do the transport and throw on failure; through `createSdk` the call then resolves `{ data: undefined, error }`, or rejects with `throw: true`. A failure is never swallowed.
@@ -18,9 +18,11 @@ sdk.lomkit.users.get({}, (event, data) => {
 
 ## Error payload
 
-The `error` event carries `{ message, status?, errors? }`; the error itself is a typed `SdkError` (exported from `nexdk`) carrying `status`, `errors` and `data`.
+The `error` event carries `{ message, status?, errors?, kind?, resource, method }`; the error itself is a typed `SdkError` (exported from `nexdk`) carrying `status`, `errors` and `data`.
 
-- `status` is the HTTP status, set when the error has one (0 for a network failure).
+- `status` is the HTTP status, set when the error has one (0 for a timeout, an abort or a network failure).
+- `kind` is `timeout`, `abort`, `network` or `http` for an `HttpError` (`error.cause` keeps the original error).
+- `resource` is the resource name the driver targets, `method` the called method (omitted when a hand-written driver does not pass it to `traceCall`).
 - `errors` is the field-error map of the response body when it has an `errors` key (Laravel 422: `{ email: ['…'] }`), else the raw response body.
 - `data` (on the error only) is the parsed response body.
 

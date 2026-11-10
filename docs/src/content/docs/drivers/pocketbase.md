@@ -35,6 +35,8 @@ const { data: posts } = await sdk.pocketbase.posts.get({ sort: '-created' })
 
 `fetch` is optional: pass any function `(input, init?) => Promise<Response>` (the `FetchLike` type, exported by `nexdk` and `@nexdk/http`) and every HTTP request goes through it instead of `globalThis.fetch`, for example `mock.fetch` from shamock or the `fetch` of bun-types, without a cast.
 
+`timeout`, `signal` and `onResponse(response, { url, method })` are optional and work as in [`@nexdk/http`](/nexdk/packages/http/): a timeout or an abort fails with status 0 and `kind` `timeout` or `abort`. Each method also takes per-call options `{ signal, timeout, headers }` as third argument.
+
 
 
 The resource name is the collection name.

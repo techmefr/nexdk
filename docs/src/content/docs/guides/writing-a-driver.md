@@ -110,7 +110,7 @@ type HeadersResolver =
 
 ## Authoring by hand
 
-You can implement `SdkDriver` yourself, as `@nexdk/driver-lomkit` and `@nexdk/driver-supabase` do. You then own the resource map, and wrap each method in `traceCall({ emit: onEvent, resource, payload }, () => send())` from `nexdk` so the core emits the events. Prefer `defineDriver` unless you need a shape it cannot express. `@nexdk/driver-nest` is the reference.
+You can implement `SdkDriver` yourself, as `@nexdk/driver-lomkit` and `@nexdk/driver-supabase` do. You then own the resource map, and wrap each method in `traceCall({ emit: onEvent, resource, method, payload }, () => send())` from `nexdk` so the core emits the events. Prefer `defineDriver` unless you need a shape it cannot express. `@nexdk/driver-nest` is the reference.
 
 ## End-to-end typing
 
