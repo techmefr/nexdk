@@ -11,6 +11,7 @@ import type {
     LomkitMutateResult,
 } from './result-types.ts'
 
+export type { FetchLike } from '@nexdk/http'
 export type * from './gate-types.ts'
 export type * from './search-types.ts'
 export type * from './mutation-types.ts'

@@ -6,5 +6,5 @@
             "#app": ["./node_modules/nuxt/dist/app/index.d.ts"]
         }
     },
-    "include": ["src", "types"]
+    "include": ["src", "test/**/*.test-d.ts", "types"]
 }
