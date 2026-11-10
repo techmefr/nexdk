@@ -58,6 +58,7 @@ describe('supabase typed errors', () => {
                     hint: 'check policy',
                     status: 403,
                     errors: { code: '42501', details: 'rls', hint: 'check policy' },
+                    kind: 'http',
                     resource: 'messages',
                     method: 'get',
                 },
