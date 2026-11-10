@@ -1,0 +1,66 @@
+{
+    "name": "@nexdk/nuxt",
+    "version": "0.0.1",
+    "description": "Nuxt module for nexdk — useSdk() and $sdk built from one config file, in SSR and on the client.",
+    "type": "module",
+    "license": "MIT",
+    "author": "techmefr",
+    "homepage": "https://github.com/techmefr/nexdk/tree/main/packages/nuxt#readme",
+    "bugs": {
+        "url": "https://github.com/techmefr/nexdk/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/techmefr/nexdk.git",
+        "directory": "packages/nuxt"
+    },
+    "keywords": [
+        "nuxt",
+        "nuxt-module",
+        "sdk",
+        "nexdk"
+    ],
+    "engines": {
+        "node": ">=22"
+    },
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "types": "./dist/module.d.mts",
+            "import": "./dist/module.mjs",
+            "default": "./dist/module.mjs"
+        }
+    },
+    "main": "./dist/module.mjs",
+    "types": "./dist/module.d.mts",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "unbuild",
+        "test": "vitest run",
+        "dev": "unbuild --stub"
+    },
+    "dependencies": {
+        "@nuxt/kit": "^4.6.3"
+    },
+    "peerDependencies": {
+        "nexdk": ">=0.0.1 <1",
+        "nuxt": "^4.0.0"
+    },
+    "devDependencies": {
+        "@nexdk/driver-lomkit": "workspace:*",
+        "@nexdk/http": "workspace:*",
+        "@nuxt/test-utils": "^4.3.4",
+        "nexdk": "workspace:*",
+        "nuxt": "^4.6.3",
+        "playwright-core": "1.64.1",
+        "typescript": "^5.9.3",
+        "unbuild": "^3.6.1",
+        "vitest": "^5.0.5",
+        "vue": "^3.5.44"
+    }
+}

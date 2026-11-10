@@ -17,7 +17,7 @@ function listPackages(): PackageInfo[] {
             dir: `packages/drivers/${name}`,
             docPage: `docs/src/content/docs/drivers/${name}.md`,
         })),
-        ...['http', 'hooks'].map((name) => ({
+        ...['http', 'hooks', 'nuxt'].map((name) => ({
             dir: `packages/${name}`,
             docPage: `docs/src/content/docs/packages/${name}.md`,
         })),

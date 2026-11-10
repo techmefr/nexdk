@@ -10,6 +10,7 @@ The workspace is split into small packages, each usable on its own. None is publ
 | `nexdk` | The SDK: `createSdk`, `defineResource`, `defineDriver`, `resolveHeaders` and the types. See the [API reference](/nexdk/reference/nexdk/). | nothing |
 | [`@nexdk/http`](/nexdk/packages/http/) | REST toolkit: `request`, `createRequest`, `HttpError`, `toQuery`, `splitId`, `encodeId`. | `nexdk` (peer) |
 | [`@nexdk/hooks`](/nexdk/packages/hooks/) | `useResourceForm` (Vue forms with Zod). | `nexdk`, `vue`, `zod` 3 or 4 (peers) |
+| [`@nexdk/nuxt`](/nexdk/packages/nuxt/) | Nuxt module: `useSdk()` and `$sdk` from one config file. | `@nuxt/kit`; `nexdk`, `nuxt` (peers) |
 | [`@nexdk/driver-lomkit`](/nexdk/drivers/lomkit/) | Laravel + Lomkit (`search`, `mutate`, `delete`). | `nexdk`, `@nexdk/http` (peers) |
 | [`@nexdk/driver-nhost`](/nexdk/drivers/nhost/) | Hasura GraphQL and subscriptions. | `nexdk` (peer) |
 | [`@nexdk/driver-supabase`](/nexdk/drivers/supabase/) | Supabase queries and `postgres_changes`. | `nexdk`, `@supabase/supabase-js` (peers) |
