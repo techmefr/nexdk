@@ -50,7 +50,7 @@ const { data: articles } = await sdk.strapi.articles.get({
 
 ## Pagination
 
-`get` follows every page (`meta.pagination.pageCount`). If `pagination` sets `page`, `pageSize`, `start` or `limit`, it makes one request and returns that page only. Strapi caps `pagination.pageSize` and `pagination.limit` at 100: a larger value is silently reduced by the server. An empty `$in` or `$notIn` list is sent as `filters[field][$in]=`, which Strapi reads as an empty list.
+`get` follows every page (`meta.pagination.pageCount`). If `pagination` sets `page`, `pageSize`, `start` or `limit`, it makes one request and returns that page only. Strapi caps `pagination.pageSize` and `pagination.limit` at 100 (`api.rest.maxLimit` in `config/api` changes it): a larger value is silently reduced by the server, with no error, and the answer has fewer rows than asked. Use `get` without `pagination` to read everything, or page through with `page` and a `pageSize` of 100 at most. Query strings are bracket-encoded with a space sent as `%20`, like `@nexdk/http`. An empty `$in` or `$notIn` list is sent as `filters[field][$in]=`, which Strapi reads as an empty list.
 
 ## Query serialization
 

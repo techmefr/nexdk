@@ -15,7 +15,7 @@ Strapi v5 REST driver (`/api/{resource}`): `get`, `find`, `create`, `update` (PU
 ## Errors and options
 - `message` is the backend message when identifiable and `errors` is normalized (see `@nexdk/http`); the thrown error and the `error` event carry the same `status` and `errors`. `config.timeout`, `config.signal` and `config.onResponse` go to `createRequest`; the per-call options (third argument) go through `withCallOptions`. A resource name that is empty, `.` or `..` throws `Invalid resource name`.
 
-- An empty `$in` or `$notIn` list is encoded as `filters[f][$in]=`. Strapi silently caps `pagination.pageSize` and `limit` at 100.
+- An empty `$in` or `$notIn` list is encoded as `filters[f][$in]=`. Strapi silently caps `pagination.pageSize` and `limit` at 100 (`api.rest.maxLimit`), documented in the driver page. `toStrapiQuery` encodes a space as `%20` (aligned on `@nexdk/http` `toQuery`; Strapi `qs` reads both).
 
 ## Build/test
 `pnpm --filter @nexdk/driver-strapi build` · `... test`. Tests stub the global `fetch` and inject one through `config.fetch` (`test/fetch-and-errors.test.ts`).
