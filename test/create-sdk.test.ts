@@ -146,6 +146,16 @@ describe('createSdk prototype safety', () => {
         expect(driver.boundResources).toEqual([])
     })
 
+    it('returns an error result for bindResource in the default mode without calling it', async () => {
+        const driver = new MockDriver('mock')
+        const sdk = createSdk({ drivers: { mock: driver } })
+        const users = sdk.mock.users as unknown as Record<string, (...args: unknown[]) => Promise<{ data: unknown, error: { message: string } | null }>>
+        const result = await users.bindResource('x')
+        expect(result.data).toBeUndefined()
+        expect(result.error?.message).toContain('has no method')
+        expect(driver.boundResources).toEqual([])
+    })
+
     it('still dispatches own and class-prototype driver methods', async () => {
         const sdk = createSdk({ drivers: { mock: new MockDriver('mock') }, throw: true })
         await expect(sdk.mock.users.get({ id: 1 })).resolves.toEqual({ id: 1, fromDriver: 'mock' })
