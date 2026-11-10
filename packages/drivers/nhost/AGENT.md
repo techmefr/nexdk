@@ -27,4 +27,4 @@ Emit `error`, then throw an `SdkError`. A GraphQL `errors` array throws even wit
 ## Call options and onResponse
 - `GraphQLOptions` extends `SdkCallOptions`: `{ fragment, signal, timeout, headers }` (third argument of every method, `updateWhere` and `deleteById` included). `createExecute` merges the headers case-insensitively and combines `signal` with `AbortSignal.timeout`.
 - `config.onResponse(response, { url, method: 'POST' })` runs before the status check; its throw is the error of the call.
-- nhost does not use `@nexdk/http`: its errors carry no `kind`.
+- nhost does not use `@nexdk/http`; `src/errors.ts` gives its errors a `status` and a `kind`: HTTP failure `kind` `http`; GraphQL errors status from `extensions.code` (`statusByCode`, first known code, else 500), `kind` `http`; fetch throw status 0, `kind` `timeout`/`abort`/`network`, `cause` kept.

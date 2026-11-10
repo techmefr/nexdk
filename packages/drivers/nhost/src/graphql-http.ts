@@ -1,5 +1,6 @@
-import { SdkError, resolveHeaders } from 'nexdk'
+import { resolveHeaders } from 'nexdk'
 import type { SdkCallOptions } from 'nexdk'
+import { failureError, graphQLError, toHttpError } from './errors.ts'
 import type { NhostConfig, NhostQueryResult } from './types.ts'
 
 export type Execute = <T>(
@@ -27,14 +28,21 @@ export function createExecute(config: NhostConfig): Execute {
         ...(config.adminSecret ? { 'x-hasura-admin-secret': config.adminSecret } : {}),
         ...(await resolveHeaders(config.headers)),
     })
+    const post = async (init: RequestInit, signal: AbortSignal | undefined): Promise<Response> => {
+        try {
+            return await (config.fetch ?? fetch)(config.endpoint, init)
+        } catch (error) {
+            throw failureError(error, signal)
+        }
+    }
     return async <T>(document: string, variables?: Record<string, unknown>, options?: SdkCallOptions) => {
         const signal = callSignal(options)
-        const response = await (config.fetch ?? fetch)(config.endpoint, {
+        const response = await post({
             method: 'POST',
             headers: callHeaders(await buildHeaders(), options?.headers),
             body: JSON.stringify({ query: document, variables }),
             ...(signal === undefined ? {} : { signal }),
-        })
+        }, signal)
         if (config.onResponse) await config.onResponse(response, { url: config.endpoint, method: 'POST' })
         if (!response.ok) throw await toHttpError(response)
         return (await response.json()) as NhostQueryResult<T>
@@ -42,19 +50,5 @@ export function createExecute(config: NhostConfig): Execute {
 }
 
 export function assertNoGraphQLErrors(raw: NhostQueryResult<unknown>): void {
-    if (raw.errors && raw.errors.length > 0) {
-        throw new SdkError(raw.errors.map(error => error.message).join('; '), { errors: raw.errors, data: raw })
-    }
-}
-
-async function toHttpError(response: Response): Promise<SdkError> {
-    let data: unknown
-    try {
-        data = await response.json()
-    } catch {
-        data = undefined
-    }
-    const body = data !== null && typeof data === 'object' ? (data as Record<string, unknown>) : undefined
-    const errors = body?.errors
-    return new SdkError(`HTTP ${response.status}`, { status: response.status, errors, data })
+    if (raw.errors && raw.errors.length > 0) throw graphQLError(raw.errors, raw)
 }

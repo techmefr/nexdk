@@ -26,6 +26,6 @@ describe('nhost per-call options and onResponse', () => {
             new Promise<Response>((_resolve, reject) => init?.signal?.addEventListener('abort', () => reject(init.signal?.reason))),
         )
         const driver = new NhostDriver({ endpoint, fetch }) as unknown as { deleteById: Call }
-        await expect(driver.deleteById('users', { id: '1' }, undefined, { timeout: 5 })).rejects.toMatchObject({ name: 'TimeoutError' })
+        await expect(driver.deleteById('users', { id: '1' }, undefined, { timeout: 5 })).rejects.toMatchObject({ name: 'SdkError', status: 0, kind: 'timeout', cause: { name: 'TimeoutError' } })
     })
 })

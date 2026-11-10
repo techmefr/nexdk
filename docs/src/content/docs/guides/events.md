@@ -26,7 +26,7 @@ The `error` event carries `{ message, status?, errors?, kind?, resource, method 
 - `errors` is the field-error map of the response body when it has an `errors` key (Laravel 422: `{ email: ['…'] }`), else the raw response body.
 - `data` (on the error only) is the parsed response body.
 
-`@nexdk/http` throws `HttpError`, a subclass of `SdkError`. lomkit, nest, symfony, pocketbase, strapi and firebase use it. nhost throws an `SdkError` (HTTP failures carry `status`, GraphQL errors carry `errors`). supabase throws `SupabaseQueryError`, an `SdkError` whose `errors` is `{ code, details, hint }`.
+`@nexdk/http` throws `HttpError`, a subclass of `SdkError`. lomkit, nest, symfony, pocketbase, strapi and firebase use it. nhost throws an `SdkError` (HTTP failures carry `status`, GraphQL errors carry `errors` and a status mapped from `extensions.code`, 500 when unknown; see [nhost](/nexdk/drivers/nhost/)). supabase throws `SupabaseQueryError`, an `SdkError` whose `errors` is `{ code, details, hint }`.
 
 ```ts
 await sdk.lomkit.users.mutate({ operation: 'create', attributes: {} }, (event, data) => {
