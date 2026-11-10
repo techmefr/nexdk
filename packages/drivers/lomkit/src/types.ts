@@ -36,7 +36,7 @@ export interface LomkitResourceApi<T, TThrow extends boolean = false> {
     delete(
         payload: LomkitBulkPayload,
         onEvent?: SdkEventHandler,
-    ): Promise<SdkReturn<TThrow, LomkitDeleteResult>>
+    ): Promise<SdkReturn<TThrow, LomkitDeleteResult<T>>>
     restore(
         payload: LomkitBulkPayload,
         onEvent?: SdkEventHandler,

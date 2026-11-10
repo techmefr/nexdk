@@ -89,15 +89,14 @@ export class LomkitDriver implements SdkDriver {
         return this.call(resourceName, payload, onEvent, url => this.sendRequest<LomkitMutateResult>(`${url}/mutate`, 'POST', body))
     }
 
-    async delete(
+    async delete<T>(
         resourceName: string,
         payload?: unknown,
         onEvent?: SdkEventHandler,
-    ): Promise<LomkitDeleteResult> {
-        return this.call(resourceName, payload, onEvent, async url => {
-            await this.sendRequest(url, 'DELETE', payload)
-            return { success: true }
-        })
+    ): Promise<LomkitDeleteResult<T>> {
+        return this.call(resourceName, payload, onEvent, url =>
+            this.sendRequest<LomkitDeleteResult<T>>(url, 'DELETE', payload),
+        )
     }
 
     async restore<T>(

@@ -17,14 +17,12 @@ export interface LomkitMutateResult {
     updated: LomkitKey[]
 }
 
-export interface LomkitDeleteResult {
-    success: boolean
-}
-
 export interface LomkitBulkResult<T> {
     data: T[]
     meta?: LomkitMeta
 }
+
+export type LomkitDeleteResult<T = Record<string, unknown>> = LomkitBulkResult<T>
 
 export interface LomkitActionResult {
     data: {

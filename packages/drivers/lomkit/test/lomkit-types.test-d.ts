@@ -166,7 +166,7 @@ describe('mutate relations', () => {
 
 describe('other operations', () => {
     it('types delete, restore, forceDelete, actions and details', () => {
-        expectTypeOf(sdk.lomkit.users.delete).returns.resolves.toEqualTypeOf<LomkitDeleteResult>()
+        expectTypeOf(sdk.lomkit.users.delete).returns.resolves.toEqualTypeOf<LomkitDeleteResult<User>>()
         expectTypeOf(sdk.lomkit.users.restore).returns.resolves.toEqualTypeOf<LomkitBulkResult<User>>()
         expectTypeOf(sdk.lomkit.users.forceDelete).returns.resolves.toEqualTypeOf<LomkitBulkResult<User>>()
         expectTypeOf(sdk.lomkit.users.actions).returns.resolves.toEqualTypeOf<LomkitActionResult>()
