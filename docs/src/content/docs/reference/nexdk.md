@@ -28,6 +28,16 @@ Binds resources to drivers and returns the typed proxy. An async call resolves `
 
 The call proxy is described in [Anatomy of a call](/nexdk/guides/anatomy-of-a-call/).
 
+## `defineSdkConfig(config)`
+
+```ts
+function defineSdkConfig<const TDrivers, const TResources, const TThrow extends boolean = false>(
+  config: SdkConfig<TDrivers, TResources> & { throw?: TThrow }
+): DefinedSdkConfig<TDrivers, TResources, TThrow>
+```
+
+Returns `config` unchanged. Use it for a config written apart from `createSdk` (a config file, the `@nexdk/nuxt` module): a plain object widens `throw: true` to `boolean`, and the call types would announce `{ data, error }` while the calls throw.
+
 ## `defineResource(config)`
 
 ```ts
@@ -46,7 +56,18 @@ function defineDriver<TConfig, TState, TMethods>(
 ): (config: TConfig) => DefinedDriver<TMethods>
 ```
 
-`definition` is `{ name, setup: (config) => state, methods }`. See [Writing a driver](/nexdk/guides/writing-a-driver/).
+`definition` is `{ name, setup: (config) => state, methods, reactive? }`. A method receives `(ctx, payload, options)`, `options` being `SdkCallOptions | undefined`. `reactive` lists the methods that return an unsubscribe function; the driver exposes them as `reactiveMethods` and `createSdk` rethrows their synchronous throw instead of resolving it. See [Writing a driver](/nexdk/guides/writing-a-driver/).
+
+## Call option helpers
+
+```ts
+function anySignal(...signals: Array<AbortSignal | undefined>): AbortSignal | undefined
+function callSignal(options: SdkCallOptions | undefined): AbortSignal | undefined
+function mergeHeaders(base?: Record<string, string>, extra?: Record<string, string>): Record<string, string>
+function failureKind(error: unknown, signal: AbortSignal | undefined): SdkErrorKind
+```
+
+Pure functions shared by the drivers. `anySignal` combines the given signals (`AbortSignal.any`), `callSignal` combines the call `signal` with an `AbortSignal.timeout` of the call `timeout`, `mergeHeaders` sets `extra` over `base` case-insensitively, `failureKind` tells `timeout`, `abort` and `network` apart from the aborted signal, then from the error name.
 
 ## `traceCall(call, run)`
 

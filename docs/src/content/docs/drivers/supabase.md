@@ -30,7 +30,7 @@ const sdk = createSdk({
 
 `fetch` is optional (type `FetchLike`, any function `(input, init?) => Promise<Response>`) and is forwarded to supabase-js as `global.fetch`, so every request of the client goes through it.
 
-Each method takes per-call options `{ signal, timeout, headers }` as third argument: `signal` and `timeout` go to `abortSignal`, `headers` to the query. There is no `onResponse` option and errors carry no `kind`: supabase-js turns fetch failures into result objects.
+Each method takes per-call options `{ signal, timeout, headers }` as third argument: `signal` and `timeout` go to `abortSignal`, `headers` to the query. There is no `onResponse` option: supabase-js turns fetch failures into result objects. A query error carries `kind`: `timeout` or `abort` when the call signal aborted it, `network` for a status 0 answer, `http` for an error status. `subscribe` is a reactive method: an invalid `room_id` throws synchronously, even through `createSdk`.
 
 ## Methods
 

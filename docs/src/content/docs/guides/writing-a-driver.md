@@ -96,6 +96,8 @@ The wrapper does this for each method:
 3. if the body throws, emits `error` and rethrows. An error with a numeric `status` (an `SdkError`, such as the `HttpError` of `@nexdk/http`) gives `{ message, status, errors }`, anything else `{ message }`;
 4. if the body returns a function, returns it as is. It is the unsubscribe handle of a reactive method, with no `success` or `error` envelope.
 
+List the reactive methods in `reactive: ['subscribe']` next to `methods` (a hand-written driver sets `readonly reactiveMethods = ['subscribe']`). `createSdk` then rethrows their synchronous throw instead of resolving it as `{ data: undefined, error }`, so a caller always gets a function or an exception, never a Promise. The third argument of a method is typed `SdkCallOptions | undefined`; bind it once per method (`withCallOptions(ctx.request, options)` with `@nexdk/http`) so the call timeout covers every request of the call.
+
 ### Headers
 
 `headers` is a record or a function called before every request, so a refreshed token is always used:

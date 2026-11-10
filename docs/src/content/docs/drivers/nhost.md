@@ -45,7 +45,18 @@ const sdk = createSdk({
 
 `onResponse(response, { url, method })` is optional and runs on every HTTP response before the status check; a throw inside it is the error of the call. Each method takes `{ fragment, signal, timeout, headers }` as third argument: the call headers win over the driver ones, `signal` and `timeout` abort the request.
 
-A GraphQL error (HTTP 200 with `errors`) gets a status from the `extensions.code` of the first error that has a known one: `access-denied` and `permission-error` 403, `invalid-jwt` 401, `validation-failed`, `parse-failed`, `data-exception` 400, `not-found` 404, `constraint-violation` 409, any other code or none 500; `kind` is `http`. A network failure, an abort or a timeout is an `SdkError` with status 0, `kind` `network`, `abort` or `timeout` and the original error as `cause`.
+A GraphQL error (HTTP 200 with `errors`) gets a status from the `extensions.code` of the first error that has a known one: 
+
+| `extensions.code` | Status |
+|---|---|
+| `access-denied`, `permission-denied`, `permission-error` | 403 |
+| `invalid-jwt`, `jwt-invalid`, `jwt-invalid-claims`, `jwt-missing-role-claims` | 401 |
+| `validation-failed`, `parse-failed`, `bad-request`, `data-exception`, `invalid-headers`, `not-supported` | 400 |
+| `not-found` | 404 |
+| `constraint-violation` | 409 |
+| any other code, or none | 500 |
+
+`kind` is `http`. A network failure, an abort or a timeout is an `SdkError` with status 0, `kind` `network`, `abort` or `timeout` and the original error as `cause`. A body that cannot be read keeps the response status, with the message `response body unreadable`. `timeout` (milliseconds) and `signal` are also accepted in the config: the call `timeout` wins over the config one, the signals are combined.
 
 ## Methods
 

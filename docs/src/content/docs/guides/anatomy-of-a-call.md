@@ -11,7 +11,7 @@ sdk.[driver].[resource].[method](payload?, onEvent?, options?)
 |-----------|------|------|
 | `payload` | `object` | Filter, query, record to create. Its shape is defined by the driver. |
 | `onEvent` | `SdkEventHandler` | Event callback for this call, run together with the global `notify` of `createSdk`. |
-| `options` | `SdkCallOptions` | `{ signal?, timeout?, headers? }` for this call only, passed as is to the driver. `headers` and `timeout` win over the driver config; the call `signal` and the driver `signal` are combined (either one aborts). An aborted call leaves the driver usable. nhost also reads `{ fragment }`; supabase applies `signal` and `headers` to the query. |
+| `options` | `SdkCallOptions` | `{ signal?, timeout?, headers? }` for this call only, passed as is to the driver. `headers` and `timeout` win over the driver config; the call `signal` and the driver `signal` are combined (either one aborts). The call `timeout` covers the whole call: every page of a paginated `get` and the reading of the bodies. An aborted call leaves the driver usable. nhost also reads `{ fragment }`; supabase applies `signal` and `headers` to the query. |
 
 Rules of the proxy:
 
