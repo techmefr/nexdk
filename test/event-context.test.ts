@@ -30,6 +30,27 @@ describe('event context', () => {
         ])
     })
 
+    it('reuses the resource of the request for an error the core emits', async () => {
+        const events: Array<[SdkEvent, unknown]> = []
+        const driver = {
+            name: 'hand',
+            fail(_resource: string, payload: unknown, onEvent?: (event: SdkEvent, data?: unknown) => void) {
+                onEvent?.('request', { resource: 'mapped_users', method: 'fail', payload })
+                throw new SdkError('Broken')
+            },
+        }
+        const sdk = createSdk({ drivers: { hand: driver }, notify: (event, data) => events.push([event, data]) }) as unknown as {
+            hand: Record<string, Record<string, (payload?: unknown) => Promise<unknown>>>
+        }
+
+        await sdk.hand.users.fail(1)
+
+        expect(events).toEqual([
+            ['request', { resource: 'mapped_users', method: 'fail', payload: 1 }],
+            ['error', { message: 'Broken', resource: 'mapped_users', method: 'fail' }],
+        ])
+    })
+
     it('omits method when a hand-written driver does not give it', () => {
         const events: unknown[] = []
         traceCall({ emit: (_event, data) => events.push(data), resource: 'users', payload: 1 }, () => 2)

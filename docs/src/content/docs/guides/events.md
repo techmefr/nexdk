@@ -22,7 +22,7 @@ The `error` event carries `{ message, status?, errors?, kind?, resource, method 
 
 - `status` is the HTTP status, set when the error has one (0 for a timeout, an abort or a network failure).
 - `kind` is `timeout`, `abort`, `network` or `http` for an `HttpError` (`error.cause` keeps the original error).
-- `resource` is the resource name the driver targets, `method` the called method (omitted when a hand-written driver does not pass it to `traceCall`).
+- `resource` is the resource name the driver targets, `method` the called method (omitted when a hand-written driver does not pass it to `traceCall`). Every event of one call carries the same `resource`: an error the core emits (response validation, synchronous throw) reuses the one of the `request` event, so lomkit gives the resolved `resource.name` everywhere.
 - `errors` is the field-error map of the response body when it has an `errors` key (Laravel 422: `{ email: ['…'] }`), else the raw response body.
 - `data` (on the error only) is the parsed response body.
 
