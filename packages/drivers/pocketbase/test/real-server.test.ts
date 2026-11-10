@@ -60,6 +60,8 @@ describe('pocketbase validation errors', () => {
                     status: 400,
                     errors: { name: ['Cannot be blank.'], email: ['Must be a valid email address.'] },
                     kind: 'http',
+                    resource: 'users',
+                    method: 'create',
                 },
             ],
         ])

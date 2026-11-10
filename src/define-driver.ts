@@ -74,7 +74,7 @@ export function defineDriver<
                     emit: onEvent,
                     ...state,
                 } as DriverMethodContext & TState
-                return traceCall({ emit: onEvent, resource: resourceName, payload }, () => method(ctx, payload, extra))
+                return traceCall({ emit: onEvent, resource: resourceName, method: methodName, payload }, () => method(ctx, payload, extra))
             }
             ;(built as Record<string, unknown>)[methodName] = proxyMethod
         }

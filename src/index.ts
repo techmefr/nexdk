@@ -18,6 +18,7 @@ export type {
     AsyncMethod,
     FetchLike,
     InferSchema,
+    RequestEventPayload,
     ResponseHook,
     ResponseRequest,
     SdkCallOptions,
@@ -39,6 +40,7 @@ export type {
     StatusError,
     StatusHandler,
     StatusHandlers,
+    SuccessEventPayload,
     WriteInput,
 } from './types.ts'
 export type {

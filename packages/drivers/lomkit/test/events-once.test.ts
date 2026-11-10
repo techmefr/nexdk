@@ -53,6 +53,6 @@ describe.each(calls)('lomkit %s', (method, payload, body) => {
     it('emits the resolved resource name and the payload with the request', async () => {
         const { global, call } = run(reply(200, body) as typeof globalThis.fetch, method)
         await call(payload)
-        expect(global[0]).toEqual(['request', { resource: 'users', payload }])
+        expect(global[0]).toEqual(['request', { resource: 'users', method, payload }])
     })
 })

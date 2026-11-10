@@ -61,7 +61,7 @@ describe('nhost typed errors', () => {
         expect(error.message).toBe('HTTP 401')
         expect(error.errors).toEqual([{ message: 'invalid token' }])
         expect(events.filter(([event]) => event === 'error')).toEqual([
-            ['error', { message: 'HTTP 401', status: 401, errors: [{ message: 'invalid token' }] }],
+            ['error', { message: 'HTTP 401', status: 401, errors: [{ message: 'invalid token' }], resource: 'users', method: 'query' }],
         ])
     })
 
@@ -78,7 +78,7 @@ describe('nhost typed errors', () => {
         expect(error.message).toBe('email must be unique; name too long')
         expect(error.errors).toEqual(graphqlErrors)
         expect(events.filter(([event]) => event === 'error')).toEqual([
-            ['error', { message: 'email must be unique; name too long', errors: graphqlErrors }],
+            ['error', { message: 'email must be unique; name too long', errors: graphqlErrors, resource: 'users', method: 'query' }],
         ])
     })
 

@@ -51,6 +51,6 @@ describe.each(calls)('nest %s', (method, payload, body) => {
             payload,
             (event, data) => seen.push([event, data]),
         )
-        expect(seen).toEqual([['request', { resource: 'users', payload }], ['success', expect.anything()]])
+        expect(seen).toEqual([['request', { resource: 'users', method, payload }], ['success', expect.anything()]])
     })
 })

@@ -100,7 +100,7 @@ describe('defineDriver', () => {
             }).boom('users', undefined, (event, data) => events.push([event, data])),
         ).rejects.toThrow('kaboom')
         expect(events[0][0]).toBe('request')
-        expect(events[1]).toEqual(['error', { message: 'kaboom' }])
+        expect(events[1]).toEqual(['error', { message: 'kaboom', resource: 'users', method: 'boom' }])
     })
 
     it('turns a synchronous author throw into emit(error) + rethrow', () => {
@@ -112,7 +112,7 @@ describe('defineDriver', () => {
             }).boomSync('users', undefined, (event, data) => events.push([event, data])),
         ).toThrow('sync kaboom')
         expect(events[0][0]).toBe('request')
-        expect(events[1]).toEqual(['error', { message: 'sync kaboom' }])
+        expect(events[1]).toEqual(['error', { message: 'sync kaboom', resource: 'users', method: 'boomSync' }])
     })
 
     it('emits request then success around a synchronous (non-Promise) method result', () => {
@@ -183,27 +183,27 @@ describe('defineDriver error event payload', () => {
         const events: Array<[string, unknown?]> = []
         const driver = makeThrower(new FakeHttpError(422, { message: 'bad' }))
         await expect(driver.fail('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).rejects.toThrow('HTTP 422')
-        expect(events[1]).toEqual(['error', { message: 'HTTP 422', status: 422, errors: { message: 'bad' } }])
+        expect(events[1]).toEqual(['error', { message: 'HTTP 422', status: 422, errors: { message: 'bad' }, resource: 'users', method: 'fail' }])
     })
 
     it('emits status and errors for a synchronous HttpError', () => {
         const events: Array<[string, unknown?]> = []
         const driver = makeThrower(new FakeHttpError(500, null))
         expect(() => driver.failSync('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).toThrow('HTTP 500')
-        expect(events[1]).toEqual(['error', { message: 'HTTP 500', status: 500, errors: null }])
+        expect(events[1]).toEqual(['error', { message: 'HTTP 500', status: 500, errors: null, resource: 'users', method: 'failSync' }])
     })
 
     it('normalizes a non-Error throw with String()', async () => {
         const events: Array<[string, unknown?]> = []
         const driver = makeThrower('plain failure')
         await expect(driver.fail('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).rejects.toBe('plain failure')
-        expect(events[1]).toEqual(['error', { message: 'plain failure' }])
+        expect(events[1]).toEqual(['error', { message: 'plain failure', resource: 'users', method: 'fail' }])
     })
 
     it('normalizes a non-Error object throw without crashing', () => {
         const events: Array<[string, unknown?]> = []
         const driver = makeThrower(undefined)
         expect(() => driver.failSync('users', undefined, (e: string, d?: unknown) => events.push([e, d]))).toThrow()
-        expect(events[1]).toEqual(['error', { message: 'undefined' }])
+        expect(events[1]).toEqual(['error', { message: 'undefined', resource: 'users', method: 'failSync' }])
     })
 })

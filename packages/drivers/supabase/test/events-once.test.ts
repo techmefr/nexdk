@@ -38,7 +38,7 @@ describe.each(calls)('supabase %s', (method, payload) => {
         const { global, local, call } = run(method)
         await call(payload)
         expect(global.map(([event]) => event)).toEqual(['request', 'success'])
-        expect(global[0][1]).toEqual({ resource: 'messages', payload })
+        expect(global[0][1]).toEqual({ resource: 'messages', method, payload })
         expect(local).toEqual(['request', 'success'])
     })
 

@@ -39,7 +39,7 @@ describe('result object of createSdk', () => {
         const result = await users.fail()
         expect(result).toEqual({ data: undefined, error: failure })
         expect((result as { error: unknown }).error).toBe(failure)
-        expect(notify).toHaveBeenCalledWith('error', { message: 'HTTP 401', status: 401 })
+        expect(notify).toHaveBeenCalledWith('error', { message: 'HTTP 401', status: 401, resource: 'users', method: 'fail' })
         expect(onStatus).toHaveBeenCalledTimes(1)
     })
 

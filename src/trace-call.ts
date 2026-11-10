@@ -5,19 +5,31 @@ import type { SdkEventHandler } from './types.ts'
 export interface TracedCall {
     emit: SdkEventHandler | undefined
     resource: string
+    method?: string
     payload: unknown
     describeError?: (error: unknown) => ErrorEventPayload
 }
 
+export interface CallContext {
+    resource: string
+    method?: string
+}
+
+export function callContext(resource: string, method: string | undefined): CallContext {
+    return method === undefined ? { resource } : { resource, method }
+}
+
 export function traceCall<T>(call: TracedCall, run: () => T): T {
     const { emit } = call
+    const context = callContext(call.resource, call.method)
     const describe = call.describeError ?? toErrorPayload
-    emit?.('request', { resource: call.resource, payload: call.payload })
+    const fail = (error: unknown): void => emit?.('error', { ...describe(error), ...context })
+    emit?.('request', { ...context, payload: call.payload })
     let result: T
     try {
         result = run()
     } catch (error) {
-        emit?.('error', describe(error))
+        fail(error)
         throw error
     }
 
@@ -26,16 +38,16 @@ export function traceCall<T>(call: TracedCall, run: () => T): T {
     if (result instanceof Promise) {
         return result.then(
             value => {
-                emit?.('success', value)
+                emit?.('success', { ...context, data: value })
                 return value
             },
             (error: unknown) => {
-                emit?.('error', describe(error))
+                fail(error)
                 throw error
             },
         ) as T
     }
 
-    emit?.('success', result)
+    emit?.('success', { ...context, data: result })
     return result
 }

@@ -67,7 +67,7 @@ describe('restore and forceDelete', () => {
         expect(error).toBeInstanceOf(SdkError)
         expect(error.status).toBe(403)
         expect(events.map(([event]) => event)).toEqual(['request', 'error'])
-        expect(events[1][1]).toEqual({ message: 'This action is unauthorized.', status: 403, errors: undefined, kind: 'http' })
+        expect(events[1][1]).toEqual({ message: 'This action is unauthorized.', status: 403, errors: undefined, kind: 'http', resource: 'posts', method: 'restore' })
     })
 })
 

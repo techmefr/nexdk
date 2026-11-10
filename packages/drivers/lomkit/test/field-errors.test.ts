@@ -76,7 +76,7 @@ describe('lomkit 422 field names', () => {
         expect(error.data).toEqual(body)
         const emitted = events.filter(([event]) => event === 'error')
         expect(emitted).toEqual([
-            ['error', { message: body.message, status: 422, errors: { name: ['required'], email: ['invalid'] }, kind: 'http' }],
+            ['error', { message: body.message, status: 422, errors: { name: ['required'], email: ['invalid'] }, kind: 'http', resource: 'users', method: 'mutate' }],
         ])
     })
 

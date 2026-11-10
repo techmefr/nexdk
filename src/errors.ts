@@ -13,6 +13,8 @@ export interface ErrorEventPayload {
     status?: number
     errors?: unknown
     kind?: SdkErrorKind
+    resource?: string
+    method?: string
 }
 
 export class SdkError extends Error {

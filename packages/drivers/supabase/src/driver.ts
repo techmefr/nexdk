@@ -58,11 +58,12 @@ export class SupabaseDriver implements SdkDriver {
     }
 
     private call<R>(
+        method: string,
         target: { resourceName: string; payload: unknown; onEvent: SdkEventHandler | undefined },
         run: () => Promise<R>,
     ): Promise<R> {
         const { resourceName, payload, onEvent } = target
-        return traceCall({ emit: onEvent, resource: resourceName, payload, describeError }, run)
+        return traceCall({ emit: onEvent, resource: resourceName, method, payload, describeError }, run)
     }
 
     private requireId(method: string, payload: unknown): Record<string, unknown> {
@@ -76,7 +77,7 @@ export class SupabaseDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<SupabaseResult<T>> {
-        return this.call({ resourceName, payload, onEvent }, async () => {
+        return this.call('get', { resourceName, payload, onEvent }, async () => {
             const query = this.client.from(resourceName).select('*')
 
             if (payload && typeof payload === 'object') {
@@ -98,7 +99,7 @@ export class SupabaseDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<SupabaseResult<T>> {
-        return this.call({ resourceName, payload, onEvent }, async () => {
+        return this.call('insert', { resourceName, payload, onEvent }, async () => {
             const query = this.client
                 .from(resourceName)
                 .insert(payload as Record<string, unknown>)
@@ -116,7 +117,7 @@ export class SupabaseDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<SupabaseResult<T>> {
-        return this.call({ resourceName, payload, onEvent }, async () => {
+        return this.call('update', { resourceName, payload, onEvent }, async () => {
             const { id, ...rest } = this.requireId('update', payload)
 
             const query = this.client
@@ -137,7 +138,7 @@ export class SupabaseDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<{ success: boolean }> {
-        return this.call({ resourceName, payload, onEvent }, async () => {
+        return this.call('remove', { resourceName, payload, onEvent }, async () => {
             const { id } = this.requireId('remove', payload)
             const { error, status } = await withCallOptions(this.client.from(resourceName).delete().eq('id', id), options)
             if (error !== null) throw new SupabaseQueryError(error, status)

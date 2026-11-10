@@ -117,6 +117,8 @@ describe('response validation enabled', () => {
             message: 'Response does not match the schema of resource "users"',
             status: 0,
             errors: { id: [expect.any(String)] },
+            resource: 'users',
+            method: 'find',
         })
     })
 

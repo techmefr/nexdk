@@ -1,5 +1,6 @@
 import { toErrorPayload } from './errors.ts'
 import { reactToStatus } from './on-status.ts'
+import { callContext } from './trace-call.ts'
 import { VALIDATED_METHODS, validateResponse } from './validate-response.ts'
 import type { AnyResource, SdkDriver, SdkEventHandler, SdkResult, SdkResultError, StatusHandlers } from './types.ts'
 
@@ -42,7 +43,7 @@ async function validated(call: MethodCall, resource: AnyResource, value: unknown
     try {
         checked = await validateResponse(resource, call.methodName, value)
     } catch (error) {
-        call.handler?.('error', toErrorPayload(error))
+        call.handler?.('error', { ...toErrorPayload(error), ...callContext(call.resourceName, call.methodName) })
         throw error
     }
     success.release()

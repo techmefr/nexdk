@@ -28,6 +28,18 @@ export interface SdkCallOptions {
     headers?: Record<string, string>
 }
 
+export interface RequestEventPayload {
+    resource: string
+    method?: string
+    payload: unknown
+}
+
+export interface SuccessEventPayload<T = unknown> {
+    resource: string
+    method?: string
+    data: T
+}
+
 export type AnyResource = Resource<StandardSchemaV1>
 
 export interface ResourceConfig<TSchema extends StandardSchemaV1> {

@@ -59,12 +59,13 @@ export class LomkitDriver implements SdkDriver {
     }
 
     private call<R>(
+        method: string,
         target: { resourceName: string; payload: unknown; onEvent: SdkEventHandler | undefined; options: unknown },
         run: (send: Send) => Promise<R>,
     ): Promise<R> {
         const name = this.resources.get(target.resourceName)?.name ?? target.resourceName
         const httpRequest = withCallOptions(this.httpRequest, target.options)
-        return traceCall({ emit: target.onEvent, resource: name, payload: target.payload }, () => {
+        return traceCall({ emit: target.onEvent, resource: name, method, payload: target.payload }, () => {
             const url = `${this.baseUrl}/${encodeResource(name)}`
             return run((path, verb, body) => this.sendRequest(httpRequest, `${url}${path}`, verb, body))
         })
@@ -84,7 +85,7 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<LomkitGetResult<T>> {
-        return this.call({ resourceName, payload, onEvent, options }, send =>
+        return this.call('get', { resourceName, payload, onEvent, options }, send =>
             send<LomkitGetResult<T>>('/search', 'POST', payload ?? {}),
         )
     }
@@ -96,7 +97,7 @@ export class LomkitDriver implements SdkDriver {
         options?: SdkCallOptions,
     ): Promise<LomkitMutateResult> {
         const body = { mutate: Array.isArray(payload) ? payload : [payload] }
-        return this.call({ resourceName, payload, onEvent, options }, send =>
+        return this.call('mutate', { resourceName, payload, onEvent, options }, send =>
             send<LomkitMutateResult>('/mutate', 'POST', body),
         )
     }
@@ -107,7 +108,7 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<LomkitDeleteResult<T>> {
-        return this.call({ resourceName, payload, onEvent, options }, send =>
+        return this.call('delete', { resourceName, payload, onEvent, options }, send =>
             send<LomkitDeleteResult<T>>('', 'DELETE', payload),
         )
     }
@@ -118,7 +119,7 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<LomkitBulkResult<T>> {
-        return this.call({ resourceName, payload, onEvent, options }, send =>
+        return this.call('restore', { resourceName, payload, onEvent, options }, send =>
             send<LomkitBulkResult<T>>('/restore', 'POST', payload),
         )
     }
@@ -129,7 +130,7 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<LomkitBulkResult<T>> {
-        return this.call({ resourceName, payload, onEvent, options }, send =>
+        return this.call('forceDelete', { resourceName, payload, onEvent, options }, send =>
             send<LomkitBulkResult<T>>('/force', 'DELETE', payload),
         )
     }
@@ -142,7 +143,7 @@ export class LomkitDriver implements SdkDriver {
     ): Promise<LomkitActionResult> {
         const { name: action, ...body } = (payload ?? {}) as Partial<LomkitActionPayload>
         if (typeof action !== 'string' || action === '') throw new Error(`Invalid action name: "${action ?? ''}"`)
-        return this.call({ resourceName, payload, onEvent, options }, send =>
+        return this.call('actions', { resourceName, payload, onEvent, options }, send =>
             send<LomkitActionResult>(`/actions/${encodeURIComponent(action)}`, 'POST', body),
         )
     }
@@ -153,7 +154,7 @@ export class LomkitDriver implements SdkDriver {
         onEvent?: SdkEventHandler,
         options?: SdkCallOptions,
     ): Promise<LomkitDetailsResult> {
-        return this.call({ resourceName, payload, onEvent, options }, send =>
+        return this.call('details', { resourceName, payload, onEvent, options }, send =>
             send<LomkitDetailsResult>('', 'GET', undefined),
         )
     }

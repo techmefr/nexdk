@@ -34,6 +34,8 @@ describe('nest error message', () => {
             status: 400,
             errors: { email: ['email must be an email'], name: ['name must be a string'] },
             kind: 'http',
+            resource: 'users',
+            method: 'create',
         })
     })
 })

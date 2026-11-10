@@ -48,7 +48,7 @@ describe('a call resolves { data, error } by default', () => {
         expect(data).toBeUndefined()
         expect(error).toBeInstanceOf(HttpError)
         expect(error).toMatchObject({ status: 422, errors: { name: ['required'] }, data: body })
-        expect(notify).toHaveBeenCalledWith('error', { message: 'invalid', status: 422, errors: { name: ['required'] }, kind: 'http' })
+        expect(notify).toHaveBeenCalledWith('error', { message: 'invalid', status: 422, errors: { name: ['required'] }, kind: 'http', resource: 'users', method: 'mutate' })
         expect(onStatus).toHaveBeenCalledTimes(1)
         expect(order).toEqual(['notify:request', 'notify:error', 'status'])
     })

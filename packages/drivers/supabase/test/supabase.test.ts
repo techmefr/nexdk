@@ -45,6 +45,8 @@ describe('SupabaseDriver', () => {
         expect(onEvent).toHaveBeenCalledWith('error', {
             ...nextError,
             errors: { code: '42P01' },
+            resource: 'messages',
+            method: 'get',
         })
         expect(onEvent).not.toHaveBeenCalledWith('success', expect.anything())
 

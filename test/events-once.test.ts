@@ -23,7 +23,10 @@ describe('events emitted once per call', () => {
     it('emits request then success once without validation', async () => {
         const { events, local, find } = makeSdk({ id: 1 }, false)
         await find()
-        expect(events).toEqual([['request', { resource: 'users', payload: { id: 1 } }], ['success', { id: 1 }]])
+        expect(events).toEqual([
+            ['request', { resource: 'users', method: 'find', payload: { id: 1 } }],
+            ['success', { resource: 'users', method: 'find', data: { id: 1 } }],
+        ])
         expect(local).toEqual(['request', 'success'])
     })
 
