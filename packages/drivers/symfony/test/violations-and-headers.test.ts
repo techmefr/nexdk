@@ -36,6 +36,7 @@ describe('symfony violations', () => {
             message: 'name: blank',
             status: 422,
             errors: { name: ['blank'], email: ['invalid'] },
+            kind: 'http',
         })
     })
 })

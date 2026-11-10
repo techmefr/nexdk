@@ -21,6 +21,7 @@ export type {
     SdkConfig,
     SdkDriver,
     SdkEvent,
+    SdkErrorKind,
     SdkEventHandler,
     SdkResult,
     SdkResultError,

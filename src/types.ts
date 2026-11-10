@@ -13,6 +13,8 @@ export type SdkEvent =
 
 export type SdkEventHandler = (event: SdkEvent, data?: unknown) => void
 
+export type SdkErrorKind = 'timeout' | 'abort' | 'network' | 'http'
+
 export type AnyResource = Resource<StandardSchemaV1>
 
 export interface ResourceConfig<TSchema extends StandardSchemaV1> {
@@ -96,6 +98,7 @@ export type SdkResultError = Error & {
     status?: number
     errors?: unknown
     data?: unknown
+    kind?: SdkErrorKind
 }
 
 export type SdkResult<T> =

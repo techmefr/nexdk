@@ -1,7 +1,8 @@
 import { SdkError } from 'nexdk'
-import type { FetchLike } from 'nexdk'
+import type { FetchLike, SdkErrorKind } from 'nexdk'
 import { isJsonBody, isStreamBody, readBody } from './body.ts'
 import { errorsFromData, messageFromData } from './error-data.ts'
+import { anySignal, failureKind, requestSignal } from './signals.ts'
 
 export interface HttpRequestOptions {
     timeout?: number
@@ -15,18 +16,26 @@ export interface HttpRequestInit extends HttpRequestOptions {
     fetch?: FetchLike
 }
 
+export interface HttpFailure {
+    kind: SdkErrorKind
+    cause?: unknown
+}
+
 export type HttpRequest = <T>(url: string, init?: HttpRequestInit) => Promise<T>
 
 const PAYLOAD_METHODS = new Set(['PATCH', 'POST', 'PUT', 'DELETE'])
 
 export class HttpError extends SdkError {
     declare readonly status: number
+    declare readonly kind: SdkErrorKind
 
-    constructor(status: number, data: unknown, message?: string) {
+    constructor(status: number, data: unknown, message?: string, failure?: HttpFailure) {
         super(message ?? messageFromData(data) ?? `HTTP ${status}`, {
             status,
             data,
             errors: errorsFromData(data),
+            kind: failure?.kind ?? (status === 0 ? 'network' : 'http'),
+            cause: failure?.cause,
         })
         this.name = 'HttpError'
     }
@@ -34,7 +43,7 @@ export class HttpError extends SdkError {
 
 function requestInit(init: HttpRequestInit | undefined, method: string | undefined): RequestInit {
     const headers = new Headers(init?.headers)
-    const options: RequestInit & { duplex?: 'half' } = { method, headers, body: init?.body as RequestInit['body'], signal: init?.signal }
+    const options: RequestInit & { duplex?: 'half' } = { method, headers, body: init?.body as RequestInit['body'] }
     if (!init?.body || !PAYLOAD_METHODS.has(method ?? 'GET')) return options
     if (isJsonBody(init.body)) {
         const contentType = headers.get('content-type')
@@ -51,41 +60,50 @@ function requestInit(init: HttpRequestInit | undefined, method: string | undefin
     return options
 }
 
-function timeoutSignal(timeout: number): { signal: AbortSignal; timer: ReturnType<typeof setTimeout> } {
-    const controller = new AbortController()
-    const timer = setTimeout(() => {
-        const error = new Error('[TimeoutError]: The operation was aborted due to timeout')
-        error.name = 'TimeoutError'
-        Object.assign(error, { code: 23 })
-        controller.abort(error)
-    }, timeout)
-    return { signal: controller.signal, timer }
+function noResponse(error: unknown, signal: AbortSignal | undefined, method: string | undefined, url: string): HttpError {
+    const cause = error as Error | undefined
+    const detail = cause?.message || cause?.toString() || ''
+    const message = `[${method ?? 'GET'}] ${JSON.stringify(url)}: <no response>${detail ? ` ${detail}` : ''}`
+    return new HttpError(0, undefined, message, { kind: failureKind(error, signal), cause: error })
 }
 
 async function send(url: string, init: HttpRequestInit | undefined, method: string | undefined): Promise<Response> {
     const options = requestInit(init, method)
-    const timeout = !options.signal && init?.timeout ? timeoutSignal(init.timeout) : undefined
-    if (timeout) options.signal = timeout.signal
+    const { signal, dispose } = requestSignal(init?.signal, init?.timeout)
+    if (signal) options.signal = signal
     try {
         return await (init?.fetch ?? globalThis.fetch)(url, options)
     } catch (error) {
-        const cause = error as Error | undefined
-        const detail = cause?.message || cause?.toString() || ''
-        throw new HttpError(0, undefined, `[${method ?? 'GET'}] ${JSON.stringify(url)}: <no response>${detail ? ` ${detail}` : ''}`)
+        throw noResponse(error, signal, method, url)
     } finally {
-        if (timeout) clearTimeout(timeout.timer)
+        dispose()
+    }
+}
+
+async function read(response: Response, init: HttpRequestInit | undefined, method: string | undefined, url: string): Promise<unknown> {
+    try {
+        return await readBody(response, method)
+    } catch (error) {
+        throw noResponse(error, init?.signal, method, url)
     }
 }
 
 export async function request<T>(url: string, init?: HttpRequestInit): Promise<T> {
     const method = init?.method?.toUpperCase()
     const response = await send(url, init, method)
-    const data = await readBody(response, method)
+    const data = await read(response, init, method, url)
     if (response.status >= 400 && response.status < 600) throw new HttpError(response.status, data)
     return data as T
 }
 
 export function createRequest(fetchImpl?: FetchLike, options?: HttpRequestOptions): HttpRequest {
     if (fetchImpl === undefined && options === undefined) return request
-    return (url, init) => request(url, { ...options, ...init, fetch: fetchImpl })
+    return (url, init) =>
+        request(url, {
+            ...options,
+            ...init,
+            signal: anySignal(options?.signal, init?.signal),
+            timeout: init?.timeout ?? options?.timeout,
+            fetch: fetchImpl,
+        })
 }

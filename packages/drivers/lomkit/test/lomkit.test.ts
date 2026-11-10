@@ -101,6 +101,7 @@ describe('LomkitDriver.mutate', () => {
                 message: 'Validation failed',
                 status: 422,
                 errors: { email: ['The email field is required.'] },
+                kind: 'http',
             },
         ])
     })

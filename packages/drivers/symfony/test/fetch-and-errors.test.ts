@@ -63,7 +63,7 @@ describe('symfony typed errors', () => {
         expect(error.errors).toEqual(body.errors)
         expect(error.data).toEqual(body)
         expect(events.filter(([event]) => event === 'error')).toEqual([
-            ['error', { message: body.message, status: 422, errors: body.errors }],
+            ['error', { message: body.message, status: 422, errors: body.errors, kind: 'http' }],
         ])
         expect(events.map(([event]) => event)).not.toContain('success')
     })
@@ -78,6 +78,6 @@ describe('symfony typed errors', () => {
 
         expect(error.status).toBe(500)
         expect(error.errors).toBeUndefined()
-        expect(events.find(([event]) => event === 'error')?.[1]).toEqual({ message: 'HTTP 500', status: 500 })
+        expect(events.find(([event]) => event === 'error')?.[1]).toEqual({ message: 'HTTP 500', status: 500, kind: 'http' })
     })
 })
