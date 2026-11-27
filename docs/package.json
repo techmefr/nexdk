@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.11",
-    "astro": "^7.4.4",
+    "astro": "^7.4.13",
     "lucide-static": "^1.64.0"
   },
   "devDependencies": {
